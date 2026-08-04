@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard administrador | MEVIPLAST</title>
+  <link rel="icon" href="assets/logo-meviplast.png">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body data-role="Administrador">
+  <div class="dashboard">
+    <aside class="sidebar" aria-label="Menu del administrador">
+      <a class="sidebar-brand" href="dashboard-admin.html"><img src="assets/logo-meviplast.png" alt=""><span>MEVIPLAST</span></a>
+      <p class="role-label">Administrador</p>
+      <nav class="side-nav">
+        <a class="active" href="#"><span class="nav-icon">IN</span>Inicio</a>
+        <a href="#"><span class="nav-icon">US</span>Gestion de usuarios</a>
+        <a href="#"><span class="nav-icon">MP</span>Materias primas</a>
+        <a href="#"><span class="nav-icon">IT</span>Inventario terminado</a>
+        <a href="#"><span class="nav-icon">PR</span>Produccion</a>
+        <a href="#"><span class="nav-icon">VT</span>Ventas</a>
+        <a href="#"><span class="nav-icon">RP</span>Reportes</a>
+        <a href="#"><span class="nav-icon">CF</span>Configuracion</a>
+      </nav>
+      <div class="sidebar-footer"><button id="logout" type="button">Cerrar sesion</button></div>
+    </aside>
+    <section class="workspace">
+      <header class="topbar">
+        <div class="topbar-left"><button class="sidebar-toggle" type="button" aria-label="Abrir menu">☰</button><div><h1>Panel administrativo</h1><p data-today></p></div></div>
+        <div class="user-menu"><span class="user-avatar">AD</span><div><strong data-user-name></strong><span data-role-name></span></div></div>
+      </header>
+      <main class="main-content">
+        <div class="page-intro"><div><h2>Resumen empresarial</h2><p>Estado general de produccion, inventario y ventas.</p></div><button class="primary-action" data-demo-action="Generar reporte general">Generar reporte</button></div>
+        <section class="stats-grid" aria-label="Indicadores principales">
+          <article class="stat-card"><div class="stat-head"><span>Produccion mensual</span><i class="stat-icon">PR</i></div><strong>18.420 kg</strong><small>+8,4% frente al mes anterior</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Inventario terminado</span><i class="stat-icon">IT</i></div><strong>6.284</strong><small>Unidades disponibles</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Ventas del mes</span><i class="stat-icon">VT</i></div><strong>$42,8 M</strong><small>+5,1% de crecimiento</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Alertas operativas</span><i class="stat-icon">AL</i></div><strong>4</strong><small class="warning">Requieren revision</small></article>
+        </section>
+        <div class="dashboard-grid">
+          <section class="panel">
+            <header class="panel-header"><h3>Ordenes de produccion recientes</h3><button data-demo-action="Abrir listado de ordenes">Ver todas</button></header>
+            <div class="table-wrap"><table><thead><tr><th>Orden</th><th>Producto</th><th>Responsable</th><th>Avance</th><th>Estado</th></tr></thead><tbody>
+              <tr><td>OP-1084</td><td>Bolsa industrial 40x60</td><td>L. Martinez</td><td>82%</td><td><span class="status progress">En proceso</span></td></tr>
+              <tr><td>OP-1083</td><td>Empaque adhesivo rojo</td><td>D. Rojas</td><td>100%</td><td><span class="status success">Completada</span></td></tr>
+              <tr><td>OP-1082</td><td>Bolsa transparente 30x45</td><td>J. Perez</td><td>45%</td><td><span class="status pending">Pendiente</span></td></tr>
+              <tr><td>OP-1081</td><td>Rollo protector azul</td><td>A. Gomez</td><td>63%</td><td><span class="status alert">Con novedad</span></td></tr>
+            </tbody></table></div>
+          </section>
+          <aside class="panel">
+            <header class="panel-header"><h3>Actividad reciente</h3></header>
+            <ul class="activity-list">
+              <li><strong>Inventario actualizado</strong><span>Producto terminado · hace 12 min</span></li>
+              <li><strong>Nueva venta registrada</strong><span>Factura FV-3042 · hace 34 min</span></li>
+              <li><strong>Orden completada</strong><span>OP-1083 · hace 1 h</span></li>
+              <li><strong>Usuario creado</strong><span>Rol operario · hace 3 h</span></li>
+            </ul>
+          </aside>
+        </div>
+        <section class="panel" style="margin-top:18px"><header class="panel-header"><h3>Accesos rapidos</h3></header><div class="quick-grid">
+          <button class="quick-action" data-demo-action="Crear usuario"><strong>Crear usuario</strong><span>Administrar roles y accesos</span></button>
+          <button class="quick-action" data-demo-action="Registrar materia prima"><strong>Registrar materia prima</strong><span>Actualizar abastecimiento</span></button>
+          <button class="quick-action" data-demo-action="Consultar ventas"><strong>Consultar ventas</strong><span>Revisar comportamiento comercial</span></button>
+        </div></section>
+      </main>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

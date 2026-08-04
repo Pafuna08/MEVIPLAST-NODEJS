@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard operario | MEVIPLAST</title>
+  <link rel="icon" href="assets/logo-meviplast.png">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body data-role="Operario">
+  <div class="dashboard">
+    <aside class="sidebar" aria-label="Menu del operario">
+      <a class="sidebar-brand" href="dashboard-operario.html"><img src="assets/logo-meviplast.png" alt=""><span>MEVIPLAST</span></a>
+      <p class="role-label">Operario</p>
+      <nav class="side-nav">
+        <a class="active" href="#"><span class="nav-icon">IN</span>Inicio</a>
+        <a href="#"><span class="nav-icon">TA</span>Mis tareas</a>
+        <a href="#"><span class="nav-icon">RG</span>Registrar produccion</a>
+        <a href="#"><span class="nav-icon">HI</span>Mi historial</a>
+      </nav>
+      <div class="sidebar-footer"><button id="logout" type="button">Cerrar sesion</button></div>
+    </aside>
+    <section class="workspace">
+      <header class="topbar">
+        <div class="topbar-left"><button class="sidebar-toggle" type="button" aria-label="Abrir menu">☰</button><div><h1>Mi jornada de produccion</h1><p data-today></p></div></div>
+        <div class="user-menu"><span class="user-avatar">OP</span><div><strong data-user-name></strong><span data-role-name></span></div></div>
+      </header>
+      <main class="main-content">
+        <div class="page-intro"><div><h2>Tareas asignadas</h2><p>Consulta tu trabajo diario y registra el avance realizado.</p></div><button class="primary-action" data-demo-action="Registrar produccion realizada">Registrar produccion</button></div>
+        <section class="stats-grid">
+          <article class="stat-card"><div class="stat-head"><span>Tareas de hoy</span><i class="stat-icon">TA</i></div><strong>4</strong><small>2 completadas</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Produccion registrada</span><i class="stat-icon">PR</i></div><strong>984 kg</strong><small>82% de la meta</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Horas activas</span><i class="stat-icon">HR</i></div><strong>6,2 h</strong><small>Turno actual</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Novedades</span><i class="stat-icon">NV</i></div><strong>1</strong><small class="warning">Pendiente de revision</small></article>
+        </section>
+        <div class="dashboard-grid">
+          <section class="panel">
+            <header class="panel-header"><h3>Mis tareas del turno</h3><button data-demo-action="Actualizar tareas">Actualizar</button></header>
+            <div class="table-wrap"><table><thead><tr><th>Orden</th><th>Actividad</th><th>Meta</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody>
+              <tr><td>OP-1084</td><td>Bolsa industrial 40x60</td><td>1.200 kg</td><td>Alta</td><td><span class="status progress">En proceso</span></td></tr>
+              <tr><td>OP-1087</td><td>Empaque adhesivo azul</td><td>450 kg</td><td>Media</td><td><span class="status pending">Pendiente</span></td></tr>
+              <tr><td>OP-1078</td><td>Bolsa transparente 30x45</td><td>800 kg</td><td>Alta</td><td><span class="status success">Completada</span></td></tr>
+            </tbody></table></div>
+          </section>
+          <aside class="panel">
+            <header class="panel-header"><h3>Ultimos registros</h3></header>
+            <ul class="activity-list">
+              <li><strong>420 kg registrados</strong><span>OP-1084 · lote L-2406</span></li>
+              <li><strong>564 kg registrados</strong><span>OP-1084 · lote L-2405</span></li>
+              <li><strong>Tarea completada</strong><span>OP-1078 · ayer</span></li>
+            </ul>
+          </aside>
+        </div>
+        <section class="panel" style="margin-top:18px"><header class="panel-header"><h3>Acciones rapidas</h3></header><div class="quick-grid">
+          <button class="quick-action" data-demo-action="Ver tareas asignadas"><strong>Ver tareas</strong><span>Consultar prioridades del turno</span></button>
+          <button class="quick-action" data-demo-action="Registrar produccion"><strong>Registrar produccion</strong><span>Cantidad, lote y observaciones</span></button>
+          <button class="quick-action" data-demo-action="Consultar historial"><strong>Consultar historial</strong><span>Revisar registros anteriores</span></button>
+        </div></section>
+      </main>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

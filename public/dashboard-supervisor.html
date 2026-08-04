@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard supervisor | MEVIPLAST</title>
+  <link rel="icon" href="assets/logo-meviplast.png">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body data-role="Supervisor">
+  <div class="dashboard">
+    <aside class="sidebar" aria-label="Menu del supervisor">
+      <a class="sidebar-brand" href="dashboard-supervisor.html"><img src="assets/logo-meviplast.png" alt=""><span>MEVIPLAST</span></a>
+      <p class="role-label">Supervisor</p>
+      <nav class="side-nav">
+        <a class="active" href="#"><span class="nav-icon">IN</span>Inicio</a>
+        <a href="#"><span class="nav-icon">AT</span>Asignar tareas</a>
+        <a href="#"><span class="nav-icon">OP</span>Operarios</a>
+        <a href="#"><span class="nav-icon">SP</span>Seguimiento</a>
+        <a href="#"><span class="nav-icon">RP</span>Reportes operativos</a>
+      </nav>
+      <div class="sidebar-footer"><button id="logout" type="button">Cerrar sesion</button></div>
+    </aside>
+    <section class="workspace">
+      <header class="topbar">
+        <div class="topbar-left"><button class="sidebar-toggle" type="button" aria-label="Abrir menu">☰</button><div><h1>Control de produccion</h1><p data-today></p></div></div>
+        <div class="user-menu"><span class="user-avatar">SU</span><div><strong data-user-name></strong><span data-role-name></span></div></div>
+      </header>
+      <main class="main-content">
+        <div class="page-intro"><div><h2>Seguimiento del turno</h2><p>Ordenes, cumplimiento y carga del equipo operativo.</p></div><button class="primary-action" data-demo-action="Asignar nueva tarea">Asignar tarea</button></div>
+        <section class="stats-grid">
+          <article class="stat-card"><div class="stat-head"><span>Ordenes activas</span><i class="stat-icon">OA</i></div><strong>12</strong><small>8 dentro de la meta</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Operarios en turno</span><i class="stat-icon">OP</i></div><strong>16</strong><small>94% de disponibilidad</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Cumplimiento</span><i class="stat-icon">CM</i></div><strong>87%</strong><small>+3% frente a ayer</small></article>
+          <article class="stat-card"><div class="stat-head"><span>Novedades</span><i class="stat-icon">NV</i></div><strong>3</strong><small class="warning">Por gestionar</small></article>
+        </section>
+        <div class="dashboard-grid">
+          <section class="panel">
+            <header class="panel-header"><h3>Seguimiento de ordenes</h3><button data-demo-action="Filtrar ordenes">Filtrar</button></header>
+            <div class="table-wrap"><table><thead><tr><th>Orden</th><th>Operario</th><th>Meta</th><th>Producido</th><th>Estado</th></tr></thead><tbody>
+              <tr><td>OP-1084</td><td>L. Martinez</td><td>1.200 kg</td><td>984 kg</td><td><span class="status progress">En proceso</span></td></tr>
+              <tr><td>OP-1083</td><td>D. Rojas</td><td>850 kg</td><td>850 kg</td><td><span class="status success">Completada</span></td></tr>
+              <tr><td>OP-1082</td><td>J. Perez</td><td>900 kg</td><td>405 kg</td><td><span class="status pending">Pendiente</span></td></tr>
+              <tr><td>OP-1081</td><td>A. Gomez</td><td>700 kg</td><td>441 kg</td><td><span class="status alert">Con novedad</span></td></tr>
+            </tbody></table></div>
+          </section>
+          <aside class="panel">
+            <header class="panel-header"><h3>Alertas del turno</h3></header>
+            <ul class="activity-list">
+              <li><strong>Meta en riesgo</strong><span>OP-1081 · retraso de 45 min</span></li>
+              <li><strong>Material por confirmar</strong><span>Polietileno BD · almacen</span></li>
+              <li><strong>Registro incompleto</strong><span>OP-1079 · faltan observaciones</span></li>
+            </ul>
+          </aside>
+        </div>
+        <section class="panel" style="margin-top:18px"><header class="panel-header"><h3>Acciones del supervisor</h3></header><div class="quick-grid">
+          <button class="quick-action" data-demo-action="Asignar tarea"><strong>Asignar tarea</strong><span>Crear trabajo para un operario</span></button>
+          <button class="quick-action" data-demo-action="Consultar operarios"><strong>Consultar operarios</strong><span>Disponibilidad y rendimiento</span></button>
+          <button class="quick-action" data-demo-action="Generar reporte operativo"><strong>Reporte operativo</strong><span>Resumen de cumplimiento</span></button>
+        </div></section>
+      </main>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

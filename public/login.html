@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acceso al sistema interno de MEVIPLAST.">
+  <title>Iniciar sesion | MEVIPLAST</title>
+  <link rel="icon" href="assets/logo-meviplast.png">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-brand" aria-label="Presentacion del sistema">
+      <a class="back-link" href="index.html">← Volver al sitio</a>
+      <div class="brand-copy">
+        <img src="assets/logo-meviplast.png" alt="Logo de MEVIPLAST">
+        <p class="eyebrow">Sistema de gestion industrial</p>
+        <h1>Control operativo en un solo lugar</h1>
+        <p>Acceso seguro para administradores, supervisores y operarios de MEVIPLAST.</p>
+      </div>
+    </section>
+
+    <section class="login-panel">
+      <form class="login-card" id="login-form" novalidate>
+        <div class="login-heading">
+          <span>Acceso interno</span>
+          <h2>Iniciar sesion</h2>
+          <p>Ingresa las credenciales asignadas a tu rol.</p>
+        </div>
+
+        <div class="field">
+          <label for="username">Usuario</label>
+          <input id="username" name="username" autocomplete="username" required>
+          <small></small>
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <div class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" id="toggle-password" aria-label="Mostrar contraseña">Ver</button>
+          </div>
+          <small></small>
+        </div>
+
+        <button class="login-button" type="submit">Ingresar</button>
+        <p class="login-status" id="login-status" role="alert" aria-live="polite"></p>
+
+        <div class="demo-access">
+          <strong>Credenciales de demostracion</strong>
+          <button type="button" data-user="admin" data-password="admin123">Administrador</button>
+          <button type="button" data-user="supervisor" data-password="super123">Supervisor</button>
+          <button type="button" data-user="operario" data-password="oper123">Operario</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script src="js/login.js"></script>
+</body>
+</html>
+
