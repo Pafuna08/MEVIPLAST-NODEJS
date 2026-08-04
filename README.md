@@ -9,7 +9,7 @@ en `config`, `controllers`, `routes`, `services`).
 ## Estructura del proyecto
 
 ```
-meviplast/
+meviplast-nodejs/
 ├── public/                      (vista — se sirve como estático)
 │   ├── assets/
 │   ├── css/
@@ -44,13 +44,13 @@ meviplast/
 
 ## Cómo se mapean las 5 épicas a la estructura
 
-| Épica  | Módulo                  | Archivos principales                                                |
-|--------|--------------------------|-----------------------------------------------------------------------|
-| EP-001 | Producción                | `controllers/produccion.*`, `services/produccion.*`, `routes/produccion.routes.js` |
-| EP-002 | Materia Prima              | `controllers/materiaPrima.*`, `services/materiaPrima.*`, `routes/materiaPrima.routes.js` |
-| EP-003 | Inventario / Ventas        | `controllers/inventario.*`, `controllers/ventas.*` y sus services/routes |
-| EP-004 | Seguridad                  | `services/auth.service.js`, `controllers/usuarios.*`, `middlewares/auth.middleware.js`, `utils/auditoria.js` |
-| EP-005 | Reportes                   | `controllers/reportes.*`, `services/reportes.*` (agrega datos de los demás módulos) |
+| Épica  | Módulo              | Archivos principales                                                                                         |
+| ------ | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| EP-001 | Producción          | `controllers/produccion.*`, `services/produccion.*`, `routes/produccion.routes.js`                           |
+| EP-002 | Materia Prima       | `controllers/materiaPrima.*`, `services/materiaPrima.*`, `routes/materiaPrima.routes.js`                     |
+| EP-003 | Inventario / Ventas | `controllers/inventario.*`, `controllers/ventas.*` y sus services/routes                                     |
+| EP-004 | Seguridad           | `services/auth.service.js`, `controllers/usuarios.*`, `middlewares/auth.middleware.js`, `utils/auditoria.js` |
+| EP-005 | Reportes            | `controllers/reportes.*`, `services/reportes.*` (agrega datos de los demás módulos)                          |
 
 Cada módulo sigue el mismo flujo: **routes → controller → service → MySQL**,
 y los services registran automáticamente en la tabla `auditoria` (bitácora)
