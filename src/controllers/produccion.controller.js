@@ -2,11 +2,16 @@ const produccionService = require("../services/produccion.service");
 
 async function listar(req, res) {
   try {
-    res.json(await produccionService.listar());
+    res.json(await produccionService.listar(req.usuario));
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error al listar produccion" });
   }
+}
+
+async function listarOperarios(req, res) {
+  try { res.json(await produccionService.listarOperarios()); }
+  catch (error) { console.error(error); res.status(500).json({ mensaje: "Error al listar operarios" }); }
 }
 
 async function crear(req, res) {
@@ -30,11 +35,22 @@ async function cambiarEstado(req, res) {
     if (!validos.includes(estado)) {
       return res.status(400).json({ mensaje: `estado debe ser uno de: ${validos.join(", ")}` });
     }
-    const actualizado = await produccionService.cambiarEstado(req.params.id, estado, req.usuario.id);
+    const actualizado = await produccionService.cambiarEstado(req.params.id, estado, req.usuario);
     res.json(actualizado);
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error al cambiar estado de produccion" });
+  }
+}
+
+async function registrarAvance(req, res) {
+  try {
+    const cantidad = Number(req.body.cantidad);
+    if (!Number.isFinite(cantidad) || cantidad <= 0) return res.status(400).json({ mensaje: "cantidad debe ser mayor que cero" });
+    res.json(await produccionService.registrarAvance(req.params.id, { cantidad, lote: req.body.lote, observaciones: req.body.observaciones }, req.usuario));
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ mensaje: error.message || "Error al registrar avance" });
   }
 }
 
@@ -48,4 +64,4 @@ async function eliminar(req, res) {
   }
 }
 
-module.exports = { listar, crear, cambiarEstado, eliminar };
+module.exports = { listar, listarOperarios, crear, cambiarEstado, registrarAvance, eliminar };
