@@ -1,6 +1,5 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
-const inventarioService = require("./inventario.service");
 
 async function listar() {
   const [filas] = await pool.query(
@@ -18,27 +17,63 @@ async function obtenerPorId(id) {
 }
 
 async function registrar({ cliente, producto, cantidad, precio_unitario }, actorId) {
-  // Buscamos el producto en inventario para descontar stock (EP-003)
-  const [inv] = await pool.query("SELECT id, cantidad FROM inventario WHERE producto = ?", [producto]);
-  if (inv.length === 0 || inv[0].cantidad < cantidad) {
-    throw new Error("Stock insuficiente en inventario para esta venta");
+  const cantidadNumerica = Number(cantidad);
+  const precioUnitarioNumerico = Number(precio_unitario);
+  if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
+    throw new Error("La cantidad debe ser mayor que cero");
+  }
+  if (!Number.isFinite(precioUnitarioNumerico) || precioUnitarioNumerico <= 0) {
+    throw new Error("El precio unitario debe ser mayor que cero");
   }
 
-  const [resultado] = await pool.query(
-    "INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, usuario_id) VALUES (?, ?, ?, ?, ?)",
-    [cliente, producto, cantidad, precio_unitario, actorId]
-  );
+  const connection = await pool.getConnection();
+  let saleId;
+  let transactionStarted = false;
+  try {
+    await connection.beginTransaction();
+    transactionStarted = true;
 
-  await inventarioService.registrarSalida(inv[0].id, cantidad, actorId);
+    const [inventario] = await connection.query(
+      "SELECT id, cantidad FROM inventario WHERE producto = ? FOR UPDATE",
+      [producto]
+    );
+    if (inventario.length === 0 || Number(inventario[0].cantidad) < cantidadNumerica) {
+      throw new Error("Stock insuficiente en inventario para esta venta");
+    }
+
+    const [resultado] = await connection.query(
+      "INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, usuario_id) VALUES (?, ?, ?, ?, ?)",
+      [cliente, producto, cantidadNumerica, precioUnitarioNumerico, actorId]
+    );
+    await connection.query(
+      "UPDATE inventario SET cantidad = cantidad - ? WHERE id = ? AND cantidad >= ?",
+      [cantidadNumerica, inventario[0].id, cantidadNumerica]
+    );
+    await connection.commit();
+    transactionStarted = false;
+    saleId = resultado.insertId;
+  } catch (error) {
+    if (transactionStarted) await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  await registrarAuditoria({
+    usuarioId: actorId,
+    accion: "SALIDA_INVENTARIO",
+    tabla: "inventario",
+    detalle: `Salida de ${cantidadNumerica} unidades de '${producto}'`,
+  });
 
   await registrarAuditoria({
     usuarioId: actorId,
     accion: "REGISTRAR_VENTA",
     tabla: "ventas",
-    detalle: `Venta de ${cantidad} '${producto}' a '${cliente}'`,
+    detalle: `Venta de ${cantidadNumerica} '${producto}' a '${cliente}'`,
   });
 
-  return obtenerPorId(resultado.insertId);
+  return obtenerPorId(saleId);
 }
 
 module.exports = { listar, obtenerPorId, registrar };
