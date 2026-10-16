@@ -2,22 +2,35 @@ function sanitizarTexto(valor, maxLongitud = 255) {
   if (valor === null || valor === undefined) return "";
 
   const texto = String(valor)
-    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, " $1 ")
-    .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, " $1 ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(
+      /(?:javascript\s*:|on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))/gi,
+      " ",
+    )
+    .replace(
+      /\b(?:alert|confirm|prompt|eval|document\.cookie)\s*\([^)]*\)/gi,
+      " ",
+    )
     .replace(/&nbsp;/gi, " ")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
     .replace(/&#39;/gi, "'")
     .replace(/&quot;/gi, '"')
     .replace(/[\u0000-\u001F\u007F]+/g, " ")
+    .replace(/\\["']/g, "")
+    .replace(/^[\s"'`\\]+|[\s"'`\\]+$/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
   return texto.slice(0, maxLongitud);
 }
 
-function sanitizarNumero(valor, { minimo = 0, maximo = Number.MAX_SAFE_INTEGER } = {}) {
+function sanitizarNumero(
+  valor,
+  { minimo = 0, maximo = Number.MAX_SAFE_INTEGER } = {},
+) {
   if (valor === null || valor === undefined || valor === "") return 0;
 
   const numero = Number(String(valor).replace(/[^0-9.-]/g, ""));
@@ -40,12 +53,18 @@ function sanitizarObjeto(valor) {
       if (!nombre) return;
 
       const claveNormalizada = nombre.toLowerCase();
-      const esNumero = /(cantidad|precio|stock|min|max|total|id|activo|cantidad_producida|cantidad_total)/i.test(claveNormalizada);
+      const esNumero =
+        /(cantidad|precio|stock|min|max|total|id|activo|cantidad_producida|cantidad_total)/i.test(
+          claveNormalizada,
+        );
 
       if (item !== null && typeof item === "object" && !Array.isArray(item)) {
         limpio[nombre] = sanitizarObjeto(item);
       } else if (typeof item === "string") {
-        if (claveNormalizada.includes("usuario") || claveNormalizada.includes("user")) {
+        if (
+          claveNormalizada.includes("usuario") ||
+          claveNormalizada.includes("user")
+        ) {
           limpio[nombre] = sanitizarTexto(item, 50).toLowerCase();
           return;
         }
