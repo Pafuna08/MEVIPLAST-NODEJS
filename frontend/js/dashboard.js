@@ -1,4 +1,31 @@
-const session = JSON.parse(localStorage.getItem("meviplastSession") || "null"),
+const sanitizeText = (value, maxLength = 255) => String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[\u0000-\u001F\u007F]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength),
+  sanitizePayload = (value) => {
+    if (Array.isArray(value)) return value.map((item) => sanitizePayload(item));
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => {
+          const lowerKey = key.toLowerCase();
+          if (typeof item === "string") {
+            const clean = sanitizeText(item, /(password|observaciones|cliente|producto|nombre|usuario|tipo|proveedor|ubicacion|lote)/i.test(lowerKey) ? 255 : 80);
+            const normalized = /(cantidad|precio|stock|min|max|total|id|activo)/i.test(lowerKey)
+              ? Number(clean) || 0
+              : lowerKey.includes("usuario")
+                ? clean.toLowerCase().replace(/[^a-z0-9._-]/g, "")
+                : clean;
+            return [key, normalized];
+          }
+          return [key, sanitizePayload(item)];
+        }),
+      );
+    }
+    return value;
+  },
+  session = JSON.parse(localStorage.getItem("meviplastSession") || "null"),
   token = localStorage.getItem("meviplastToken"),
   role = document.body.dataset.role,
   apiRole = {
@@ -294,7 +321,7 @@ app.addEventListener("submit", async (e) => {
   if (!f.matches("form")) return;
   e.preventDefault();
   const formId = f.getAttribute("id");
-  let d = Object.fromEntries(new FormData(f));
+  let d = sanitizePayload(Object.fromEntries(new FormData(f)));
   try {
     if (formId === "user-form")
       await api("/api/usuarios", { method: "POST", body: JSON.stringify(d) });
