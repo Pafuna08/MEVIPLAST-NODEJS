@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", apiRoutes);
 
 // Vista (frontend estatico: index, login y dashboards por rol)
-app.use(express.static(path.join(__dirname, "..", "public")));
+app.use(express.static(path.join(__dirname, "..", "..", "frontend")));
 
 // Manejo de rutas de API no encontradas
 app.use("/api", (req, res) => {

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Operario | MEVIPLAST</title>
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body data-role="Operario">
+    <div class="dashboard">
+      <aside class="sidebar">
+        <a class="sidebar-brand" href="dashboard-operario.html"
+          ><img src="assets/logo-meviplast.png" alt="" /><span
+            >MEVIPLAST</span
+          ></a
+        >
+        <p class="role-label">Operario</p>
+        <nav class="side-nav">
+          <a class="active" href="#inicio" data-view="inicio"
+            ><span class="nav-icon">IN</span>Inicio</a
+          ><a href="#tareas" data-view="tareas"
+            ><span class="nav-icon">TA</span>Mis tareas</a
+          ><a href="#registrar" data-view="registrar"
+            ><span class="nav-icon">RG</span>Registrar producción</a
+          ><a href="#historial" data-view="historial"
+            ><span class="nav-icon">HI</span>Mi historial</a
+          >
+        </nav>
+        <div class="sidebar-footer">
+          <button id="logout" type="button">Cerrar sesión</button>
+        </div>
+      </aside>
+      <section class="workspace">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="sidebar-toggle" type="button">☰</button>
+            <div>
+              <h1>Mi jornada de producción</h1>
+              <p data-today></p>
+            </div>
+          </div>
+          <div class="user-menu">
+            <span class="user-avatar">OP</span>
+            <div>
+              <strong data-user-name></strong><span data-role-name></span>
+            </div>
+          </div>
+        </header>
+        <main class="main-content" id="app"></main>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>
