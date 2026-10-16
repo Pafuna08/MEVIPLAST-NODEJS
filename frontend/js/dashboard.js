@@ -67,16 +67,14 @@ document
 document
   .querySelectorAll("[data-role-name]")
   .forEach((e) => (e.textContent = role));
-document
-  .querySelectorAll("[data-today]")
-  .forEach(
-    (e) =>
-      (e.textContent = new Intl.DateTimeFormat("es-CO", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }).format(new Date())),
-  );
+document.querySelectorAll("[data-today]").forEach(
+  (e) =>
+    (e.textContent = new Intl.DateTimeFormat("es-CO", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date())),
+);
 document
   .querySelector(".sidebar-toggle")
   ?.addEventListener("click", () =>
