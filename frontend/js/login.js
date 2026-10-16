@@ -2,15 +2,27 @@
 const rolesInfo = {
   admin: { nombre: "Administrador", destino: "dashboard-admin.html" },
   supervisor: { nombre: "Supervisor", destino: "dashboard-supervisor.html" },
-  operario: { nombre: "Operario", destino: "dashboard-operario.html" }
+  operario: { nombre: "Operario", destino: "dashboard-operario.html" },
 };
 
-const sanitizeText = (value, maxLength = 255) => String(value ?? "")
-  .replace(/<[^>]*>/g, " ")
-  .replace(/[\u0000-\u001F\u007F]+/g, " ")
-  .replace(/\s+/g, " ")
-  .trim()
-  .slice(0, maxLength);
+const sanitizeText = (value, maxLength = 255) =>
+  String(value ?? "")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(
+      /(?:javascript\s*:|on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))/gi,
+      " ",
+    )
+    .replace(
+      /\b(?:alert|confirm|prompt|eval|document\.cookie)\s*\([^)]*\)/gi,
+      " ",
+    )
+    .replace(/[\u0000-\u001F\u007F]+/g, " ")
+    .replace(/\\["']/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
 
 const form = document.querySelector("#login-form");
 const username = document.querySelector("#username");
@@ -34,7 +46,10 @@ toggle.addEventListener("click", () => {
   const visible = password.type === "text";
   password.type = visible ? "password" : "text";
   toggle.textContent = visible ? "Ver" : "Ocultar";
-  toggle.setAttribute("aria-label", visible ? "Mostrar contraseña" : "Ocultar contraseña");
+  toggle.setAttribute(
+    "aria-label",
+    visible ? "Mostrar contraseña" : "Ocultar contraseña",
+  );
 });
 
 document.querySelectorAll("[data-user]").forEach((button) => {
@@ -65,13 +80,18 @@ form.addEventListener("submit", async (event) => {
   if (!valid) return;
 
   try {
-    const usuarioLimpio = sanitizeText(userKey, 50).replace(/[^a-z0-9._-]/gi, "").toLowerCase();
+    const usuarioLimpio = sanitizeText(userKey, 50)
+      .replace(/[^a-z0-9._-]/gi, "")
+      .toLowerCase();
     const passwordLimpia = sanitizeText(password.value, 128);
 
     const respuesta = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario: usuarioLimpio, password: passwordLimpia })
+      body: JSON.stringify({
+        usuario: usuarioLimpio,
+        password: passwordLimpia,
+      }),
     });
 
     const datos = await respuesta.json();
@@ -83,14 +103,16 @@ form.addEventListener("submit", async (event) => {
 
     const info = rolesInfo[datos.usuario.rol];
     localStorage.setItem("meviplastToken", datos.token);
-    localStorage.setItem("meviplastSession", JSON.stringify({
-      username: datos.usuario.usuario,
-      role: info ? info.nombre : datos.usuario.rol,
-      loginAt: new Date().toISOString()
-    }));
+    localStorage.setItem(
+      "meviplastSession",
+      JSON.stringify({
+        username: datos.usuario.usuario,
+        role: info ? info.nombre : datos.usuario.rol,
+        loginAt: new Date().toISOString(),
+      }),
+    );
     window.location.href = info ? info.destino : "index.html";
   } catch (err) {
     status.textContent = "No fue posible conectar con el servidor.";
   }
 });
-
