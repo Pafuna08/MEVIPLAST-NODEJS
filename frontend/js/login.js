@@ -5,6 +5,13 @@ const rolesInfo = {
   operario: { nombre: "Operario", destino: "dashboard-operario.html" }
 };
 
+const sanitizeText = (value, maxLength = 255) => String(value ?? "")
+  .replace(/<[^>]*>/g, " ")
+  .replace(/[\u0000-\u001F\u007F]+/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+  .slice(0, maxLength);
+
 const form = document.querySelector("#login-form");
 const username = document.querySelector("#username");
 const password = document.querySelector("#password");
@@ -58,10 +65,13 @@ form.addEventListener("submit", async (event) => {
   if (!valid) return;
 
   try {
+    const usuarioLimpio = sanitizeText(userKey, 50).replace(/[^a-z0-9._-]/gi, "").toLowerCase();
+    const passwordLimpia = sanitizeText(password.value, 128);
+
     const respuesta = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario: userKey, password: password.value })
+      body: JSON.stringify({ usuario: usuarioLimpio, password: passwordLimpia })
     });
 
     const datos = await respuesta.json();
