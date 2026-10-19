@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const apiRoutes = require("./routes");
+const { sanitizarObjeto } = require("./utils/sanitizar");
 
 const app = express();
 
@@ -9,6 +10,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === "object") {
+    req.body = sanitizarObjeto(req.body);
+  }
+  if (req.query && typeof req.query === "object") {
+    req.query = sanitizarObjeto(req.query);
+  }
+  if (req.params && typeof req.params === "object") {
+    req.params = sanitizarObjeto(req.params);
+  }
+  next();
+});
 
 // API REST (todos los modulos: seguridad, materia prima, produccion, inventario, ventas, reportes)
 app.use("/api", apiRoutes);

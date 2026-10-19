@@ -1,4 +1,51 @@
-const session = JSON.parse(localStorage.getItem("meviplastSession") || "null"),
+const sanitizeText = (value, maxLength = 255) =>
+    String(value ?? "")
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(
+        /(?:javascript\s*:|on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))/gi,
+        " ",
+      )
+      .replace(
+        /\b(?:alert|confirm|prompt|eval|document\.cookie)\s*\([^)]*\)/gi,
+        " ",
+      )
+      .replace(/[\u0000-\u001F\u007F]+/g, " ")
+      .replace(/\\["']/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, maxLength),
+  sanitizePayload = (value) => {
+    if (Array.isArray(value)) return value.map((item) => sanitizePayload(item));
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => {
+          const lowerKey = key.toLowerCase();
+          if (typeof item === "string") {
+            const clean = sanitizeText(
+              item,
+              /(password|observaciones|cliente|producto|nombre|usuario|tipo|proveedor|ubicacion|lote)/i.test(
+                lowerKey,
+              )
+                ? 255
+                : 80,
+            );
+            const normalized =
+              /(cantidad|precio|stock|min|max|total|id|activo)/i.test(lowerKey)
+                ? Number(clean) || 0
+                : lowerKey.includes("usuario")
+                  ? clean.toLowerCase().replace(/[^a-z0-9._-]/g, "")
+                  : clean;
+            return [key, normalized];
+          }
+          return [key, sanitizePayload(item)];
+        }),
+      );
+    }
+    return value;
+  },
+  session = JSON.parse(localStorage.getItem("meviplastSession") || "null"),
   token = localStorage.getItem("meviplastToken"),
   role = document.body.dataset.role,
   apiRole = {
@@ -39,6 +86,10 @@ const esc = (v) =>
           '"': "&quot;",
         })[c],
     ),
+  limpiarTextoVisible = (v) =>
+    sanitizeText(String(v ?? ""))
+      .replace(/^[\s"'`\\]+|[\s"'`\\]+$/g, "")
+      .trim(),
   num = (v) =>
     new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 }).format(
       Number(v || 0),
@@ -51,8 +102,10 @@ const esc = (v) =>
     }).format(Number(v || 0)),
   badge = (v) =>
     `<span class="status ${v === "finalizado" ? "success" : v === "en_proceso" ? "progress" : v === "cancelado" ? "alert" : "pending"}">${esc(v.replace("_", " "))}</span>`;
-const tbl = (heads, rows) =>
-    `<div class="table-wrap"><table><thead><tr>${heads.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="${heads.length}">No hay datos para mostrar.</td></tr>`}</tbody></table></div>`,
+const tbl = (heads, rows) => {
+    const contenido = Array.isArray(rows) ? rows.join("") : rows || `<tr><td colspan="${heads.length}">No hay datos para mostrar.</td></tr>`;
+    return `<div class="table-wrap"><table><thead><tr>${heads.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${contenido}</tbody></table></div>`;
+  },
   form = (title, fields, id) =>
     `<section class="panel form-panel"><header class="panel-header"><h3>${title}</h3></header><form id="${id}" class="data-form">${fields}<button class="primary-action">Guardar</button></form></section>`;
 function toast(m) {
@@ -60,6 +113,46 @@ function toast(m) {
   e.textContent = m;
   e.classList.add("show");
   setTimeout(() => e.classList.remove("show"), 3000);
+}
+function confirmarEliminacion({
+  usuario,
+  texto = "Se eliminará del sistema y no podrá iniciar sesión.",
+} = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "confirm-overlay";
+    overlay.innerHTML = `
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-label="Confirmar eliminación">
+        <div class="confirm-header">
+          <div class="confirm-icon">!</div>
+          <div>
+            <h3>Confirmar eliminación</h3>
+            <p>¿Deseas eliminar al usuario <strong>${esc(usuario || "este usuario")}</strong>?<br>${texto}</p>
+          </div>
+        </div>
+        <div class="confirm-actions">
+          <button class="confirm-cancel" type="button">Cancelar</button>
+          <button class="confirm-delete" type="button">Eliminar</button>
+        </div>
+      </div>
+    `;
+
+    const cancel = overlay.querySelector(".confirm-cancel");
+    const deleteBtn = overlay.querySelector(".confirm-delete");
+
+    const close = (value) => {
+      overlay.remove();
+      resolve(value);
+    };
+
+    cancel.addEventListener("click", () => close(false));
+    deleteBtn.addEventListener("click", () => close(true));
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) close(false);
+    });
+
+    document.body.appendChild(overlay);
+  });
 }
 document
   .querySelectorAll("[data-user-name]")
@@ -147,11 +240,11 @@ async function home() {
 }
 async function users() {
   let a = await api("/api/usuarios");
-  app.innerHTML = `<div class="page-intro"><div><h2>Gestión de usuarios</h2><p>Crea cuentas y activa o desactiva accesos.</p></div></div>${form("Nuevo usuario", '<label>Nombre<input name="nombre" required></label><label>Usuario<input name="usuario" required></label><label>Contraseña<input name="password" type="password" minlength="6" required></label><label>Rol<select name="rol"><option value="operario">Operario</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></label>', "user-form")}<section class="panel"><header class="panel-header"><h3>Usuarios registrados</h3></header>${tbl(
+  app.innerHTML = `<div class="page-intro"><div><h2>Gestión de usuarios</h2><p>Crea cuentas, activa o desactiva accesos y elimina usuarios si eres administrador.</p></div></div>${form("Nuevo usuario", '<label>Nombre<input name="nombre" required></label><label>Usuario<input name="usuario" required></label><label>Contraseña<input name="password" type="password" minlength="6" required></label><label>Rol<select name="rol"><option value="operario">Operario</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></label>', "user-form")}<section class="panel"><header class="panel-header"><h3>Usuarios registrados</h3></header>${tbl(
     ["Nombre", "Usuario", "Rol", "Estado", "Acción"],
     a.map(
       (u) =>
-        `<tr><td>${esc(u.nombre)}</td><td>${esc(u.usuario)}</td><td>${u.rol}</td><td>${u.activo ? "Activo" : "Inactivo"}</td><td><button class="text-action" data-toggle="${u.id}" data-active="${u.activo ? 0 : 1}">${u.activo ? "Desactivar" : "Activar"}</button></td></tr>`,
+        `<tr><td>${esc(limpiarTextoVisible(u.nombre))}</td><td>${esc(limpiarTextoVisible(u.usuario))}</td><td>${u.rol}</td><td>${u.activo ? "Activo" : "Inactivo"}</td><td><div class="inline-actions"><button class="text-action" data-toggle="${u.id}" data-active="${u.activo ? 0 : 1}">${u.activo ? "Desactivar" : "Activar"}</button>${apiRole === "admin" && u.usuario !== session.username ? `<button class="text-action danger" data-delete="${u.id}" data-user="${esc(limpiarTextoVisible(u.usuario))}">Eliminar</button>` : ""}</div></td></tr>`,
     ),
   )}</section>`;
 }
@@ -275,6 +368,30 @@ app.addEventListener("click", async (e) => {
     } catch (x) {
       toast(x.message);
     }
+
+  let d = e.target.closest("[data-delete]");
+  if (d) {
+    const id = d.dataset.delete;
+    const usuario = d.dataset.user;
+    if (usuario === session.username) {
+      toast("No puedes eliminar tu propio usuario.");
+      return;
+    }
+
+    const confirmado = await confirmarEliminacion({
+      usuario,
+      texto: "Se eliminará del sistema y no podrá iniciar sesión.",
+    });
+    if (!confirmado) return;
+
+    try {
+      await api(`/api/usuarios/${id}`, { method: "DELETE" });
+      toast("Usuario eliminado correctamente.");
+      render();
+    } catch (x) {
+      toast(x.message);
+    }
+  }
 });
 app.addEventListener("change", async (e) => {
   if (e.target.matches(".state-select"))
@@ -294,7 +411,7 @@ app.addEventListener("submit", async (e) => {
   if (!f.matches("form")) return;
   e.preventDefault();
   const formId = f.getAttribute("id");
-  let d = Object.fromEntries(new FormData(f));
+  let d = sanitizePayload(Object.fromEntries(new FormData(f)));
   try {
     if (formId === "user-form")
       await api("/api/usuarios", { method: "POST", body: JSON.stringify(d) });
