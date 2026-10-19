@@ -1,8 +1,8 @@
 // Mapa de rol (tal como lo devuelve la API) -> nombre visible y dashboard destino
 const rolesInfo = {
-  admin: { nombre: "Administrador", destino: "dashboard-admin.html" },
-  supervisor: { nombre: "Supervisor", destino: "dashboard-supervisor.html" },
-  operario: { nombre: "Operario", destino: "dashboard-operario.html" },
+  admin: { nombre: "Administrador", destino: "dashboard.html" },
+  supervisor: { nombre: "Supervisor", destino: "dashboard.html" },
+  operario: { nombre: "Operario", destino: "dashboard.html" },
 };
 
 const sanitizeText = (value, maxLength = 255) =>
