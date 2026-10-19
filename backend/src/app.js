@@ -26,8 +26,10 @@ app.use((req, res, next) => {
 // API REST (todos los modulos: seguridad, materia prima, produccion, inventario, ventas, reportes)
 app.use("/api", apiRoutes);
 
-// Vista (frontend estatico: index, login y dashboards por rol)
-app.use(express.static(path.join(__dirname, "..", "..", "frontend")));
+// El build React tiene prioridad; el resto del sitio estático permanece disponible.
+const frontendPath = path.join(__dirname, "..", "..", "frontend");
+app.use(express.static(path.join(frontendPath, "dist")));
+app.use(express.static(frontendPath));
 
 // Manejo de rutas de API no encontradas
 app.use("/api", (req, res) => {
