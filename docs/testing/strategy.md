@@ -23,4 +23,4 @@ npm run build --prefix frontend
 - Respaldo y restauración de base de datos comprobados.
 - La auditoría todavía reporta vulnerabilidades altas transitivas en herramientas de desarrollo; revisar `SECURITY.md`.
 
-Los resultados vigentes y su vínculo con la versión están en [`../evidence/EV-2026-10-19.md`](../evidence/EV-2026-10-19.md).
+Los resultados vigentes están en [`../evidence/EV-2026-10-20.md`](../evidence/EV-2026-10-20.md) y la evidencia histórica de navegación en [`../evidence/EV-2026-10-19.md`](../evidence/EV-2026-10-19.md).

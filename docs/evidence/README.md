@@ -7,3 +7,4 @@ Usa identificadores `EV-AAAA-MM-DD-NN`. Cada registro debe indicar requisito o c
 | EV-2026-10-19-01 | Dashboard React por perfiles | Prueba manual de navegación | Verificado localmente | [`EV-2026-10-19.md`](EV-2026-10-19.md) |
 | EV-2026-10-19-02 | Sanitización backend | Prueba automatizada | 3 aprobadas | [`EV-2026-10-19.md`](EV-2026-10-19.md) |
 | EV-2026-10-19-03 | Build frontend | Compilación Vite | Aprobado | [`EV-2026-10-19.md`](EV-2026-10-19.md) |
+| EV-2026-10-20-01 | Install, tests, audit y build | Ejecución local en Windows | Aprobado con alertas altas no críticas | [`EV-2026-10-20.md`](EV-2026-10-20.md) |

@@ -1,6 +1,9 @@
 # Documentación del repositorio
 
+- [Evaluación frente a la arquitectura ADSO](adso-review-2026-10-20.md)
 - [Estado del proyecto y brechas](project-status.md)
+- [Matriz de trazabilidad](requirements/traceability.md)
+- [Manual de usuario, borrador](user-guide.md)
 - [Arquitectura](architecture/overview.md)
 - [Catálogo API](api/endpoints.md)
 - [Esquema de datos](data/schema.md)
