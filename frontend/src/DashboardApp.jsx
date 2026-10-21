@@ -145,11 +145,14 @@ async function api(url, token, options = {}) {
   });
   const data = response.status === 204 ? null : await response.json().catch(() => ({}));
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401) {
     localStorage.removeItem("meviplastToken");
     localStorage.removeItem("meviplastSession");
     window.location.replace("/login.html");
     return null;
+  }
+  if (response.status === 403) {
+    throw new Error(data?.mensaje || "No tienes permisos para esta sección.");
   }
   if (!response.ok) {
     throw new Error(data?.mensaje || "No fue posible completar la operación.");
@@ -159,14 +162,14 @@ async function api(url, token, options = {}) {
 
 async function loadView(view, role, token) {
   if (view === "inicio") {
-    const [orders, inventory] = await Promise.all([
-      api("/api/produccion", token),
+    const orders = await api("/api/produccion", token);
+    if (role.apiRole === "operario") {
+      return { orders, inventory: [] };
+    }
+    const [inventory, sales] = await Promise.all([
       api("/api/inventario", token),
+      api("/api/reportes/ventas", token),
     ]);
-    const sales =
-      role.apiRole === "operario"
-        ? null
-        : await api("/api/reportes/ventas", token);
     return { orders, inventory, sales };
   }
   if (view === "usuarios") return api("/api/usuarios", token);
@@ -686,7 +689,11 @@ function Home({ data, role, navigate }) {
         <Panel title="Estado">
           <ul className="activity-list">
             <li><strong>{active.length} órdenes activas</strong><span>Revisa el seguimiento para actualizar.</span></li>
-            <li><strong>{data.inventory.filter((item) => Number(item.cantidad) === 0).length} productos agotados</strong><span>Inventario actual.</span></li>
+            {role === "operario" ? (
+              <li><strong>{data.orders.filter((order) => order.estado === "finalizado").length} órdenes completadas</strong><span>Tu historial de producción.</span></li>
+            ) : (
+              <li><strong>{data.inventory.filter((item) => Number(item.cantidad) === 0).length} productos agotados</strong><span>Inventario actual.</span></li>
+            )}
           </ul>
         </Panel>
       </div>
