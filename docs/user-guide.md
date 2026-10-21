@@ -19,9 +19,9 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 
 - **Inicio:** resumen operativo, órdenes, inventario y ventas.
 - **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista.
-- **Materias primas:** registrar material y consultar existencia/bajo stock. No hay flujo de compras ni historial de consumo.
-- **Inventario:** ingresar producto terminado o sumar unidades a una referencia.
-- **Producción:** consultar órdenes y cambiar estado.
+- **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock; registrar compras, ajustes y consumos asociados a una orden.
+- **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
+- **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, producto, cantidad y precio. El total se calcula y el stock disminuye si hay existencias.
 - **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador.
 
@@ -33,7 +33,8 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Seguimiento:** consultar órdenes y cambiar estados.
 - **Reportes:** consultar resúmenes.
 
-La API autoriza ventas a supervisor, pero la interfaz no muestra esa opción. Confirmar esta diferencia con el administrador antes de usar el perfil para ventas.
+- **Materias primas:** consultar movimientos y registrar consumo asociado a una orden. La asociación de materia prima a la orden no consume stock automáticamente.
+- **Ventas:** registrar ventas; el descuento de inventario y el movimiento relacionado se guardan en una transacción.
 
 ## Operario
 
@@ -41,11 +42,22 @@ La API autoriza ventas a supervisor, pero la interfaz no muestra esa opción. Co
 - **Registrar producción:** elegir una orden abierta e indicar cantidad, lote y observaciones. No superar la meta pendiente; el avance incrementa inventario terminado.
 - **Mi historial:** consultar órdenes asignadas.
 
+## Vendedor
+
+- **Ventas:** registrar ventas y consultar únicamente las ventas registradas con su cuenta.
+- La vista de productos consulta existencias para seleccionar el artículo; no permite modificar inventario.
+
+## Almacenista
+
+- **Materias primas:** registrar compras y ajustes, consultar existencias e historial de movimientos.
+- **Inventario:** registrar ingresos y salidas manuales, y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
+
 ## Problemas frecuentes
 
 - Si una vista no carga, comprueba conexión y usa **Reintentar**; si persiste, reporta perfil, sección y hora.
 - Si aparece stock insuficiente, solicita revisar la existencia al responsable autorizado.
-- No registres compras, consumo, comprobantes o exportaciones: esas operaciones no están disponibles en la versión revisada.
+- Si una salida excede el saldo disponible, revisa el stock antes de volver a intentar; la operación se rechaza sin aplicar cambios parciales.
+- Las modificaciones de órdenes están limitadas a órdenes pendientes sin avance. El consumo de materia prima debe registrarse explícitamente y asociarse a la orden.
 
 ## Aprobación pendiente
 

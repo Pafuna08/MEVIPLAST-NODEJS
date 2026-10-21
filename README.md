@@ -2,17 +2,19 @@
 
 Sistema web interno para apoyar la gestión de producción, materias primas, inventario terminado, ventas y reportes de MEVIPLAST.
 
-**Estado:** en desarrollo académico. No se ha aprobado como despliegue productivo ni se han verificado disponibilidad, restauración de copias o compatibilidad en todos los navegadores.
+**Estado:** en desarrollo académico. La rama `feature/MEVI-9-completar-backlog` contiene cambios locales aún no integrados ni aceptados. No se ha aprobado como despliegue productivo ni se han verificado disponibilidad, restauración de copias o compatibilidad en todos los navegadores.
 
-## Funcionalidad verificada en código
+## Funcionalidad presente en la rama en revisión
 
-- Inicio de sesión con JWT y contraseñas almacenadas con bcryptjs.
-- Panel React/Vite en una sola página, con vistas para Administrador, Supervisor y Operario.
-- Usuarios, materias primas, producción, inventario terminado, ventas y reportes básicos.
-- Los avances de producción incrementan inventario y las ventas descuentan existencias dentro de una transacción.
-- API REST protegida por token y permisos para los roles `admin`, `supervisor` y `operario`.
+- Autenticación con JWT y contraseñas almacenadas con bcryptjs.
+- Panel React/Vite con vistas para Administrador, Supervisor, Operario, Vendedor y Almacenista.
+- Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes básicos.
+- Movimientos de materias primas e inventario terminado registrados junto con sus saldos en transacciones.
+- Edición de órdenes de producción restringida a órdenes pendientes sin avances registrados.
+- Ventas del vendedor filtradas por usuario; el registro de venta descuenta existencias en la transacción.
+- API REST con autenticación y controles de acceso por rol.
 
-El panel no define roles de acceso `vendedor` ni `almacenista`. La recuperación de contraseña, el bloqueo de intentos, las compras/consumos trazables de materia prima, los comprobantes de venta, el análisis de rendimiento por operario y la exportación Excel no están implementados. La impresión del reporte depende de la función de imprimir del navegador.
+La presencia en código no equivale a aceptación del requisito. Los cambios de roles y ledger siguen pendientes de pruebas de integración con MySQL y aprobación de las reglas de acceso. La recuperación de contraseña, el bloqueo de intentos fallidos y los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
@@ -40,7 +42,7 @@ npm run db:init --prefix backend
 npm start --prefix backend
 ```
 
-`db:init` crea o actualiza el esquema y agrega cuentas y datos de demostración cuando no existen. Úsalo únicamente en una base local de desarrollo; haz copia de seguridad antes de ejecutarlo sobre una base con información real. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
+**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. La migración de roles y movimientos se probó en una instancia temporal aislada de MariaDB con datos ficticios; no se aplicó a una base existente, y la integración de la aplicación con MySQL sigue pendiente. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 
@@ -62,7 +64,7 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
-Las pruebas automatizadas actuales cubren tres casos de sanitización. Aún falta ampliar la cobertura funcional, de integración, permisos y aceptación. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+Las pruebas automatizadas incluyen casos de servicios para movimientos de inventario y materias primas, edición de órdenes, ventas y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 

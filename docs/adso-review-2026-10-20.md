@@ -3,9 +3,11 @@
 - Código funcional de referencia: `Pafuna08/MEVIPLAST-NODEJS`, rama `develop`, commit `f89abcb` (PR #10).
 - Documentos recibidos: `MEVIPLAST.docx` y `Arquitectura_Documental_Proyectos_Software_ADSO_SENA.docx`, 2026-10-20.
 - Código de esta revisión: `REV-ADSO-MEVI-001`, versión 1.0.
-- Estado: **En revisión; no aprobado por instructor ni cliente.**
+- Estado: **Revisión histórica de `develop`; no describe los cambios posteriores de `feature/MEVI-9-completar-backlog` y no está aprobada por instructor ni cliente.**
 - Elaboración: análisis asistido por IA; responsable oficial, revisión y aprobación: pendientes de confirmar.
 - Método: contraste estático de documentos, rutas/servicios/esquema y verificaciones locales. No se validó producción, rendimiento, disponibilidad, compatibilidad completa ni aceptación institucional.
+
+> Para el estado preliminar de las historias y las pruebas de la rama actual, consultar [`requirements/traceability.md`](requirements/traceability.md) y [`evidence/EV-2026-10-21.md`](evidence/EV-2026-10-21.md). Las tablas de esta revisión se conservan como fotografía del código de `develop` en `f89abcb`, no como descripción vigente de la feature.
 
 ## Dictamen ejecutivo
 
