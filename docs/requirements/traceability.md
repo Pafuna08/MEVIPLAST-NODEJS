@@ -59,8 +59,9 @@ Los permisos de vendedor y almacenista se reflejan en backend y navegación. Est
 
 ## Evidencia asociada
 
-- `npm test --prefix backend`: 11 pruebas automatizadas aprobadas en la revisión del 2026-10-21, incluida una prueba HTTP de permisos por rol con base de datos simulada; no son pruebas de integración con MySQL ni aceptación de usuario.
+- `npm test --prefix backend`: 11 pruebas automatizadas aprobadas en la revisión del 2026-10-21, incluida una prueba HTTP de permisos por rol con base de datos simulada.
+- Smoke test de aplicación con MariaDB aislado: dashboard, login y rutas seleccionadas por rol aprobados; no cubre todos los endpoints ni constituye aceptación de usuario.
 - `npm run build --prefix frontend`: compilación aprobada en la revisión del 2026-10-21; no demuestra aceptación de interfaz.
 - `EV-2026-10-19`: evidencia histórica de navegación; no representa aceptación de todos los procesos.
-- Migración SQL: probada dos veces en una instancia temporal aislada MariaDB 10.4.32 con esquema previo y datos ficticios; los saldos iniciales no se duplicaron. No se ejecutó `db:init` ni se tocó la instancia XAMPP existente. La integración de aplicación y cualquier aplicación a una base compartida/real siguen pendientes.
+- Migración SQL: probada dos veces en una instancia temporal aislada MariaDB 10.4.32 con esquema previo y datos ficticios; los saldos iniciales no se duplicaron. No se tocó la instancia XAMPP existente. La integración completa y cualquier aplicación a una base compartida/real siguen pendientes.
 - `.github/workflows/ci.yml`: revisar ejecución remota antes de registrar evidencia de CI aprobada.
