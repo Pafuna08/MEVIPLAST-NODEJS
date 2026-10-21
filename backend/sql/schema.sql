@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nombre VARCHAR(120) NOT NULL,
   usuario VARCHAR(60) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  rol ENUM('admin', 'supervisor', 'operario') NOT NULL,
+  rol ENUM('admin', 'supervisor', 'operario', 'vendedor', 'almacenista') NOT NULL,
   activo TINYINT(1) NOT NULL DEFAULT 1,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -88,6 +88,38 @@ CREATE TABLE IF NOT EXISTS ventas (
   usuario_id INT NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_materia_prima (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  materia_prima_id INT NOT NULL,
+  usuario_id INT NULL,
+  produccion_id INT NULL,
+  tipo ENUM('compra', 'ajuste_entrada', 'ajuste_salida', 'consumo_produccion') NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  observaciones VARCHAR(255) NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_mov_materia_fecha (materia_prima_id, fecha),
+  FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE RESTRICT,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (produccion_id) REFERENCES produccion(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_inventario (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  inventario_id INT NOT NULL,
+  usuario_id INT NULL,
+  produccion_id INT NULL,
+  venta_id INT NULL,
+  tipo ENUM('saldo_inicial', 'ingreso_manual', 'produccion', 'salida_manual', 'venta') NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  observaciones VARCHAR(255) NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_mov_inventario_fecha (inventario_id, fecha),
+  FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE RESTRICT,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (produccion_id) REFERENCES produccion(id) ON DELETE SET NULL,
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------

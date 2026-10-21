@@ -24,6 +24,7 @@ const roleViews = {
       ["asignar", "AT", "Asignar tareas"],
       ["operarios", "OP", "Operarios"],
       ["produccion", "SP", "Seguimiento"],
+      ["materia", "MP", "Materias primas"],
       ["reportes", "RP", "Reportes"],
     ],
   },
@@ -36,6 +37,21 @@ const roleViews = {
       ["tareas", "TA", "Mis tareas"],
       ["registrar", "RG", "Registrar producción"],
       ["historial", "HI", "Mi historial"],
+    ],
+  },
+  Vendedor: {
+    apiRole: "vendedor",
+    title: "Gestión de ventas",
+    initials: "VE",
+    views: [["ventas", "VT", "Ventas"]],
+  },
+  Almacenista: {
+    apiRole: "almacenista",
+    title: "Control de almacén",
+    initials: "AL",
+    views: [
+      ["materia", "MP", "Materias primas"],
+      ["inventario", "IT", "Inventario"],
     ],
   },
 };
@@ -110,9 +126,13 @@ const currencyFormat = new Intl.NumberFormat("es-CO", {
 const number = (value) => numberFormat.format(Number(value || 0));
 const money = (value) => currencyFormat.format(Number(value || 0));
 const roleName = (value) =>
-  ({ admin: "Administrador", supervisor: "Supervisor", operario: "Operario" })[
-    value
-  ] || value;
+  ({
+    admin: "Administrador",
+    supervisor: "Supervisor",
+    operario: "Operario",
+    vendedor: "Vendedor",
+    almacenista: "Almacenista",
+  })[value] || value;
 
 async function api(url, token, options = {}) {
   const response = await fetch(url, {
@@ -150,10 +170,30 @@ async function loadView(view, role, token) {
     return { orders, inventory, sales };
   }
   if (view === "usuarios") return api("/api/usuarios", token);
-  if (view === "materia") return api("/api/materia-prima", token);
-  if (view === "inventario") return api("/api/inventario", token);
+  if (view === "materia") {
+    const [materials, movements, orders] = await Promise.all([
+      api("/api/materia-prima", token),
+      api("/api/materia-prima/movimientos", token),
+      ["admin", "supervisor"].includes(role.apiRole)
+        ? api("/api/produccion", token)
+        : Promise.resolve([]),
+    ]);
+    return { materials, movements, orders };
+  }
+  if (view === "inventario") {
+    const [items, movements] = await Promise.all([
+      api("/api/inventario", token),
+      api("/api/inventario/movimientos", token),
+    ]);
+    return { items, movements };
+  }
   if (["produccion", "tareas", "historial", "registrar"].includes(view)) {
-    return api("/api/produccion", token);
+    const orders = await api("/api/produccion", token);
+    if (["admin", "supervisor"].includes(role.apiRole)) {
+      const materials = await api("/api/materia-prima", token);
+      return { orders, materials };
+    }
+    return orders;
   }
   if (view === "asignar") {
     const [operators, materials] = await Promise.all([
@@ -254,7 +294,7 @@ function StatusBadge({ status }) {
   return <span className={`status ${style}`}>{String(status || "").replace("_", " ")}</span>;
 }
 
-function OrderRow({ order, canManage, onChangeStatus }) {
+function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
@@ -265,6 +305,7 @@ function OrderRow({ order, canManage, onChangeStatus }) {
         <span>{order.responsable_nombre || "Sin asignar"} · {number(produced)}/{number(goal)} ({progress}%)</span>
       </div>
       <StatusBadge status={order.estado} />
+      {canEdit && <button className="text-action" type="button" onClick={() => onEdit(order)}>Editar</button>}
       {canManage && (
         <select
           className="state-select"
@@ -298,7 +339,7 @@ export default function DashboardApp() {
   const requestedView = window.location.hash.slice(1) || "inicio";
   const activeView = config?.views.some(([view]) => view === requestedView)
     ? requestedView
-    : "inicio";
+    : config?.views[0]?.[0] || "inicio";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadedVersion, setLoadedVersion] = useState("");
@@ -371,9 +412,30 @@ export default function DashboardApp() {
       if (activeView === "usuarios") {
         await api("/api/usuarios", token, { method: "POST", body: JSON.stringify(payload) });
       } else if (activeView === "materia") {
-        await api("/api/materia-prima", token, { method: "POST", body: JSON.stringify(payload) });
+        if (payload.materia_prima_id) {
+          await api("/api/materia-prima/movimientos", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          await api("/api/materia-prima", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        }
       } else if (activeView === "inventario") {
-        await api("/api/inventario", token, { method: "POST", body: JSON.stringify(payload) });
+        if (payload.inventario_id) {
+          const { inventario_id, ...salida } = payload;
+          await api(`/api/inventario/${inventario_id}/salida`, token, {
+            method: "POST",
+            body: JSON.stringify(salida),
+          });
+        } else {
+          await api("/api/inventario", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        }
       } else if (activeView === "asignar") {
         await api("/api/produccion", token, { method: "POST", body: JSON.stringify(payload) });
       } else if (activeView === "registrar") {
@@ -402,6 +464,19 @@ export default function DashboardApp() {
         body: JSON.stringify({ estado: status }),
       });
       setToast("Estado actualizado.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
+  async function updateOrder(id, payload) {
+    try {
+      await api(`/api/produccion/${id}`, token, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      setToast("Orden actualizada.");
       setReloadKey((value) => value + 1);
     } catch (cause) {
       setToast(cause.message);
@@ -468,6 +543,7 @@ export default function DashboardApp() {
       setDeleteTarget(user);
     },
     updateOrderStatus,
+    updateOrder,
   });
 
   return (
@@ -560,12 +636,13 @@ function renderView({
   toggleUser,
   requestDelete,
   updateOrderStatus,
+  updateOrder,
 }) {
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onDelete={requestDelete} role={role} />;
-  if (view === "materia") return <Materials data={data} onSubmit={submitForm} saving={saving} />;
+  if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
-  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onChangeStatus={updateOrderStatus} />;
+  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} />;
   if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
@@ -625,7 +702,7 @@ function Users({ data, username, onSubmit, saving, onToggle, onDelete, role }) {
         <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
         <Field label="Usuario"><input name="usuario" maxLength="50" required /></Field>
         <Field label="Contraseña"><input name="password" type="password" minLength="6" required /></Field>
-        <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
+        <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
       </FormPanel>
       <Panel title="Usuarios registrados">
         <DataTable columns={["Nombre", "Usuario", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
@@ -637,21 +714,47 @@ function Users({ data, username, onSubmit, saving, onToggle, onDelete, role }) {
   );
 }
 
-function Materials({ data, onSubmit, saving }) {
+function Materials({ data, role, onSubmit, saving }) {
+  const canConsume = ["admin", "supervisor"].includes(role);
+  const canManageStock = ["admin", "almacenista"].includes(role);
+  const canCreate = role === "admin";
+  const movementTypes = [
+    ...(canConsume ? [["consumo_produccion", "Consumo en producción"]] : []),
+    ...(canManageStock
+      ? [
+          ["compra", "Compra"],
+          ["ajuste_entrada", "Ajuste de entrada"],
+          ["ajuste_salida", "Ajuste de salida"],
+        ]
+      : []),
+  ];
   return (
     <>
-      <Intro title="Materias primas" description="Registra y consulta el abastecimiento." />
-      <FormPanel title="Registrar materia prima" onSubmit={onSubmit} saving={saving}>
-        <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
-        <Field label="Tipo"><input name="tipo" maxLength="80" required /></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0" step="0.01" required /></Field>
-        <Field label="Unidad"><input name="unidad" defaultValue="kg" maxLength="30" /></Field>
-        <Field label="Proveedor"><input name="proveedor" maxLength="120" /></Field>
-        <Field label="Stock mínimo"><input name="stock_minimo" type="number" min="0" step="0.01" defaultValue="0" /></Field>
+      <Intro title="Materias primas" description="Consulta existencias y registra entradas, ajustes y consumos trazables." />
+      {canCreate && <FormPanel title="Crear materia prima" onSubmit={onSubmit} saving={saving}>
+          <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
+          <Field label="Tipo"><input name="tipo" maxLength="80" required /></Field>
+          <Field label="Cantidad inicial"><input name="cantidad" type="number" min="0" step="0.01" required /></Field>
+          <Field label="Unidad"><input name="unidad" defaultValue="kg" maxLength="30" /></Field>
+          <Field label="Proveedor"><input name="proveedor" maxLength="120" /></Field>
+          <Field label="Stock mínimo"><input name="stock_minimo" type="number" min="0" step="0.01" defaultValue="0" /></Field>
+        </FormPanel>}
+      <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving}>
+        <Field label="Materia prima"><select name="materia_prima_id" required>{data.materials.map((item) => <option key={item.id} value={item.id}>{item.nombre} ({number(item.cantidad)} {item.unidad})</option>)}</select></Field>
+        <Field label="Tipo"><select name="tipo" defaultValue={movementTypes[0]?.[0]}>
+          {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select></Field>
+        {canConsume && <Field label="Orden (para consumo)"><select name="produccion_id"><option value="">Sin asociar</option>{data.orders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {order.producto}</option>)}</select></Field>}
+        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Observaciones"><input name="observaciones" maxLength="255" /></Field>
       </FormPanel>
-      <Panel title="Existencias"><DataTable columns={["Material", "Tipo", "Cantidad", "Mínimo", "Proveedor"]} rows={data.map((item) => ({
+      <Panel title="Existencias"><DataTable columns={["Material", "Tipo", "Cantidad", "Mínimo", "Proveedor"]} rows={data.materials.map((item) => ({
         key: item.id,
         cells: <><td>{item.nombre}</td><td>{item.tipo}</td><td>{number(item.cantidad)} {item.unidad}</td><td>{number(item.stock_minimo)}</td><td>{item.proveedor || "—"}</td></>,
+      }))} /></Panel>
+      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
+        key: movement.id,
+        cells: <><td>{movement.fecha}</td><td>{movement.materia_prima}</td><td>{movement.tipo}</td><td>{number(movement.cantidad)}</td><td>{movement.registrado_por || "Sistema"}</td></>,
       }))} /></Panel>
     </>
   );
@@ -660,27 +763,58 @@ function Materials({ data, onSubmit, saving }) {
 function Inventory({ data, onSubmit, saving }) {
   return (
     <>
-      <Intro title="Inventario terminado" description="Ingresa productos fabricados y consulta existencias." />
+      <Intro title="Inventario terminado" description="Registra ingresos y salidas manuales; la producción y las ventas también dejan su movimiento." />
       <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving}>
         <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" maxLength="80" /></Field>
       </FormPanel>
-      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.map((item) => ({ key: item.id, cells: <><td>{item.producto}</td><td>{number(item.cantidad)}</td><td>{item.ubicacion || "—"}</td></> }))} /></Panel>
+      <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
+        <Field label="Producto"><select name="inventario_id" required>{data.items.map((item) => <option key={item.id} value={item.id}>{item.producto} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+      </FormPanel>
+      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{item.producto}</td><td>{number(item.cantidad)}</td><td>{item.ubicacion || "—"}</td></> }))} /></Panel>
+      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden"]} rows={data.movements.map((movement) => ({
+        key: movement.id,
+        cells: <><td>{movement.fecha}</td><td>{movement.producto}</td><td>{movement.tipo}</td><td>{number(movement.cantidad)}</td><td>{movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—")}</td></>,
+      }))} /></Panel>
     </>
   );
 }
 
-function Production({ data, role, view, onChangeStatus }) {
+function Production({ data, role, view, onChangeStatus, onEditOrder }) {
+  const [editingOrder, setEditingOrder] = useState(null);
+  const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
   const title = view === "tareas" ? "Mis tareas" : view === "historial" ? "Mi historial" : "Seguimiento de producción";
   return (
     <>
       <Intro title={title} description={canManage ? "Actualiza el estado de las órdenes asignadas." : "Solo se muestran tus tareas asignadas."} />
       <Panel title="Órdenes">
-        {data.map((order) => <OrderRow key={order.id} order={order} canManage={canManage} onChangeStatus={onChangeStatus} />)}
-        {!data.length && <p className="empty">No hay órdenes asignadas.</p>}
+        {orders.map((order) => <OrderRow
+          key={order.id}
+          order={order}
+          canManage={canManage}
+          onChangeStatus={onChangeStatus}
+          canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
+          onEdit={setEditingOrder}
+        />)}
+        {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>
+      {editingOrder && (
+        <FormPanel title={`Editar orden #${editingOrder.id}`} onSubmit={(event) => {
+          event.preventDefault();
+          const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
+          onEditOrder(editingOrder.id, payload);
+          setEditingOrder(null);
+        }} saving={false}>
+          <Field label="Producto"><input name="producto" maxLength="120" defaultValue={editingOrder.producto} required /></Field>
+          <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
+          <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
+          <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
+          <button className="text-action" type="button" onClick={() => setEditingOrder(null)}>Cancelar</button>
+        </FormPanel>
+      )}
     </>
   );
 }

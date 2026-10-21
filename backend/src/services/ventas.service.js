@@ -1,12 +1,15 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 
-async function listar() {
+async function listar(actor) {
+  const condicion = actor?.rol === "vendedor" ? "WHERE v.usuario_id = ?" : "";
+  const valores = actor?.rol === "vendedor" ? [actor.id] : [];
   const [filas] = await pool.query(
     `SELECT v.*, u.nombre AS vendedor
      FROM ventas v
      LEFT JOIN usuarios u ON u.id = v.usuario_id
-     ORDER BY v.fecha DESC`,
+     ${condicion} ORDER BY v.fecha DESC`,
+    valores,
   );
   return filas;
 }
@@ -54,6 +57,10 @@ async function registrar(
     await connection.query(
       "UPDATE inventario SET cantidad = cantidad - ? WHERE id = ? AND cantidad >= ?",
       [cantidadNumerica, inventario[0].id, cantidadNumerica],
+    );
+    await connection.query(
+      "INSERT INTO movimientos_inventario (inventario_id, usuario_id, venta_id, tipo, cantidad) VALUES (?, ?, ?, 'venta', ?)",
+      [inventario[0].id, actorId, resultado.insertId, cantidadNumerica],
     );
     await connection.commit();
     transactionStarted = false;
