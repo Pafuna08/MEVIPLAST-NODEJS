@@ -1163,12 +1163,29 @@ function Advance({ data, onSubmit, saving }) {
 }
 
 function Sales({ data, onSubmit, saving }) {
+  const products = data.inventory.filter((item) => {
+    const producto = String(item.producto ?? "").trim();
+    return producto && !/[<>]/.test(producto);
+  });
+
   return (
     <>
       <Intro title="Ventas" description="Registra ventas; el stock se descuenta automáticamente." />
       <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving}>
         <Field label="Cliente"><input name="cliente" maxLength="120" required /></Field>
-        <Field label="Producto"><select name="producto" required>{data.inventory.map((item) => <option key={item.id} value={item.producto}>{item.producto} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Producto">
+          <select name="producto" required>
+            {products.length ? (
+              products.map((item) => (
+                <option key={item.id} value={item.producto}>
+                  {sanitizeText(item.producto)} ({number(item.cantidad)})
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>No hay productos disponibles</option>
+            )}
+          </select>
+        </Field>
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Precio unitario"><input name="precio_unitario" type="number" min="1" required /></Field>
       </FormPanel>
