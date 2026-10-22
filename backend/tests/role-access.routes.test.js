@@ -37,6 +37,18 @@ test("las lecturas de materias primas y producción respetan los roles", async (
     });
   }
 
+  async function post(path, rol, body) {
+    const token = jwt.sign({ id: 7, rol }, process.env.JWT_SECRET);
+    return fetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
   for (const rol of ["vendedor", "operario"]) {
     const response = await get("/materia-prima/1", rol);
     assert.equal(response.status, 403, `${rol} no debe leer materias primas`);
@@ -56,4 +68,21 @@ test("las lecturas de materias primas y producción respetan los roles", async (
     const response = await get("/produccion", rol);
     assert.equal(response.status, 200, `${rol} debe listar producción`);
   }
+
+  const userWithoutEmail = await post("/usuarios", "admin", {
+    nombre: "Usuario Prueba",
+    usuario: "prueba",
+    password: "clave123",
+    rol: "operario",
+  });
+  assert.equal(userWithoutEmail.status, 400);
+
+  const userWithInvalidEmail = await post("/usuarios", "admin", {
+    nombre: "Usuario Prueba",
+    usuario: "prueba",
+    correo: "correo-invalido",
+    password: "clave123",
+    rol: "operario",
+  });
+  assert.equal(userWithInvalidEmail.status, 400);
 });

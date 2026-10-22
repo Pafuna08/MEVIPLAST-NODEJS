@@ -97,7 +97,7 @@ function sanitizePayload(value) {
       if (typeof item !== "string") return [key, sanitizePayload(item)];
       const clean = sanitizeText(
         item,
-        /(password|observaciones|cliente|producto|nombre|usuario|tipo|proveedor|ubicacion|lote)/i.test(
+        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|lote)/i.test(
           lowerKey,
         )
           ? 255
@@ -109,7 +109,9 @@ function sanitizePayload(value) {
         ? Number(clean) || 0
         : lowerKey.includes("usuario")
           ? clean.toLowerCase().replace(/[^a-z0-9._-]/g, "")
-          : clean;
+          : lowerKey.includes("correo")
+            ? clean.toLowerCase()
+            : clean;
       return [key, normalized];
     }),
   );
@@ -499,6 +501,21 @@ export default function DashboardApp() {
     }
   }
 
+  async function updateUserEmail(userId, correo) {
+    try {
+      await api(`/api/usuarios/${userId}`, token, {
+        method: "PUT",
+        body: JSON.stringify({ correo }),
+      });
+      setToast("Correo actualizado.");
+      setReloadKey((value) => value + 1);
+      return true;
+    } catch (cause) {
+      setToast(cause.message);
+      return false;
+    }
+  }
+
   async function deleteUser() {
     if (!deleteTarget) return;
     try {
@@ -538,6 +555,7 @@ export default function DashboardApp() {
     submitForm,
     saving,
     toggleUser,
+    updateUserEmail,
     requestDelete: (user) => {
       if (user.usuario === session.username) {
         setToast("No puedes eliminar tu propio usuario.");
@@ -637,12 +655,13 @@ function renderView({
   submitForm,
   saving,
   toggleUser,
+  updateUserEmail,
   requestDelete,
   updateOrderStatus,
   updateOrder,
 }) {
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
-  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onDelete={requestDelete} role={role} />;
+  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
   if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} />;
@@ -701,20 +720,31 @@ function Home({ data, role, navigate }) {
   );
 }
 
-function Users({ data, username, onSubmit, saving, onToggle, onDelete, role }) {
+function Users({
+  data,
+  username,
+  onSubmit,
+  saving,
+  onToggle,
+  onUpdateEmail,
+  onDelete,
+  role,
+}) {
+  const [emailUser, setEmailUser] = useState(null);
   return (
     <>
       <Intro title="Gestión de usuarios" description="Crea cuentas, activa o desactiva accesos y administra los usuarios del sistema." />
       <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving}>
         <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
         <Field label="Usuario"><input name="usuario" maxLength="50" required /></Field>
+        <Field label="Correo electrónico"><input name="correo" type="email" maxLength="254" autoComplete="email" required /></Field>
         <Field label="Contraseña"><input name="password" type="password" minLength="6" required /></Field>
         <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
       </FormPanel>
       <Panel title="Usuarios registrados">
-        <DataTable columns={["Nombre", "Usuario", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
+        <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
           key: user.id,
-          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
+          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
         }))} />
       </Panel>
     </>

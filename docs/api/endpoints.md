@@ -5,6 +5,9 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Los 
 | Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
 | ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
 | POST        | `/auth/login`                                                        | Público                                | Iniciar sesión y recibir JWT           |
+| POST        | `/auth/recuperar-password`                                           | Público                                | Solicitar enlace de recuperación por correo |
+| POST        | `/auth/recordar-usuario`                                             | Público                                | Enviar nombre de usuario al correo asociado |
+| POST        | `/auth/restablecer-password`                                         | Público con token de un solo uso       | Cambiar contraseña con enlace vigente   |
 | GET, POST   | `/usuarios`                                                          | Admin                                  | Consultar y crear usuarios             |
 | PUT, DELETE | `/usuarios/{id}`                                                     | Admin                                  | Actualizar o eliminar usuario          |
 | GET         | `/materia-prima`, `/materia-prima/bajo-stock`, `/materia-prima/{id}` | Admin, supervisor, almacenista         | Consultar materias primas              |

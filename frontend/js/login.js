@@ -54,14 +54,6 @@ toggle.addEventListener("click", () => {
   );
 });
 
-document.querySelectorAll("[data-user]").forEach((button) => {
-  button.addEventListener("click", () => {
-    username.value = button.dataset.user;
-    password.value = button.dataset.password;
-    status.textContent = "";
-  });
-});
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   clear(username);

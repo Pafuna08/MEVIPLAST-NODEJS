@@ -484,6 +484,18 @@ th {
   gap: 8px;
   flex-wrap: wrap;
 }
+.inline-email-form {
+  display: grid;
+  min-width: 220px;
+  gap: 6px;
+}
+.inline-email-form input {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
 .confirm-overlay {
   position: fixed;
   inset: 0;

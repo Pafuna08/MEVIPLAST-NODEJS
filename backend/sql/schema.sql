@@ -16,10 +16,24 @@ CREATE TABLE IF NOT EXISTS usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
   usuario VARCHAR(60) NOT NULL UNIQUE,
+  correo VARCHAR(254) NULL,
   password_hash VARCHAR(255) NOT NULL,
   rol ENUM('admin', 'supervisor', 'operario', 'vendedor', 'almacenista') NOT NULL,
   activo TINYINT(1) NOT NULL DEFAULT 1,
-  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_usuarios_correo (correo)
+);
+
+CREATE TABLE IF NOT EXISTS tokens_recuperacion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  expira_en DATETIME NOT NULL,
+  usado_en DATETIME NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tokens_recuperacion_usuario (usuario_id),
+  INDEX idx_tokens_recuperacion_expira (expira_en),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 -- EP-004 Seguridad: bitacora / auditoria de acciones

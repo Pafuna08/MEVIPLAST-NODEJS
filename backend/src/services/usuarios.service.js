@@ -4,24 +4,24 @@ const { registrarAuditoria } = require("../utils/auditoria");
 
 async function listar() {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, rol, activo, creado_en FROM usuarios ORDER BY id DESC"
+    "SELECT id, nombre, usuario, correo, rol, activo, creado_en FROM usuarios ORDER BY id DESC"
   );
   return filas;
 }
 
 async function obtenerPorId(id) {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, rol, activo, creado_en FROM usuarios WHERE id = ?",
+    "SELECT id, nombre, usuario, correo, rol, activo, creado_en FROM usuarios WHERE id = ?",
     [id]
   );
   return filas[0] || null;
 }
 
-async function crear({ nombre, usuario, password, rol }, actorId) {
+async function crear({ nombre, usuario, correo, password, rol }, actorId) {
   const hash = await bcrypt.hash(password, 10);
   const [resultado] = await pool.query(
-    "INSERT INTO usuarios (nombre, usuario, password_hash, rol) VALUES (?, ?, ?, ?)",
-    [nombre, usuario, hash, rol]
+    "INSERT INTO usuarios (nombre, usuario, correo, password_hash, rol) VALUES (?, ?, ?, ?, ?)",
+    [nombre, usuario, correo, hash, rol]
   );
 
   await registrarAuditoria({
@@ -34,10 +34,10 @@ async function crear({ nombre, usuario, password, rol }, actorId) {
   return obtenerPorId(resultado.insertId);
 }
 
-async function actualizar(id, { nombre, rol, activo }, actorId) {
+async function actualizar(id, { nombre, correo, rol, activo }, actorId) {
   await pool.query(
-    "UPDATE usuarios SET nombre = COALESCE(?, nombre), rol = COALESCE(?, rol), activo = COALESCE(?, activo) WHERE id = ?",
-    [nombre, rol, activo, id]
+    "UPDATE usuarios SET nombre = COALESCE(?, nombre), correo = COALESCE(?, correo), rol = COALESCE(?, rol), activo = COALESCE(?, activo) WHERE id = ?",
+    [nombre ?? null, correo ?? null, rol ?? null, activo ?? null, id]
   );
 
   await registrarAuditoria({
