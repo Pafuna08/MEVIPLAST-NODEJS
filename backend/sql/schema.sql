@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS produccion (
   producto VARCHAR(120) NOT NULL,
   cantidad DECIMAL(10,2) NOT NULL,
   materia_prima_id INT NULL,
+  supervisor_id INT NULL,
   responsable_id INT NULL,
   estado ENUM('pendiente', 'en_proceso', 'finalizado', 'cancelado') NOT NULL DEFAULT 'pendiente',
   prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
@@ -78,7 +79,20 @@ CREATE TABLE IF NOT EXISTS produccion (
   fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_fin DATETIME NULL,
   FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE SET NULL,
+  FOREIGN KEY (supervisor_id) REFERENCES usuarios(id) ON DELETE SET NULL,
   FOREIGN KEY (responsable_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS plantillas_produccion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  producto VARCHAR(120) NOT NULL UNIQUE,
+  cantidad DECIMAL(10,2) NOT NULL,
+  materia_prima_id INT NULL,
+  prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
+  creado_por INT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE SET NULL,
+  FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------

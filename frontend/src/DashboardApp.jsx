@@ -194,9 +194,21 @@ async function loadView(view, role, token) {
   }
   if (["produccion", "tareas", "historial", "registrar"].includes(view)) {
     const orders = await api("/api/produccion", token);
-    if (["admin", "supervisor"].includes(role.apiRole)) {
-      const materials = await api("/api/materia-prima", token);
-      return { orders, materials };
+    if (role.apiRole === "admin") {
+      const [materials, supervisors, templates] = await Promise.all([
+        api("/api/materia-prima", token),
+        api("/api/produccion/supervisores", token),
+        api("/api/produccion/plantillas", token),
+      ]);
+      return { orders, materials, supervisors, templates };
+    }
+    if (role.apiRole === "supervisor") {
+      const [operators, materials, templates] = await Promise.all([
+        api("/api/produccion/operarios", token),
+        api("/api/materia-prima", token),
+        api("/api/produccion/plantillas", token),
+      ]);
+      return { orders, operators, materials, templates };
     }
     return orders;
   }
@@ -307,7 +319,11 @@ function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
     <div className="order-row">
       <div>
         <strong>#{order.id} · {order.producto}</strong>
-        <span>{order.responsable_nombre || "Sin asignar"} · {number(produced)}/{number(goal)} ({progress}%)</span>
+        <span>
+          {order.responsable_nombre || "Sin asignar"}
+          {order.supervisor_nombre ? ` · Supervisor: ${sanitizeText(order.supervisor_nombre)}` : ""}
+          {" · "}{number(produced)}/{number(goal)} ({progress}%)
+        </span>
       </div>
       <StatusBadge status={order.estado} />
       {canEdit && <button className="text-action" type="button" onClick={() => onEdit(order)}>Editar</button>}
@@ -443,6 +459,12 @@ export default function DashboardApp() {
         }
       } else if (activeView === "asignar") {
         await api("/api/produccion", token, { method: "POST", body: JSON.stringify(payload) });
+      } else if (activeView === "produccion") {
+        const { plantilla_id, ...order } = payload;
+        await api("/api/produccion", token, {
+          method: "POST",
+          body: JSON.stringify(order),
+        });
       } else if (activeView === "registrar") {
         const { id, ...advance } = payload;
         await api(`/api/produccion/${id}/avance`, token, {
@@ -482,6 +504,44 @@ export default function DashboardApp() {
         body: JSON.stringify(payload),
       });
       setToast("Orden actualizada.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
+  async function assignOrder(id, responsableId) {
+    try {
+      await api(`/api/produccion/${id}/asignar`, token, {
+        method: "PUT",
+        body: JSON.stringify({ responsable_id: responsableId }),
+      });
+      setToast("Operario asignado a la orden.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
+  async function saveProductionTemplate(payload) {
+    try {
+      await api("/api/produccion/plantillas", token, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setToast("Plantilla guardada.");
+      setReloadKey((value) => value + 1);
+      return true;
+    } catch (cause) {
+      setToast(cause.message);
+      return false;
+    }
+  }
+
+  async function deleteProductionTemplate(id) {
+    try {
+      await api(`/api/produccion/plantillas/${id}`, token, { method: "DELETE" });
+      setToast("Plantilla eliminada.");
       setReloadKey((value) => value + 1);
     } catch (cause) {
       setToast(cause.message);
@@ -565,6 +625,9 @@ export default function DashboardApp() {
     },
     updateOrderStatus,
     updateOrder,
+    assignOrder,
+    saveProductionTemplate,
+    deleteProductionTemplate,
   });
 
   return (
@@ -659,12 +722,15 @@ function renderView({
   requestDelete,
   updateOrderStatus,
   updateOrder,
+  assignOrder,
+  saveProductionTemplate,
+  deleteProductionTemplate,
 }) {
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
-  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} />;
+  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
   if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
@@ -819,23 +885,220 @@ function Inventory({ data, onSubmit, saving }) {
   );
 }
 
-function Production({ data, role, view, onChangeStatus, onEditOrder }) {
+function Production({
+  data,
+  role,
+  view,
+  onSubmit,
+  saving,
+  onChangeStatus,
+  onEditOrder,
+  onAssignOrder,
+  onSaveTemplate,
+  onDeleteTemplate,
+}) {
   const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
+  const isAdmin = role === "admin";
+  const isSupervisor = role === "supervisor";
+  const templates = data.templates || [];
+  const selectedTemplate = templates.find(
+    (template) => String(template.id) === selectedTemplateId,
+  );
   const title = view === "tareas" ? "Mis tareas" : view === "historial" ? "Mi historial" : "Seguimiento de producción";
   return (
     <>
-      <Intro title={title} description={canManage ? "Actualiza el estado de las órdenes asignadas." : "Solo se muestran tus tareas asignadas."} />
+      <Intro
+        title={isAdmin && view === "produccion" ? "Gestión de producción" : title}
+        description={
+          isAdmin && view === "produccion"
+            ? "Crea órdenes, asígnalas a un supervisor o reutiliza una plantilla frecuente."
+            : isSupervisor
+              ? "Revisa las órdenes que te asignaron y elige al operario que las ejecutará."
+              : canManage
+                ? "Actualiza el estado de las órdenes asignadas."
+                : "Solo se muestran tus tareas asignadas."
+        }
+      />
+      {isAdmin && view === "produccion" && (
+        <>
+          <Panel title="Órdenes frecuentes">
+            {templates.length ? (
+              <div className="order-list">
+                {templates.map((template) => (
+                  <div className="order-row" key={template.id}>
+                    <div>
+                      <strong>{sanitizeText(template.producto)}</strong>
+                      <span>
+                        Meta habitual: {number(template.cantidad)}
+                        {template.materia_prima_nombre
+                          ? ` · ${sanitizeText(template.materia_prima_nombre)}`
+                          : ""}
+                      </span>
+                    </div>
+                    <button
+                      className="text-action"
+                      type="button"
+                      onClick={() => setSelectedTemplateId(String(template.id))}
+                    >
+                      Usar plantilla
+                    </button>
+                    <button
+                      className="text-action danger"
+                      type="button"
+                      onClick={() => onDeleteTemplate(template.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="empty">Aún no hay plantillas. Puedes crear una abajo.</p>
+            )}
+          </Panel>
+          <FormPanel
+            title="Nueva orden de producción"
+            onSubmit={(event) => {
+              setSelectedTemplateId("");
+              onSubmit(event);
+            }}
+            saving={saving}
+          >
+            {selectedTemplate && (
+              <p className="form-hint">
+                Plantilla seleccionada: {sanitizeText(selectedTemplate.producto)}. Puedes ajustar sus datos antes de crear la orden.
+              </p>
+            )}
+            <Field label="Producto">
+              <input
+                key={`producto-${selectedTemplateId}`}
+                name="producto"
+                maxLength="120"
+                defaultValue={selectedTemplate?.producto || ""}
+                required
+              />
+            </Field>
+            <Field label="Meta de producción">
+              <input
+                key={`cantidad-${selectedTemplateId}`}
+                name="cantidad"
+                type="number"
+                min="0.01"
+                step="0.01"
+                defaultValue={selectedTemplate?.cantidad || ""}
+                required
+              />
+            </Field>
+            <Field label="Supervisor responsable">
+              <select name="supervisor_id" required defaultValue="">
+                <option value="" disabled>Selecciona un supervisor</option>
+                {data.supervisors.map((supervisor) => (
+                  <option key={supervisor.id} value={supervisor.id}>
+                    {sanitizeText(supervisor.nombre)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Materia prima">
+              <select
+                key={`materia-${selectedTemplateId}`}
+                name="materia_prima_id"
+                defaultValue={selectedTemplate?.materia_prima_id || ""}
+              >
+                <option value="">Sin asociar</option>
+                {data.materials.map((material) => (
+                  <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Prioridad">
+              <select
+                key={`prioridad-${selectedTemplateId}`}
+                name="prioridad"
+                defaultValue={selectedTemplate?.prioridad || "media"}
+              >
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </Field>
+            {!data.supervisors.length && (
+              <p className="empty">No hay supervisores activos. Crea o activa uno antes de registrar una orden.</p>
+            )}
+          </FormPanel>
+          <FormPanel
+            title="Guardar plantilla frecuente"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const payload = sanitizePayload(
+                Object.fromEntries(new FormData(event.currentTarget)),
+              );
+              const form = event.currentTarget;
+              if (await onSaveTemplate(payload)) form.reset();
+            }}
+            saving={false}
+          >
+            <Field label="Producto">
+              <input name="producto" maxLength="120" required />
+            </Field>
+            <Field label="Meta habitual">
+              <input name="cantidad" type="number" min="0.01" step="0.01" required />
+            </Field>
+            <Field label="Materia prima">
+              <select name="materia_prima_id" defaultValue="">
+                <option value="">Sin asociar</option>
+                {data.materials.map((material) => (
+                  <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Prioridad habitual">
+              <select name="prioridad" defaultValue="media">
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </Field>
+          </FormPanel>
+        </>
+      )}
       <Panel title="Órdenes">
-        {orders.map((order) => <OrderRow
-          key={order.id}
-          order={order}
-          canManage={canManage}
-          onChangeStatus={onChangeStatus}
-          canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
-          onEdit={setEditingOrder}
-        />)}
+        {orders.map((order) => (
+          <React.Fragment key={order.id}>
+            <OrderRow
+              order={order}
+              canManage={canManage && !(isSupervisor && !order.responsable_id)}
+              onChangeStatus={onChangeStatus}
+              canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
+              onEdit={setEditingOrder}
+            />
+            {isSupervisor && !order.responsable_id && order.estado === "pendiente" && (
+              <form
+                className="data-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const responsableId = new FormData(event.currentTarget).get("responsable_id");
+                  onAssignOrder(order.id, responsableId);
+                }}
+              >
+                <Field label={`Asignar operario a la orden #${order.id}`}>
+                  <select name="responsable_id" required defaultValue="">
+                    <option value="" disabled>Selecciona un operario</option>
+                    {data.operators.map((operator) => (
+                      <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>
+                    ))}
+                  </select>
+                </Field>
+                <button className="primary-action" type="submit" disabled={!data.operators.length}>
+                  Asignar operario
+                </button>
+              </form>
+            )}
+          </React.Fragment>
+        ))}
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>
       {editingOrder && (

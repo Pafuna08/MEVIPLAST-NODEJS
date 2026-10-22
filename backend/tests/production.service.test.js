@@ -77,6 +77,7 @@ test("no se puede finalizar una orden sin completar la meta", async (t) => {
           cantidad: 10,
           cantidad_producida: 4,
           responsable_id: 3,
+          supervisor_id: 2,
         }]];
       }
       return [[], []];
@@ -91,4 +92,53 @@ test("no se puede finalizar una orden sin completar la meta", async (t) => {
     /meta pendiente/,
   );
   assert.equal(rollbackCount, 1);
+});
+
+test("el supervisor solo ve las órdenes que tiene asignadas", async (t) => {
+  const originalQuery = pool.query;
+  let query;
+  pool.query = async (sql, params) => {
+    query = { sql, params };
+    return [[], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  await productionService.listar({ id: 12, rol: "supervisor" });
+  assert.match(query.sql, /WHERE p\.supervisor_id = \?/);
+  assert.deepEqual(query.params, [12]);
+});
+
+test("el supervisor no puede asignar órdenes de otro supervisor", async (t) => {
+  const originalGetConnection = pool.getConnection;
+  let rolledBack = false;
+  pool.getConnection = async () => ({
+    beginTransaction: async () => {},
+    commit: async () => assert.fail("No debe confirmar una asignación ajena"),
+    rollback: async () => {
+      rolledBack = true;
+    },
+    release: () => {},
+    query: async (sql) => {
+      if (sql.startsWith("SELECT id, estado, cantidad_producida")) {
+        return [[{
+          id: 21,
+          estado: "pendiente",
+          cantidad_producida: 0,
+          supervisor_id: 99,
+        }]];
+      }
+      return [[], []];
+    },
+  });
+  t.after(() => {
+    pool.getConnection = originalGetConnection;
+  });
+
+  await assert.rejects(
+    productionService.asignarOperario(21, 6, { id: 12, rol: "supervisor" }),
+    /órdenes que te fueron entregadas/,
+  );
+  assert.equal(rolledBack, true);
 });

@@ -2,14 +2,22 @@ const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 
 async function listar(usuario) {
-  const condiciones =
-    usuario?.rol === "operario" ? "WHERE p.responsable_id = ?" : "";
-  const valores = usuario?.rol === "operario" ? [usuario.id] : [];
+  let condiciones = "";
+  let valores = [];
+  if (usuario?.rol === "operario") {
+    condiciones = "WHERE p.responsable_id = ?";
+    valores = [usuario.id];
+  } else if (usuario?.rol === "supervisor") {
+    condiciones = "WHERE p.supervisor_id = ? OR p.supervisor_id IS NULL";
+    valores = [usuario.id];
+  }
   const [filas] = await pool.query(
-    `SELECT p.*, mp.nombre AS materia_prima_nombre, u.nombre AS responsable_nombre
+    `SELECT p.*, mp.nombre AS materia_prima_nombre,
+            u.nombre AS responsable_nombre, s.nombre AS supervisor_nombre
      FROM produccion p
      LEFT JOIN materia_prima mp ON mp.id = p.materia_prima_id
      LEFT JOIN usuarios u ON u.id = p.responsable_id
+     LEFT JOIN usuarios s ON s.id = p.supervisor_id
      ${condiciones} ORDER BY p.fecha_inicio DESC`,
     valores,
   );
@@ -23,6 +31,46 @@ async function listarOperarios() {
   return filas;
 }
 
+async function listarSupervisores() {
+  const [filas] = await pool.query(
+    "SELECT id, nombre, usuario FROM usuarios WHERE rol = 'supervisor' AND activo = 1 ORDER BY nombre",
+  );
+  return filas;
+}
+
+async function listarPlantillas() {
+  const [filas] = await pool.query(
+    `SELECT p.*, m.nombre AS materia_prima_nombre
+     FROM plantillas_produccion p
+     LEFT JOIN materia_prima m ON m.id = p.materia_prima_id
+     ORDER BY p.producto`,
+  );
+  return filas;
+}
+
+async function crearPlantilla(datos, actorId) {
+  const { producto, cantidad, materia_prima_id, prioridad } = datos;
+  const [resultado] = await pool.query(
+    "INSERT INTO plantillas_produccion (producto, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?)",
+    [
+      producto.trim(),
+      Number(cantidad),
+      Number(materia_prima_id) || null,
+      prioridad || "media",
+      actorId,
+    ],
+  );
+  const [filas] = await pool.query(
+    "SELECT * FROM plantillas_produccion WHERE id = ?",
+    [resultado.insertId],
+  );
+  return filas[0];
+}
+
+async function eliminarPlantilla(id) {
+  await pool.query("DELETE FROM plantillas_produccion WHERE id = ?", [id]);
+}
+
 async function obtenerPorId(id) {
   const [filas] = await pool.query("SELECT * FROM produccion WHERE id = ?", [
     id,
@@ -30,22 +78,49 @@ async function obtenerPorId(id) {
   return filas[0] || null;
 }
 
-async function crear(datos, actorId) {
-  const { producto, cantidad, materia_prima_id, responsable_id, prioridad } =
-    datos;
+async function crear(datos, actor) {
+  const {
+    producto,
+    cantidad,
+    materia_prima_id,
+    responsable_id,
+    supervisor_id,
+    prioridad,
+  } = datos;
+  let supervisorId = null;
+  let responsableId = Number(responsable_id) || null;
+  if (actor.rol === "admin") {
+    supervisorId = Number(supervisor_id) || null;
+    if (!supervisorId) throw new Error("Debes asignar un supervisor");
+    const [supervisores] = await pool.query(
+      "SELECT id FROM usuarios WHERE id = ? AND activo = 1 AND rol = 'supervisor'",
+      [supervisorId],
+    );
+    if (!supervisores.length) throw new Error("El supervisor debe estar activo");
+    responsableId = null;
+  } else {
+    supervisorId = actor.id;
+    if (!responsableId) throw new Error("Debes asignar un operario");
+    const [operarios] = await pool.query(
+      "SELECT id FROM usuarios WHERE id = ? AND activo = 1 AND rol = 'operario'",
+      [responsableId],
+    );
+    if (!operarios.length) throw new Error("El responsable debe ser un operario activo");
+  }
   const [resultado] = await pool.query(
-    "INSERT INTO produccion (producto, cantidad, materia_prima_id, responsable_id, prioridad) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO produccion (producto, cantidad, materia_prima_id, supervisor_id, responsable_id, prioridad) VALUES (?, ?, ?, ?, ?, ?)",
     [
       producto,
       cantidad,
       materia_prima_id || null,
-      responsable_id || actorId,
+      supervisorId,
+      responsableId,
       prioridad || "media",
     ],
   );
 
   await registrarAuditoria({
-    usuarioId: actorId,
+    usuarioId: actor.id,
     accion: "CREAR_ORDEN_PRODUCCION",
     tabla: "produccion",
     detalle: `Orden de produccion creada para '${producto}' (${cantidad})`,
@@ -54,7 +129,53 @@ async function crear(datos, actorId) {
   return obtenerPorId(resultado.insertId);
 }
 
-async function actualizarOrden(id, datos, actorId) {
+async function asignarOperario(id, responsableId, actor) {
+  const connection = await pool.getConnection();
+  let transactionStarted = false;
+  try {
+    await connection.beginTransaction();
+    transactionStarted = true;
+    const [ordenes] = await connection.query(
+      "SELECT id, estado, cantidad_producida, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
+      [id],
+    );
+    const orden = ordenes[0];
+    if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (orden.supervisor_id && Number(orden.supervisor_id) !== Number(actor.id)) {
+      throw new Error("Solo puedes asignar órdenes que te fueron entregadas");
+    }
+    if (orden.estado !== "pendiente" || Number(orden.cantidad_producida) > 0) {
+      throw new Error("Solo puedes asignar órdenes pendientes sin avance");
+    }
+    const [operarios] = await connection.query(
+      "SELECT id FROM usuarios WHERE id = ? AND activo = 1 AND rol = 'operario'",
+      [responsableId],
+    );
+    if (!operarios.length) throw new Error("El responsable debe ser un operario activo");
+    await connection.query(
+      "UPDATE produccion SET supervisor_id = ?, responsable_id = ? WHERE id = ?",
+      [actor.id, responsableId, id],
+    );
+    await connection.commit();
+    transactionStarted = false;
+  } catch (error) {
+    if (transactionStarted) await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  await registrarAuditoria({
+    usuarioId: actor.id,
+    accion: "ASIGNAR_ORDEN_OPERARIO",
+    tabla: "produccion",
+    detalle: `Orden de produccion ${id} asignada al operario ${responsableId}`,
+  });
+  return obtenerPorId(id);
+}
+
+async function actualizarOrden(id, datos, actor) {
+  const actorId = actor?.id ?? actor;
   const camposPermitidos = new Set([
     "producto",
     "cantidad",
@@ -74,11 +195,18 @@ async function actualizarOrden(id, datos, actorId) {
     await connection.beginTransaction();
     transactionStarted = true;
     const [filas] = await connection.query(
-      "SELECT id, estado, cantidad_producida FROM produccion WHERE id = ? FOR UPDATE",
+      "SELECT id, estado, cantidad_producida, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
       [id],
     );
     const orden = filas[0];
     if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (
+      actor?.rol === "supervisor" &&
+      orden.supervisor_id &&
+      Number(orden.supervisor_id) !== Number(actor.id)
+    ) {
+      throw new Error("Solo puedes editar órdenes que te fueron entregadas");
+    }
     if (orden.estado !== "pendiente" || Number(orden.cantidad_producida) > 0) {
       throw new Error(
         "Solo se pueden editar órdenes pendientes sin avance registrado",
@@ -170,7 +298,7 @@ async function cambiarEstado(id, estado, actor) {
     await connection.beginTransaction();
     transactionStarted = true;
     const [filas] = await connection.query(
-      "SELECT id, estado, cantidad, cantidad_producida, responsable_id FROM produccion WHERE id = ? FOR UPDATE",
+      "SELECT id, estado, cantidad, cantidad_producida, responsable_id, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
       [id],
     );
     const orden = filas[0];
@@ -181,8 +309,22 @@ async function cambiarEstado(id, estado, actor) {
     ) {
       throw new Error("No puedes modificar una orden asignada a otro operario");
     }
+    if (
+      actor.rol === "supervisor" &&
+      orden.supervisor_id &&
+      Number(orden.supervisor_id) !== Number(actor.id)
+    ) {
+      throw new Error("No puedes modificar una orden asignada a otro supervisor");
+    }
     if (actor.rol === "operario" && estado !== "en_proceso") {
       throw new Error("El operario solo puede iniciar una orden asignada");
+    }
+    if (
+      actor.rol === "supervisor" &&
+      estado === "en_proceso" &&
+      !orden.responsable_id
+    ) {
+      throw new Error("Asigna un operario antes de iniciar la orden");
     }
     if (!(transiciones[orden.estado] || []).includes(estado)) {
       throw new Error("La transición de estado solicitada no es válida");
@@ -305,8 +447,13 @@ async function eliminar(id, actorId) {
 module.exports = {
   listar,
   listarOperarios,
+  listarSupervisores,
+  listarPlantillas,
+  crearPlantilla,
+  eliminarPlantilla,
   obtenerPorId,
   crear,
+  asignarOperario,
   actualizarOrden,
   cambiarEstado,
   registrarAvance,

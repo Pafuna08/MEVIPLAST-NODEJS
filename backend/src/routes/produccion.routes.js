@@ -19,7 +19,24 @@ router.get(
   verificarRol("admin", "supervisor"),
   controller.listarOperarios,
 );
+router.get("/supervisores", verificarRol("admin"), controller.listarSupervisores);
+router.get(
+  "/plantillas",
+  verificarRol("admin", "supervisor"),
+  controller.listarPlantillas,
+);
+router.post("/plantillas", verificarRol("admin"), controller.crearPlantilla);
+router.delete(
+  "/plantillas/:id",
+  verificarRol("admin"),
+  controller.eliminarPlantilla,
+);
 router.post("/", verificarRol("admin", "supervisor"), controller.crear);
+router.put(
+  "/:id/asignar",
+  verificarRol("supervisor"),
+  controller.asignarOperario,
+);
 router.put(
   "/:id/estado",
   verificarRol("admin", "supervisor", "operario"),
