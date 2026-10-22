@@ -671,6 +671,11 @@ th {
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 640px) {
+  .report-categories {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 520px) {
   .stats-grid {
     grid-template-columns: 1fr;

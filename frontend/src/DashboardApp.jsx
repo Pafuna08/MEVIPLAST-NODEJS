@@ -163,6 +163,13 @@ async function api(url, token, options = {}) {
 }
 
 async function loadView(view, role, token) {
+  if (view === "reporte-detalle") {
+    const params = new URLSearchParams(window.location.search);
+    const tipo = params.get("reporte");
+    const periodo = params.get("periodo");
+    const recurso = tipo === "produccion" ? "produccion" : "ventas";
+    return api(`/api/reportes/${recurso}/detalle?periodo=${encodeURIComponent(periodo)}`, token);
+  }
   if (view === "inicio") {
     const orders = await api("/api/produccion", token);
     if (role.apiRole === "operario") {
@@ -234,12 +241,7 @@ async function loadView(view, role, token) {
     return { sales, inventory };
   }
   if (view === "reportes") {
-    const [production, sales, inventory] = await Promise.all([
-      api("/api/reportes/produccion", token),
-      api("/api/reportes/ventas", token),
-      api("/api/reportes/inventario", token),
-    ]);
-    return { production, sales, inventory };
+    return {};
   }
   return null;
 }
@@ -357,8 +359,17 @@ export default function DashboardApp() {
   const [token] = useState(() => localStorage.getItem("meviplastToken"));
   const role = session && roleViews[session.role] ? session.role : null;
   const config = role ? roleViews[role] : null;
+  const reportParams = new URLSearchParams(window.location.search);
+  const requestedReport = reportParams.get("reporte");
+  const requestedPeriod = reportParams.get("periodo");
+  const isReportDetail =
+    ["produccion", "ventas"].includes(requestedReport) &&
+    ["diario", "semanal", "mensual", "anual"].includes(requestedPeriod) &&
+    ["Administrador", "Supervisor"].includes(role);
   const requestedView = window.location.hash.slice(1) || "inicio";
-  const activeView = config?.views.some(([view]) => view === requestedView)
+  const activeView = isReportDetail
+    ? "reporte-detalle"
+    : config?.views.some(([view]) => view === requestedView)
     ? requestedView
     : config?.views[0]?.[0] || "inicio";
   const [data, setData] = useState(null);
@@ -726,6 +737,7 @@ function renderView({
   saveProductionTemplate,
   deleteProductionTemplate,
 }) {
+  if (view === "reporte-detalle") return <ReportDetail data={data} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
@@ -735,7 +747,7 @@ function renderView({
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} />;
-  if (view === "reportes") return <Reports data={data} navigate={navigate} />;
+  if (view === "reportes") return <Reports />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }
 
@@ -1177,18 +1189,101 @@ function Operators({ data }) {
   );
 }
 
-function Reports({ data, navigate }) {
+function Reports({ data }) {
+  const periodos = [
+    ["diario", "Diario"],
+    ["semanal", "Semanal"],
+    ["mensual", "Mensual"],
+    ["anual", "Anual"],
+  ];
+  function abrirReporte(tipo, periodo) {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("reporte", tipo);
+    url.searchParams.set("periodo", periodo);
+    window.open(url.toString(), "_blank", "noopener");
+  }
   return (
     <>
-      <Intro title="Reportes" description="Consolidado actual de la operación." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
-      <section className="stats-grid">
-        <article className="stat-card"><div className="stat-head"><span>Ventas acumuladas</span></div><strong>{money(data.sales.resumen.total_vendido)}</strong><small>{data.sales.resumen.numero_ventas} ventas</small></article>
-        <article className="stat-card"><div className="stat-head"><span>Productos en inventario</span></div><strong>{data.inventory.length}</strong><small>Referencias disponibles</small></article>
+      <Intro title="Reportes" description="Consulta el seguimiento de producción y las ventas por periodo." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
+      <section className="report-categories">
+        {[
+          ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
+          ["ventas", "Ventas", "Consulta ventas, unidades, clientes y valores registrados."],
+        ].map(([tipo, titulo, descripcion]) => (
+          <Panel key={tipo} title={`Reporte de ${titulo.toLowerCase()}`} className="report-category">
+            <p>{descripcion}</p>
+            <div className="report-periods">
+              {periodos.map(([periodo, etiqueta]) => (
+                <button
+                  key={periodo}
+                  className="report-period-button"
+                  type="button"
+                  onClick={() => abrirReporte(tipo, periodo)}
+                >
+                  {etiqueta}
+                </button>
+              ))}
+            </div>
+          </Panel>
+        ))}
       </section>
-      <Panel title="Producción por estado" className="report-panel">
-        <DataTable columns={["Estado", "Órdenes", "Meta"]} rows={data.production.map((item) => ({ key: item.estado, cells: <><td><StatusBadge status={item.estado} /></td><td>{number(item.total)}</td><td>{number(item.cantidad_total)}</td></> }))} />
+    </>
+  );
+}
+
+function ReportDetail({ data }) {
+  const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
+  const titulo = reporteTipo === "produccion" ? "Producción" : "Ventas";
+  const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
+  const fechas = `${data.desde} - ${data.hastaInclusivo}`;
+  return (
+    <>
+      <Intro
+        title={`Reporte de ${titulo.toLowerCase()} ${data.periodo}`}
+        description={`${periodoNombre} · ${fechas}`}
+        action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>}
+      />
+      <section className="stats-grid">
+        {reporteTipo === "produccion" ? (
+          <>
+            <article className="stat-card"><div className="stat-head"><span>Unidades producidas</span></div><strong>{number(data.resumen.unidades)}</strong><small>{number(data.resumen.movimientos)} registros</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Productos fabricados</span></div><strong>{data.porProducto.length}</strong><small>Referencias producidas en el periodo</small></article>
+          </>
+        ) : (
+          <>
+            <article className="stat-card"><div className="stat-head"><span>Total vendido</span></div><strong>{money(data.resumen.total_vendido)}</strong><small>{number(data.resumen.numero_ventas)} ventas</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Unidades vendidas</span></div><strong>{number(data.resumen.unidades)}</strong><small>Unidades del periodo</small></article>
+          </>
+        )}
+      </section>
+      <Panel title="Resumen por producto">
+        <DataTable
+          columns={reporteTipo === "produccion" ? ["Producto", "Unidades producidas"] : ["Producto", "Unidades", "Total vendido"]}
+          rows={data.porProducto.map((item) => ({
+            key: item.producto,
+            cells: reporteTipo === "produccion"
+              ? <><td>{sanitizeText(item.producto)}</td><td>{number(item.unidades)}</td></>
+              : <><td>{sanitizeText(item.producto)}</td><td>{number(item.unidades)}</td><td>{money(item.total)}</td></>,
+          }))}
+        />
       </Panel>
-      <button className="report-shortcut" type="button" onClick={() => navigate("ventas")}>Consultar ventas</button>
+      <Panel title={reporteTipo === "produccion" ? "Registros de producción" : "Detalle de ventas"}>
+        {reporteTipo === "produccion" ? (
+          <DataTable columns={["Fecha", "Producto", "Orden", "Operario", "Cantidad"]} rows={data.detalle.map((item) => ({
+            key: item.id,
+            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.producto)}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{sanitizeText(item.operario || "No registrado")}</td><td>{number(item.cantidad)}</td></>,
+          }))} />
+        ) : (
+          <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]} rows={data.detalle.map((item) => ({
+            key: item.id,
+            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{sanitizeText(item.producto)}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td></>,
+          }))} />
+        )}
+        {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
+      </Panel>
+      <a className="report-shortcut" href="/dashboard.html#reportes">Volver a reportes</a>
     </>
   );
 }
