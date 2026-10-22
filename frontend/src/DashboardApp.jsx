@@ -87,6 +87,19 @@ const sanitizeText = (value, maxLength = 255) =>
     .trim()
     .slice(0, maxLength);
 
+function safeProductName(value) {
+  const product = String(value ?? "").trim();
+  if (
+    !product ||
+    /[<>]|&(?:lt|gt|#0*60|#0*62);|javascript\s*:|data\s*:\s*text\/html|(?:^|\s)on\w+\s*=/i.test(
+      product,
+    )
+  ) {
+    return null;
+  }
+  return sanitizeText(product, 120) || null;
+}
+
 function sanitizePayload(value) {
   if (Array.isArray(value)) return value.map(sanitizePayload);
   if (!value || typeof value !== "object") return value;
@@ -317,10 +330,11 @@ function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
+  const product = safeProductName(order.producto) || "Producto no válido";
   return (
     <div className="order-row">
       <div>
-        <strong>#{order.id} · {order.producto}</strong>
+        <strong>#{order.id} · {product}</strong>
         <span>
           {order.responsable_nombre || "Sin asignar"}
           {order.supervisor_nombre ? ` · Supervisor: ${sanitizeText(order.supervisor_nombre)}` : ""}
@@ -855,21 +869,21 @@ function Materials({ data, role, onSubmit, saving }) {
           <Field label="Stock mínimo"><input name="stock_minimo" type="number" min="0" step="0.01" defaultValue="0" /></Field>
         </FormPanel>}
       <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving}>
-        <Field label="Materia prima"><select name="materia_prima_id" required>{data.materials.map((item) => <option key={item.id} value={item.id}>{item.nombre} ({number(item.cantidad)} {item.unidad})</option>)}</select></Field>
+        <Field label="Materia prima"><select name="materia_prima_id" required>{data.materials.map((item) => <option key={item.id} value={item.id}>{sanitizeText(item.nombre)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}</select></Field>
         <Field label="Tipo"><select name="tipo" defaultValue={movementTypes[0]?.[0]}>
           {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></Field>
-        {canConsume && <Field label="Orden (para consumo)"><select name="produccion_id"><option value="">Sin asociar</option>{data.orders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {order.producto}</option>)}</select></Field>}
+        {canConsume && <Field label="Orden (para consumo)"><select name="produccion_id"><option value="">Sin asociar</option>{data.orders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}</option>)}</select></Field>}
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Observaciones"><input name="observaciones" maxLength="255" /></Field>
       </FormPanel>
       <Panel title="Existencias"><DataTable columns={["Material", "Tipo", "Cantidad", "Mínimo", "Proveedor"]} rows={data.materials.map((item) => ({
         key: item.id,
-        cells: <><td>{item.nombre}</td><td>{item.tipo}</td><td>{number(item.cantidad)} {item.unidad}</td><td>{number(item.stock_minimo)}</td><td>{item.proveedor || "—"}</td></>,
+        cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.tipo)}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad)}</td><td>{number(item.stock_minimo)}</td><td>{sanitizeText(item.proveedor || "—")}</td></>,
       }))} /></Panel>
       <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
         key: movement.id,
-        cells: <><td>{movement.fecha}</td><td>{movement.materia_prima}</td><td>{movement.tipo}</td><td>{number(movement.cantidad)}</td><td>{movement.registrado_por || "Sistema"}</td></>,
+        cells: <><td>{movement.fecha}</td><td>{sanitizeText(movement.materia_prima)}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.registrado_por || "Sistema")}</td></>,
       }))} /></Panel>
     </>
   );
@@ -885,13 +899,13 @@ function Inventory({ data, onSubmit, saving }) {
         <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" maxLength="80" /></Field>
       </FormPanel>
       <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><select name="inventario_id" required>{data.items.map((item) => <option key={item.id} value={item.id}>{item.producto} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Producto"><select name="inventario_id" required>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{item.producto}</td><td>{number(item.cantidad)}</td><td>{item.ubicacion || "—"}</td></> }))} /></Panel>
+      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
       <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden"]} rows={data.movements.map((movement) => ({
         key: movement.id,
-        cells: <><td>{movement.fecha}</td><td>{movement.producto}</td><td>{movement.tipo}</td><td>{number(movement.cantidad)}</td><td>{movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—")}</td></>,
+        cells: <><td>{movement.fecha}</td><td>{safeProductName(movement.producto) || "Producto no válido"}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—"))}</td></>,
       }))} /></Panel>
     </>
   );
@@ -915,7 +929,9 @@ function Production({
   const canManage = role !== "operario";
   const isAdmin = role === "admin";
   const isSupervisor = role === "supervisor";
-  const templates = data.templates || [];
+  const templates = (data.templates || []).filter((template) =>
+    safeProductName(template.producto),
+  );
   const selectedTemplate = templates.find(
     (template) => String(template.id) === selectedTemplateId,
   );
@@ -942,7 +958,7 @@ function Production({
                 {templates.map((template) => (
                   <div className="order-row" key={template.id}>
                     <div>
-                      <strong>{sanitizeText(template.producto)}</strong>
+                      <strong>{safeProductName(template.producto) || "Producto no válido"}</strong>
                       <span>
                         Meta habitual: {number(template.cantidad)}
                         {template.materia_prima_nombre
@@ -981,7 +997,7 @@ function Production({
           >
             {selectedTemplate && (
               <p className="form-hint">
-                Plantilla seleccionada: {sanitizeText(selectedTemplate.producto)}. Puedes ajustar sus datos antes de crear la orden.
+                Plantilla seleccionada: {safeProductName(selectedTemplate.producto) || "Producto no válido"}. Puedes ajustar sus datos antes de crear la orden.
               </p>
             )}
             <Field label="Producto">
@@ -989,7 +1005,7 @@ function Production({
                 key={`producto-${selectedTemplateId}`}
                 name="producto"
                 maxLength="120"
-                defaultValue={selectedTemplate?.producto || ""}
+                defaultValue={safeProductName(selectedTemplate?.producto) || ""}
                 required
               />
             </Field>
@@ -1120,7 +1136,7 @@ function Production({
           onEditOrder(editingOrder.id, payload);
           setEditingOrder(null);
         }} saving={false}>
-          <Field label="Producto"><input name="producto" maxLength="120" defaultValue={editingOrder.producto} required /></Field>
+          <Field label="Producto"><input name="producto" maxLength="120" defaultValue={safeProductName(editingOrder.producto) || ""} required /></Field>
           <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
           <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
           <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
@@ -1138,8 +1154,8 @@ function Assign({ data, onSubmit, saving }) {
       <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving}>
         <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
         <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{operator.nombre}</option>)}</select></Field>
-        <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
+        <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
+        <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
         <Field label="Prioridad"><select name="prioridad" defaultValue="media"><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
       </FormPanel>
     </>
@@ -1152,7 +1168,7 @@ function Advance({ data, onSubmit, saving }) {
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
-        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {order.producto} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Lote"><input name="lote" maxLength="80" placeholder="Ej. L-2406" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
@@ -1163,10 +1179,7 @@ function Advance({ data, onSubmit, saving }) {
 }
 
 function Sales({ data, onSubmit, saving }) {
-  const products = data.inventory.filter((item) => {
-    const producto = String(item.producto ?? "").trim();
-    return producto && !/[<>]/.test(producto);
-  });
+  const products = data.inventory.filter((item) => safeProductName(item.producto));
 
   return (
     <>
@@ -1178,7 +1191,7 @@ function Sales({ data, onSubmit, saving }) {
             {products.length ? (
               products.map((item) => (
                 <option key={item.id} value={item.producto}>
-                  {sanitizeText(item.producto)} ({number(item.cantidad)})
+                  {safeProductName(item.producto)} ({number(item.cantidad)})
                 </option>
               ))
             ) : (
@@ -1189,7 +1202,7 @@ function Sales({ data, onSubmit, saving }) {
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Precio unitario"><input name="precio_unitario" type="number" min="1" required /></Field>
       </FormPanel>
-      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Cantidad", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sale.cliente}</td><td>{sale.producto}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Cantidad", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{safeProductName(sale.producto) || "Producto no válido"}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
     </>
   );
 }
@@ -1281,8 +1294,8 @@ function ReportDetail({ data }) {
           rows={data.porProducto.map((item) => ({
             key: item.producto,
             cells: reporteTipo === "produccion"
-              ? <><td>{sanitizeText(item.producto)}</td><td>{number(item.unidades)}</td></>
-              : <><td>{sanitizeText(item.producto)}</td><td>{number(item.unidades)}</td><td>{money(item.total)}</td></>,
+              ? <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.unidades)}</td></>
+              : <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.unidades)}</td><td>{money(item.total)}</td></>,
           }))}
         />
       </Panel>
@@ -1290,12 +1303,12 @@ function ReportDetail({ data }) {
         {reporteTipo === "produccion" ? (
           <DataTable columns={["Fecha", "Producto", "Orden", "Operario", "Cantidad"]} rows={data.detalle.map((item) => ({
             key: item.id,
-            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.producto)}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{sanitizeText(item.operario || "No registrado")}</td><td>{number(item.cantidad)}</td></>,
+            cells: <><td>{item.fecha}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{sanitizeText(item.operario || "No registrado")}</td><td>{number(item.cantidad)}</td></>,
           }))} />
         ) : (
           <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]} rows={data.detalle.map((item) => ({
             key: item.id,
-            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{sanitizeText(item.producto)}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td></>,
+            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td></>,
           }))} />
         )}
         {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
