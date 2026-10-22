@@ -1,0 +1,15 @@
+# Documentación del repositorio
+
+- [Evaluación frente a la arquitectura ADSO](adso-review-2026-10-20.md)
+- [Estado del proyecto y brechas](project-status.md)
+- [Matriz de trazabilidad](requirements/traceability.md)
+- [Manual de usuario, borrador](user-guide.md)
+- [Arquitectura](architecture/overview.md)
+- [Catálogo API](api/endpoints.md)
+- [Esquema de datos](data/schema.md)
+- [Estrategia de pruebas](testing/strategy.md)
+- [Índice de evidencias](evidence/README.md)
+- [ADR-001: panel React](adr/ADR-001-panel-react.md)
+- [Respaldo y restauración](operations/backup-restore.md)
+- [Decisión de licencia](legal/licensing.md)
+- [Declaración de uso de IA, borrador](legal/ai-use.md)

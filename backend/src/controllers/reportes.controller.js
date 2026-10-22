@@ -9,6 +9,30 @@ async function produccion(req, res) {
   }
 }
 
+async function detalleProduccion(req, res) {
+  try {
+    res.json(await reportesService.detalleProduccion(req.query.periodo));
+  } catch (error) {
+    if (error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ mensaje: "Error al generar el detalle de producción" });
+  }
+}
+
+async function detalleVentas(req, res) {
+  try {
+    res.json(await reportesService.detalleVentas(req.query.periodo));
+  } catch (error) {
+    if (error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ mensaje: "Error al generar el detalle de ventas" });
+  }
+}
+
 async function ventas(req, res) {
   try {
     const { desde, hasta } = req.query;
@@ -38,4 +62,4 @@ async function auditoria(req, res) {
   }
 }
 
-module.exports = { produccion, ventas, inventario, auditoria };
+module.exports = { produccion, detalleProduccion, detalleVentas, ventas, inventario, auditoria };

@@ -1,0 +1,28 @@
+name: Nueva funcionalidad
+description: Proponer una capacidad del sistema
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Necesidad
+      description: ¿Qué problema o necesidad debe resolver?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación
+      description: Escribe resultados observables y verificables.
+    validations:
+      required: true
+  - type: input
+    id: trace
+    attributes:
+      label: Requisito o historia relacionada
+      placeholder: RF-001 / HU-001
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Dependencias y evidencia
