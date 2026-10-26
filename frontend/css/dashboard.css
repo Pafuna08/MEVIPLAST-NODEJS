@@ -447,6 +447,82 @@ th {
 .data-form .primary-action {
   align-self: end;
 }
+.product-family-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.product-family-card {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 12px;
+  min-height: 210px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--white);
+  text-align: left;
+  cursor: pointer;
+}
+.product-family-card:hover,
+.product-family-card.selected {
+  border-color: var(--red);
+  box-shadow: 0 4px 14px rgba(14, 37, 67, 0.08);
+}
+.product-family-initial {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 4px;
+  color: var(--white);
+  background: var(--red);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.product-family-card strong {
+  color: var(--navy);
+  font-size: 1rem;
+}
+.product-family-card > span:not(.product-family-initial):not(.product-family-link) {
+  color: var(--steel);
+  font-size: 0.82rem;
+}
+.product-family-card b {
+  color: var(--navy);
+  font-size: 1rem;
+}
+.product-family-card .product-family-link {
+  color: var(--red);
+  font-weight: 800;
+}
+.product-variant-summary {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f8fafb;
+}
+.product-variant-summary div {
+  display: grid;
+  gap: 5px;
+}
+.product-variant-summary small {
+  color: var(--steel);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.product-variant-summary span {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
 .order-row {
   display: flex;
   align-items: center;
@@ -670,6 +746,9 @@ th {
   .data-form {
     grid-template-columns: 1fr;
   }
+ .product-variant-summary {
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+ }
 }
 @media (max-width: 640px) {
   .report-categories {

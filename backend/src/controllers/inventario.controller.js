@@ -11,11 +11,11 @@ async function listar(req, res) {
 
 async function ingresar(req, res) {
   try {
-    const { producto, cantidad } = req.body;
-    if (!producto || !cantidad) {
+    const { familia, medida, calibre, color, cantidad } = req.body;
+    if (!familia || !medida || !calibre || !color || !cantidad) {
       return res
         .status(400)
-        .json({ mensaje: "producto y cantidad son obligatorios" });
+        .json({ mensaje: "Línea, medida, calibre, color y unidades son obligatorios" });
     }
     const actualizado = await inventarioService.ingresar(
       req.body,
@@ -24,7 +24,9 @@ async function ingresar(req, res) {
     res.status(201).json(actualizado);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: "Error al ingresar al inventario" });
+    res
+      .status(error.statusCode || 500)
+      .json({ mensaje: error.message || "Error al ingresar al inventario" });
   }
 }
 

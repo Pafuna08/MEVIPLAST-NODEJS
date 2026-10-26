@@ -103,38 +103,26 @@ async function main() {
     }
   }
 
-  const semillas = [
-    [
-      "materia_prima",
-      "nombre",
-      "Polietileno BD",
-      "INSERT INTO materia_prima (nombre, tipo, cantidad, unidad, proveedor, stock_minimo) VALUES ('Polietileno BD', 'Resina', 850, 'kg', 'Plasticos Andinos', 200)",
-    ],
-    [
-      "materia_prima",
-      "nombre",
-      "Pigmento azul",
-      "INSERT INTO materia_prima (nombre, tipo, cantidad, unidad, proveedor, stock_minimo) VALUES ('Pigmento azul', 'Aditivo', 25, 'kg', 'Colorquim', 40)",
-    ],
-    [
-      "inventario",
-      "producto",
-      "Bolsa industrial 40x60",
-      "INSERT INTO inventario (producto, cantidad, ubicacion) VALUES ('Bolsa industrial 40x60', 380, 'Bodega A')",
-    ],
-    [
-      "inventario",
-      "producto",
-      "Empaque adhesivo azul",
-      "INSERT INTO inventario (producto, cantidad, ubicacion) VALUES ('Empaque adhesivo azul', 220, 'Bodega B')",
-    ],
+  const muestrasMateriaPrima = [
+    ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)", "6 x 12", "0.95", "Transparente", 25],
+    ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)", "8 x 12", "1", "Natural", 30],
+    ["PEAD", "Bobina o rollo de polietileno de alta densidad (PEAD)", "6 x 8", "2", "Natural", 25],
+    ["PEAD", "Bobina o rollo de polietileno de alta densidad (PEAD)", "10 x 15", "2", "Blanco", 30],
+    ["PP", "Bobina o rollo de polipropileno (PP)", "6 x 12", "2", "Transparente", 25],
+    ["PP", "Bobina o rollo de polipropileno (PP)", "8 x 12", "3", "Blanco", 30],
   ];
-  for (const [tabla, campo, valor, insercion] of semillas) {
+  for (const [tipo, descripcion, medida, calibre, color, pesoRollo] of muestrasMateriaPrima) {
+    const nombre = `${descripcion} - ${medida} - calibre ${calibre} - ${color}`;
     const [existe] = await connection.query(
-      `SELECT id FROM ${tabla} WHERE ${campo} = ? LIMIT 1`,
-      [valor],
+      "SELECT id FROM materia_prima WHERE tipo = ? AND medida = ? AND calibre = ? AND color = ? LIMIT 1",
+      [tipo, medida, calibre, color],
     );
-    if (!existe.length) await connection.query(insercion);
+    if (!existe.length) {
+      await connection.query(
+        "INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, peso_rollo, cantidad, unidad, stock_minimo) VALUES (?, ?, ?, ?, ?, ?, 0, 'kg', 0)",
+        [nombre, tipo, medida, calibre, color, pesoRollo],
+      );
+    }
   }
 
   const [laura] = await connection.query(
@@ -147,20 +135,13 @@ async function main() {
     "SELECT id FROM usuarios WHERE usuario = 'operario'",
   );
   const [materia] = await connection.query(
-    "SELECT id FROM materia_prima WHERE nombre = 'Polietileno BD'",
+    "SELECT id FROM materia_prima WHERE tipo = 'PEBD' ORDER BY id LIMIT 1",
   );
   const ordenes = [
-    ["Bolsa industrial 40x60", 1200, 720, "en_proceso", "alta", laura[0].id],
-    ["Empaque adhesivo azul", 450, 0, "pendiente", "media", diego[0].id],
-    ["Bolsa transparente 30x45", 800, 800, "finalizado", "alta", laura[0].id],
-    [
-      "Rollo protector azul",
-      600,
-      180,
-      "en_proceso",
-      "media",
-      operarioDemo[0].id,
-    ],
+    ["Adhesivo PP", 1200, 720, "en_proceso", "alta", laura[0].id],
+    ["Sencilla PP", 450, 0, "pendiente", "media", diego[0].id],
+    ["Cargadera", 800, 800, "finalizado", "alta", laura[0].id],
+    ["Troquel riñón", 600, 180, "en_proceso", "media", operarioDemo[0].id],
   ];
   for (const [
     producto,
@@ -189,18 +170,6 @@ async function main() {
         ],
       );
   }
-  const [admin] = await connection.query(
-    "SELECT id FROM usuarios WHERE usuario = 'admin'",
-  );
-  const [venta] = await connection.query(
-    "SELECT id FROM ventas WHERE cliente = 'Distribuciones Norte' LIMIT 1",
-  );
-  if (!venta.length)
-    await connection.query(
-      "INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, usuario_id) VALUES (?, ?, ?, ?, ?)",
-      ["Distribuciones Norte", "Bolsa industrial 40x60", 35, 1800, admin[0].id],
-    );
-
   const migracionesPath = path.join(
     __dirname,
     "..",

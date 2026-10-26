@@ -1,9 +1,35 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
+const { productosTerminados } = require("../constants/productosTerminados");
+
+function validarVariante({ familia, medida, calibre, color }) {
+  if (!productosTerminados.includes(familia)) {
+    const error = new Error("Selecciona una línea de producto válida");
+    error.statusCode = 400;
+    throw error;
+  }
+  for (const [campo, valor] of Object.entries({ medida, calibre, color })) {
+    if (typeof valor !== "string" || !valor.trim()) {
+      const error = new Error(`${campo} es obligatorio`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+  const producto = `${familia} · ${medida.trim()} · calibre ${calibre.trim()} · ${color.trim()}`;
+  if (producto.length > 255) {
+    const error = new Error("Las especificaciones son demasiado largas");
+    error.statusCode = 400;
+    throw error;
+  }
+  return producto;
+}
 
 async function listar() {
   const [filas] = await pool.query(
-    "SELECT * FROM inventario ORDER BY producto ASC",
+    `SELECT * FROM inventario
+     WHERE familia IN (${productosTerminados.map(() => "?").join(", ")})
+     ORDER BY familia, medida, calibre, color`,
+    productosTerminados,
   );
   return filas;
 }
@@ -17,7 +43,10 @@ async function obtenerPorId(id) {
 
 async function ingresar(
   {
-    producto,
+    familia,
+    medida,
+    calibre,
+    color,
     cantidad,
     ubicacion,
     tipo = "ingreso_manual",
@@ -26,12 +55,17 @@ async function ingresar(
   actorId,
 ) {
   const cantidadNumerica = Number(cantidad);
-  if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
-    throw new Error("La cantidad debe ser mayor que cero");
+  if (!Number.isInteger(cantidadNumerica) || cantidadNumerica <= 0) {
+    const error = new Error("Las unidades deben ser un entero mayor que cero");
+    error.statusCode = 400;
+    throw error;
   }
   if (tipo !== "ingreso_manual") {
-    throw new Error("Tipo de ingreso no válido");
+    const error = new Error("Tipo de ingreso no válido");
+    error.statusCode = 400;
+    throw error;
   }
+  const producto = validarVariante({ familia, medida, calibre, color });
 
   const connection = await pool.getConnection();
   let id;
@@ -40,8 +74,8 @@ async function ingresar(
     await connection.beginTransaction();
     transactionStarted = true;
     const [existente] = await connection.query(
-      "SELECT id FROM inventario WHERE producto = ? FOR UPDATE",
-      [producto],
+      "SELECT id FROM inventario WHERE familia = ? AND medida = ? AND calibre = ? AND color = ? FOR UPDATE",
+      [familia, medida.trim(), calibre.trim(), color.trim()],
     );
 
     if (existente.length > 0) {
@@ -52,8 +86,8 @@ async function ingresar(
       );
     } else {
       const [resultado] = await connection.query(
-        "INSERT INTO inventario (producto, cantidad, ubicacion) VALUES (?, ?, ?)",
-        [producto, cantidadNumerica, ubicacion || null],
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [producto, familia, medida.trim(), calibre.trim(), color.trim(), cantidadNumerica, ubicacion || null],
       );
       id = resultado.insertId;
     }

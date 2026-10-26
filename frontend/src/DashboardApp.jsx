@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
 
+const finishedProductFamilies = [
+  "Adhesivo PP",
+  "Adhesivo Seguridad",
+  "Sencilla PP",
+  "Bolsas para la basura",
+  "Cargadera",
+  "Troquel riñón",
+];
+
 const roleViews = {
   Administrador: {
     apiRole: "admin",
@@ -97,7 +106,7 @@ function safeProductName(value) {
   ) {
     return null;
   }
-  return sanitizeText(product, 120) || null;
+  return sanitizeText(product, 255) || null;
 }
 
 function sanitizePayload(value) {
@@ -196,14 +205,11 @@ async function loadView(view, role, token) {
   }
   if (view === "usuarios") return api("/api/usuarios", token);
   if (view === "materia") {
-    const [materials, movements, orders] = await Promise.all([
+    const [materials, movements] = await Promise.all([
       api("/api/materia-prima", token),
       api("/api/materia-prima/movimientos", token),
-      ["admin", "supervisor"].includes(role.apiRole)
-        ? api("/api/produccion", token)
-        : Promise.resolve([]),
     ]);
-    return { materials, movements, orders };
+    return { materials, movements };
   }
   if (view === "inventario") {
     const [items, movements] = await Promise.all([
@@ -844,47 +850,52 @@ function Users({
 }
 
 function Materials({ data, role, onSubmit, saving }) {
-  const canConsume = ["admin", "supervisor"].includes(role);
-  const canManageStock = ["admin", "almacenista"].includes(role);
   const canCreate = role === "admin";
-  const movementTypes = [
-    ...(canConsume ? [["consumo_produccion", "Consumo en producción"]] : []),
-    ...(canManageStock
-      ? [
-          ["compra", "Compra"],
-          ["ajuste_entrada", "Ajuste de entrada"],
-          ["ajuste_salida", "Ajuste de salida"],
-        ]
-      : []),
+  const polymerMaterials = [
+    ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)"],
+    ["PEAD", "Bobina o rollo de polietileno de alta densidad (PEAD)"],
+    ["PP", "Bobina o rollo de polipropileno (PP)"],
   ];
   return (
     <>
-      <Intro title="Materias primas" description="Consulta existencias y registra entradas, ajustes y consumos trazables." />
-      {canCreate && <FormPanel title="Crear materia prima" onSubmit={onSubmit} saving={saving}>
-          <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
-          <Field label="Tipo"><input name="tipo" maxLength="80" required /></Field>
-          <Field label="Cantidad inicial"><input name="cantidad" type="number" min="0" step="0.01" required /></Field>
-          <Field label="Unidad"><input name="unidad" defaultValue="kg" maxLength="30" /></Field>
-          <Field label="Proveedor"><input name="proveedor" maxLength="120" /></Field>
-          <Field label="Stock mínimo"><input name="stock_minimo" type="number" min="0" step="0.01" defaultValue="0" /></Field>
-        </FormPanel>}
-      <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving}>
-        <Field label="Materia prima"><select name="materia_prima_id" required>{data.materials.map((item) => <option key={item.id} value={item.id}>{sanitizeText(item.nombre)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}</select></Field>
-        <Field label="Tipo"><select name="tipo" defaultValue={movementTypes[0]?.[0]}>
-          {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select></Field>
-        {canConsume && <Field label="Orden (para consumo)"><select name="produccion_id"><option value="">Sin asociar</option>{data.orders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}</option>)}</select></Field>}
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Observaciones"><input name="observaciones" maxLength="255" /></Field>
-      </FormPanel>
-      <Panel title="Existencias"><DataTable columns={["Material", "Tipo", "Cantidad", "Mínimo", "Proveedor"]} rows={data.materials.map((item) => ({
+      <Intro title="Materias primas" description="Registra bobinas y consulta existencias por material, medida, calibre y color." />
+      {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving}>
+        <Field label="Material">
+          <select name="tipo" defaultValue="" required>
+            <option value="" disabled>Selecciona un material</option>
+            {polymerMaterials.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </Field>
+        <Field label="Medida (ancho x largo)">
+          <input name="medida" list="materia-medidas" maxLength="80" placeholder="Ej. 6 x 12" required />
+          <datalist id="materia-medidas">
+            {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Calibre">
+          <input name="calibre" list="materia-calibres" maxLength="40" placeholder="Selecciona o escribe el calibre" required />
+          <datalist id="materia-calibres">
+            {["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Color">
+          <input name="color" list="materia-colores" maxLength="80" placeholder="Selecciona o escribe el color" required />
+          <datalist id="materia-colores">
+            {["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Peso del rollo (kg)">
+          <input name="peso_rollo" type="number" min="0.01" step="0.01" placeholder="Ej. 25" required />
+        </Field>
+      </FormPanel>}
+      <Panel title="Materiales registrados"><DataTable columns={["Material", "Medida", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
         key: item.id,
-        cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.tipo)}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad)}</td><td>{number(item.stock_minimo)}</td><td>{sanitizeText(item.proveedor || "—")}</td></>,
+        cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{item.peso_rollo === null || item.peso_rollo === undefined ? "—" : `${number(item.peso_rollo)} kg`}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad)}</td></>,
       }))} /></Panel>
-      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
+      {data.movements.length > 0 && <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
         key: movement.id,
         cells: <><td>{movement.fecha}</td><td>{sanitizeText(movement.materia_prima)}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.registrado_por || "Sistema")}</td></>,
-      }))} /></Panel>
+      }))} /></Panel>}
     </>
   );
 }
@@ -892,17 +903,20 @@ function Materials({ data, role, onSubmit, saving }) {
 function Inventory({ data, onSubmit, saving }) {
   return (
     <>
-      <Intro title="Inventario terminado" description="Registra ingresos y salidas manuales; la producción y las ventas también dejan su movimiento." />
+      <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
       <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Línea de producto"><select name="familia" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+        <Field label="Medida"><input name="medida" maxLength="40" placeholder="Ej. 6*12" required /></Field>
+        <Field label="Calibre"><input name="calibre" maxLength="40" required /></Field>
+        <Field label="Color"><input name="color" maxLength="80" required /></Field>
+        <Field label="Unidades"><input name="cantidad" type="number" min="1" step="1" required /></Field>
         <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" maxLength="80" /></Field>
       </FormPanel>
       <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
         <Field label="Producto"><select name="inventario_id" required>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
+      <Panel title="Productos disponibles"><DataTable columns={["Línea", "Medida", "Calibre", "Color", "Unidades", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{sanitizeText(item.familia)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
       <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden"]} rows={data.movements.map((movement) => ({
         key: movement.id,
         cells: <><td>{movement.fecha}</td><td>{safeProductName(movement.producto) || "Producto no válido"}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—"))}</td></>,
@@ -1001,13 +1015,15 @@ function Production({
               </p>
             )}
             <Field label="Producto">
-              <input
+              <select
                 key={`producto-${selectedTemplateId}`}
                 name="producto"
-                maxLength="120"
                 defaultValue={safeProductName(selectedTemplate?.producto) || ""}
                 required
-              />
+              >
+                <option value="" disabled>Selecciona una línea</option>
+                {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
+              </select>
             </Field>
             <Field label="Meta de producción">
               <input
@@ -1070,7 +1086,7 @@ function Production({
             saving={false}
           >
             <Field label="Producto">
-              <input name="producto" maxLength="120" required />
+              <select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
             </Field>
             <Field label="Meta habitual">
               <input name="cantidad" type="number" min="0.01" step="0.01" required />
@@ -1136,7 +1152,7 @@ function Production({
           onEditOrder(editingOrder.id, payload);
           setEditingOrder(null);
         }} saving={false}>
-          <Field label="Producto"><input name="producto" maxLength="120" defaultValue={safeProductName(editingOrder.producto) || ""} required /></Field>
+          <Field label="Producto"><select name="producto" defaultValue={editingOrder.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
           <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
           <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
           <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
@@ -1152,7 +1168,7 @@ function Assign({ data, onSubmit, saving }) {
     <>
       <Intro title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
       <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
+        <Field label="Producto"><select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
         <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
         <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
@@ -1179,30 +1195,76 @@ function Advance({ data, onSubmit, saving }) {
 }
 
 function Sales({ data, onSubmit, saving }) {
-  const products = data.inventory.filter((item) => safeProductName(item.producto));
+  const [selectedInventoryId, setSelectedInventoryId] = useState("");
+  const [selectedFamily, setSelectedFamily] = useState(finishedProductFamilies[0]);
+  const products = data.inventory.filter((item) => finishedProductFamilies.includes(item.familia));
+  const selectedProduct =
+    products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily) ||
+    products.find((item) => item.familia === selectedFamily && Number(item.cantidad) > 0);
+  const availableProducts = products.filter((item) => Number(item.cantidad) > 0);
 
   return (
     <>
-      <Intro title="Ventas" description="Registra ventas; el stock se descuenta automáticamente." />
+      <Intro title="Ventas" description="Elige una línea y una variante disponible; las existencias se descuentan al registrar la venta." />
+      <div className="product-family-grid">
+        {finishedProductFamilies.map((family) => {
+          const variants = products.filter((item) => item.familia === family);
+          const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
+          return (
+            <button
+              className={`product-family-card${selectedFamily === family ? " selected" : ""}`}
+              key={family}
+              type="button"
+              onClick={() => {
+                setSelectedFamily(family);
+                const firstAvailable = variants.find((item) => Number(item.cantidad) > 0);
+                if (firstAvailable) setSelectedInventoryId(String(firstAvailable.id));
+              }}
+            >
+              <span className="product-family-initial">{family.slice(0, 1)}</span>
+              <strong>{family}</strong>
+              <span>{variants.length} {variants.length === 1 ? "referencia disponible" : "referencias disponibles"}</span>
+              <b>{number(stock)} unidades en stock</b>
+              <span className="product-family-link">Ver existencias</span>
+            </button>
+          );
+        })}
+      </div>
       <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving}>
         <Field label="Cliente"><input name="cliente" maxLength="120" required /></Field>
-        <Field label="Producto">
-          <select name="producto" required>
-            {products.length ? (
-              products.map((item) => (
-                <option key={item.id} value={item.producto}>
-                  {safeProductName(item.producto)} ({number(item.cantidad)})
-                </option>
-              ))
-            ) : (
-              <option value="" disabled>No hay productos disponibles</option>
-            )}
+        <Field label="Línea de producto">
+          <select value={selectedFamily} onChange={(event) => {
+            const family = event.target.value;
+            setSelectedFamily(family);
+            const firstAvailable = products.find((item) => item.familia === family && Number(item.cantidad) > 0);
+            setSelectedInventoryId(firstAvailable ? String(firstAvailable.id) : "");
+          }}>
+            {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
           </select>
         </Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Precio unitario"><input name="precio_unitario" type="number" min="1" required /></Field>
+        <Field label="Variante (medida / calibre / color)">
+          <select name="inventario_id" value={selectedProduct?.id || ""} onChange={(event) => {
+            const item = products.find((product) => String(product.id) === event.target.value);
+            if (item) setSelectedFamily(item.familia);
+            setSelectedInventoryId(event.target.value);
+          }} required>
+            {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
+              <option key={item.id} value={item.id}>{item.medida || "Sin medida"} · calibre {item.calibre || "Sin especificar"} · {item.color || "Sin especificar"} · {number(item.cantidad)} unidades</option>
+            ))}
+            {!availableProducts.some((item) => item.familia === selectedFamily) && <option value="" disabled>No hay variantes con existencias</option>}
+          </select>
+        </Field>
+        {selectedProduct && <div className="product-variant-summary">
+          <div><small>MEDIDA</small><span>{sanitizeText(selectedProduct.medida || "Sin especificar")}</span></div>
+          <div><small>CALIBRE</small><span>{sanitizeText(selectedProduct.calibre || "Sin especificar")}</span></div>
+          <div><small>COLOR</small><span>{sanitizeText(selectedProduct.color || "Sin especificar")}</span></div>
+          <div><small>DISPONIBLE</small><span>{number(selectedProduct.cantidad)} unidades</span></div>
+        </div>}
+        <Field label="Unidades por paquete (máximo 500)"><input name="unidades_paquete" type="number" min="1" max="500" step="1" defaultValue="50" required /></Field>
+        <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" min="1" step="1" required /></Field>
+        <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Cantidad", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{safeProductName(sale.producto) || "Producto no válido"}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
     </>
   );
 }

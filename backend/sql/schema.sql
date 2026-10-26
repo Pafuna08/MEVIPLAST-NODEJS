@@ -54,6 +54,10 @@ CREATE TABLE IF NOT EXISTS materia_prima (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
   tipo VARCHAR(60) NOT NULL,
+  medida VARCHAR(80) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
+  peso_rollo DECIMAL(10,2) NULL,
   cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
   unidad VARCHAR(20) NOT NULL DEFAULT 'kg',
   proveedor VARCHAR(120) NULL,
@@ -100,22 +104,32 @@ CREATE TABLE IF NOT EXISTS plantillas_produccion (
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS inventario (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  producto VARCHAR(120) NOT NULL,
+  producto VARCHAR(255) NOT NULL,
+  familia VARCHAR(80) NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
   ubicacion VARCHAR(80) NULL,
+  UNIQUE KEY uq_inventario_variante (familia, medida, calibre, color),
   actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS ventas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   cliente VARCHAR(120) NOT NULL,
-  producto VARCHAR(120) NOT NULL,
+  producto VARCHAR(255) NOT NULL,
   cantidad DECIMAL(10,2) NOT NULL,
-  precio_unitario DECIMAL(10,2) NOT NULL,
-  total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad * precio_unitario) STORED,
+  precio_unitario DECIMAL(12,4) NOT NULL,
+  inventario_id INT NULL,
+  cantidad_paquetes INT NOT NULL,
+  unidades_paquete INT NOT NULL,
+  precio_paquete DECIMAL(12,2) NOT NULL,
+  total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_paquetes * precio_paquete) STORED,
   usuario_id INT NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS movimientos_materia_prima (

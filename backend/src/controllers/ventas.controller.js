@@ -11,13 +11,12 @@ async function listar(req, res) {
 
 async function registrar(req, res) {
   try {
-    const { cliente, producto, cantidad, precio_unitario } = req.body;
-    if (!cliente || !producto || !cantidad || !precio_unitario) {
+    const { cliente, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete } = req.body;
+    if (!cliente || !inventario_id || !cantidad_paquetes || !unidades_paquete || !precio_paquete) {
       return res
         .status(400)
         .json({
-          mensaje:
-            "cliente, producto, cantidad y precio_unitario son obligatorios",
+          mensaje: "cliente, variante, paquetes, unidades por paquete y precio por paquete son obligatorios",
         });
     }
     const venta = await ventasService.registrar(req.body, req.usuario.id);

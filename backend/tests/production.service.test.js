@@ -38,7 +38,7 @@ test("actualizarOrden preserva relaciones omitidas y permite limpiar materia pri
   });
   pool.query = async (sql) => {
     if (sql.startsWith("SELECT * FROM produccion")) {
-      return [[{ id: 7, producto: "Bolsa", materia_prima_id: null }]];
+      return [[{ id: 7, producto: "Adhesivo PP", materia_prima_id: null }]];
     }
     return [[], []];
   };
@@ -47,16 +47,26 @@ test("actualizarOrden preserva relaciones omitidas y permite limpiar materia pri
     pool.query = originalQuery;
   });
 
-  await productionService.actualizarOrden(7, { producto: " Bolsa nueva " }, 2);
+  await productionService.actualizarOrden(7, { producto: " Adhesivo PP " }, 2);
   assert.match(updatedOrder.sql, /producto = \?/);
   assert.doesNotMatch(updatedOrder.sql, /materia_prima_id/);
-  assert.deepEqual(updatedOrder.params, ["Bolsa nueva", 7]);
+  assert.deepEqual(updatedOrder.params, ["Adhesivo PP", 7]);
 
   queries.length = 0;
   await productionService.actualizarOrden(7, { materia_prima_id: null }, 2);
   updatedOrder = queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
   assert.match(updatedOrder.sql, /materia_prima_id = \?/);
   assert.deepEqual(updatedOrder.params, [null, 7]);
+});
+
+test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async () => {
+  await assert.rejects(
+    productionService.crearPlantilla(
+      { producto: "Sello fondo", cantidad: 20 },
+      1,
+    ),
+    /línea de producto válida/,
+  );
 });
 
 test("no se puede finalizar una orden sin completar la meta", async (t) => {
@@ -106,8 +116,16 @@ test("el supervisor solo ve las órdenes que tiene asignadas", async (t) => {
   });
 
   await productionService.listar({ id: 12, rol: "supervisor" });
-  assert.match(query.sql, /WHERE p\.supervisor_id = \?/);
-  assert.deepEqual(query.params, [12]);
+  assert.match(query.sql, /AND \(p\.supervisor_id = \? OR p\.supervisor_id IS NULL\)/);
+  assert.deepEqual(query.params, [
+    "Adhesivo PP",
+    "Adhesivo Seguridad",
+    "Sencilla PP",
+    "Bolsas para la basura",
+    "Cargadera",
+    "Troquel riñón",
+    12,
+  ]);
 });
 
 test("el supervisor no puede asignar órdenes de otro supervisor", async (t) => {

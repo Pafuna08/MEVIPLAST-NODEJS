@@ -1,15 +1,22 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
+const { productosTerminados } = require("../constants/productosTerminados");
+
+function validarProducto(producto) {
+  if (!productosTerminados.includes(producto)) {
+    throw new Error("Selecciona una línea de producto válida");
+  }
+}
 
 async function listar(usuario) {
-  let condiciones = "";
-  let valores = [];
+  const condiciones = [`p.producto IN (${productosTerminados.map(() => "?").join(", ")})`];
+  const valores = [...productosTerminados];
   if (usuario?.rol === "operario") {
-    condiciones = "WHERE p.responsable_id = ?";
-    valores = [usuario.id];
+    condiciones.push("p.responsable_id = ?");
+    valores.push(usuario.id);
   } else if (usuario?.rol === "supervisor") {
-    condiciones = "WHERE p.supervisor_id = ? OR p.supervisor_id IS NULL";
-    valores = [usuario.id];
+    condiciones.push("(p.supervisor_id = ? OR p.supervisor_id IS NULL)");
+    valores.push(usuario.id);
   }
   const [filas] = await pool.query(
     `SELECT p.*, mp.nombre AS materia_prima_nombre,
@@ -18,7 +25,7 @@ async function listar(usuario) {
      LEFT JOIN materia_prima mp ON mp.id = p.materia_prima_id
      LEFT JOIN usuarios u ON u.id = p.responsable_id
      LEFT JOIN usuarios s ON s.id = p.supervisor_id
-     ${condiciones} ORDER BY p.fecha_inicio DESC`,
+     WHERE ${condiciones.join(" AND ")} ORDER BY p.fecha_inicio DESC`,
     valores,
   );
   return filas;
@@ -43,13 +50,16 @@ async function listarPlantillas() {
     `SELECT p.*, m.nombre AS materia_prima_nombre
      FROM plantillas_produccion p
      LEFT JOIN materia_prima m ON m.id = p.materia_prima_id
+     WHERE p.producto IN (${productosTerminados.map(() => "?").join(", ")})
      ORDER BY p.producto`,
+    productosTerminados,
   );
   return filas;
 }
 
 async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
+  validarProducto(producto);
   const [resultado] = await pool.query(
     "INSERT INTO plantillas_produccion (producto, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?)",
     [
@@ -87,6 +97,7 @@ async function crear(datos, actor) {
     supervisor_id,
     prioridad,
   } = datos;
+  validarProducto(producto);
   let supervisorId = null;
   let responsableId = Number(responsable_id) || null;
   if (actor.rol === "admin") {
@@ -217,6 +228,7 @@ async function actualizarOrden(id, datos, actor) {
     if (producto !== undefined && (typeof producto !== "string" || !producto.trim())) {
       throw new Error("El producto no puede estar vacío");
     }
+    if (producto !== undefined) validarProducto(producto.trim());
     if (
       cantidad !== undefined &&
       (!Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0)
@@ -395,7 +407,7 @@ async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
       [nuevoTotal, estado, lote || null, observaciones || null, estado, id],
     );
     const [inventario] = await connection.query(
-      "SELECT id FROM inventario WHERE producto = ? FOR UPDATE",
+      "SELECT id FROM inventario WHERE familia = ? AND medida IS NULL AND calibre IS NULL AND color IS NULL FOR UPDATE",
       [producto],
     );
     let inventarioId;
@@ -407,8 +419,8 @@ async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
       );
     } else {
       const [creado] = await connection.query(
-        "INSERT INTO inventario (producto, cantidad, ubicacion) VALUES (?, ?, ?)",
-        [producto, cantidadNumerica, "Produccion"],
+        "INSERT INTO inventario (producto, familia, cantidad, ubicacion) VALUES (?, ?, ?, ?)",
+        [producto, producto, cantidadNumerica, "Produccion"],
       );
       inventarioId = creado.insertId;
     }

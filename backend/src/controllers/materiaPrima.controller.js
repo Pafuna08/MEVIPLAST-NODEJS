@@ -23,17 +23,19 @@ async function obtener(req, res) {
 
 async function crear(req, res) {
   try {
-    const { nombre, tipo, cantidad } = req.body;
-    if (!nombre || !tipo || cantidad === undefined) {
+    const { tipo, medida, calibre, color, peso_rollo } = req.body;
+    if (!tipo || !medida || !calibre || !color || peso_rollo === undefined) {
       return res
         .status(400)
-        .json({ mensaje: "nombre, tipo y cantidad son obligatorios" });
+        .json({ mensaje: "Material, medida, calibre, color y peso del rollo son obligatorios" });
     }
     const nuevo = await materiaPrimaService.crear(req.body, req.usuario.id);
     res.status(201).json(nuevo);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: "Error al crear materia prima" });
+    res
+      .status(error.statusCode || 500)
+      .json({ mensaje: error.message || "Error al crear materia prima" });
   }
 }
 

@@ -7,6 +7,28 @@ const tiposPermitidos = new Set([
   "ajuste_salida",
   "consumo_produccion",
 ]);
+const materialesPermitidos = {
+  PEBD: "Bobina o rollo de polietileno de baja densidad (PEBD)",
+  PEAD: "Bobina o rollo de polietileno de alta densidad (PEAD)",
+  PP: "Bobina o rollo de polipropileno (PP)",
+};
+
+function validarCampoMaterial(valor, campo, maxLength) {
+  if (
+    typeof valor !== "string" ||
+    !valor.trim() ||
+    valor.trim().length > maxLength
+  ) {
+    const error = new Error(`${campo} es obligatorio y no debe exceder ${maxLength} caracteres`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return valor.trim();
+}
+
+function nombreMaterial(tipo, medida, calibre, color) {
+  return `${materialesPermitidos[tipo]} - ${medida} - calibre ${calibre} - ${color}`;
+}
 
 async function listar() {
   const [filas] = await pool.query(
@@ -23,10 +45,27 @@ async function obtenerPorId(id) {
 }
 
 async function crear(datos, actorId) {
-  const { nombre, tipo, cantidad, unidad, proveedor, stock_minimo } = datos;
-  const cantidadInicial = Number(cantidad || 0);
-  if (!Number.isFinite(cantidadInicial) || cantidadInicial < 0) {
-    throw new Error("La cantidad inicial no puede ser negativa");
+  const { tipo, peso_rollo } = datos;
+  const nombre = materialesPermitidos[tipo];
+  if (!nombre) {
+    const error = new Error("Selecciona un material válido");
+    error.statusCode = 400;
+    throw error;
+  }
+  const medida = validarCampoMaterial(datos.medida, "La medida", 80);
+  const calibre = validarCampoMaterial(datos.calibre, "El calibre", 40);
+  const color = validarCampoMaterial(datos.color, "El color", 80);
+  const nombreCompleto = nombreMaterial(tipo, medida, calibre, color);
+  if (nombreCompleto.length > 120) {
+    const error = new Error("Las especificaciones exceden el largo permitido");
+    error.statusCode = 400;
+    throw error;
+  }
+  const pesoRollo = Number(peso_rollo);
+  if (!Number.isFinite(pesoRollo) || pesoRollo <= 0) {
+    const error = new Error("El peso del rollo debe ser mayor que cero");
+    error.statusCode = 400;
+    throw error;
   }
 
   const connection = await pool.getConnection();
@@ -36,23 +75,22 @@ async function crear(datos, actorId) {
     await connection.beginTransaction();
     transactionStarted = true;
     const [resultado] = await connection.query(
-      "INSERT INTO materia_prima (nombre, tipo, cantidad, unidad, proveedor, stock_minimo) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, peso_rollo, cantidad, unidad, proveedor, stock_minimo) VALUES (?, ?, ?, ?, ?, ?, ?, 'kg', NULL, 0)",
       [
-        nombre,
+        nombreCompleto,
         tipo,
-        cantidadInicial,
-        unidad || "kg",
-        proveedor || null,
-        stock_minimo || 0,
+        medida,
+        calibre,
+        color,
+        pesoRollo,
+        pesoRollo,
       ],
     );
     id = resultado.insertId;
-    if (cantidadInicial > 0) {
-      await connection.query(
-        "INSERT INTO movimientos_materia_prima (materia_prima_id, usuario_id, tipo, cantidad, observaciones) VALUES (?, ?, 'ajuste_entrada', ?, ?)",
-        [id, actorId, cantidadInicial, "Saldo inicial al crear materia prima"],
-      );
-    }
+    await connection.query(
+      "INSERT INTO movimientos_materia_prima (materia_prima_id, usuario_id, tipo, cantidad, observaciones) VALUES (?, ?, 'ajuste_entrada', ?, ?)",
+      [id, actorId, pesoRollo, "Peso inicial del rollo al registrar materia prima"],
+    );
     await connection.commit();
     transactionStarted = false;
   } catch (error) {
@@ -66,7 +104,7 @@ async function crear(datos, actorId) {
     usuarioId: actorId,
     accion: "CREAR_MATERIA_PRIMA",
     tabla: "materia_prima",
-    detalle: `Ingreso de materia prima '${nombre}' (${cantidad} ${unidad || "kg"})`,
+    detalle: `Ingreso de '${nombreCompleto}', peso ${pesoRollo} kg`,
   });
 
   return obtenerPorId(id);
