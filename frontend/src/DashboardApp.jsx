@@ -140,7 +140,7 @@ function sanitizePayload(value) {
       if (typeof item !== "string") return [key, sanitizePayload(item)];
       const clean = sanitizeText(
         item,
-        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|lote|motivo|detalle)/i.test(
+        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|motivo|detalle)/i.test(
           lowerKey,
         )
           ? 255
@@ -361,6 +361,12 @@ function StatusBadge({ status }) {
   return <span className={`status ${style}`}>{String(status || "").replace("_", " ")}</span>;
 }
 
+// Solo en órdenes abiertas: es lo que decide el orden de atención
+function PriorityBadge({ order }) {
+  if (["finalizado", "cancelado"].includes(order.estado) || !order.prioridad) return null;
+  return <span className={`status priority ${order.prioridad}`}>Prioridad {order.prioridad}</span>;
+}
+
 // Medida, calibre y color de la orden; las órdenes anteriores a la variante no la tienen
 function orderVariant(order) {
   if (!order.medida || !order.calibre || !order.color) return "";
@@ -383,7 +389,7 @@ function VariantFields({ idPrefix, order }) {
   ));
 }
 
-function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
+function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit, editing = false }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
@@ -398,8 +404,9 @@ function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
           {" · "}{number(produced)}/{number(goal)} ({progress}%)
         </span>
       </div>
+      <PriorityBadge order={order} />
       <StatusBadge status={order.estado} />
-      {canEdit && <button className="text-action" type="button" onClick={() => onEdit(order)}>Editar</button>}
+      {canEdit && <button className="text-action" type="button" aria-expanded={editing} onClick={() => onEdit(editing ? null : order)}>{editing ? "Cerrar" : "Editar"}</button>}
       {canManage && (
         <select
           className="state-select"
@@ -628,8 +635,10 @@ export default function DashboardApp() {
       });
       setToast("Orden actualizada.");
       setReloadKey((value) => value + 1);
+      return true;
     } catch (cause) {
       setToast(cause.message);
+      return false;
     }
   }
 
@@ -1326,7 +1335,28 @@ function Production({
               onChangeStatus={onChangeStatus}
               canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
               onEdit={setEditingOrder}
+              editing={editingOrder?.id === order.id}
             />
+            {editingOrder?.id === order.id && (
+              <form
+                className="data-form order-edit"
+                aria-label={`Editar orden #${order.id}`}
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
+                  // Se cierra solo si se guardó; si falla, el formulario conserva lo escrito
+                  if (await onEditOrder(order.id, payload)) setEditingOrder(null);
+                }}
+              >
+                <Field label="Producto"><select name="producto" defaultValue={order.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+                <VariantFields idPrefix={`orden-${order.id}`} order={order} />
+                <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={order.cantidad} required /></Field>
+                <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
+                <Field label="Prioridad"><select name="prioridad" defaultValue={order.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
+                <button className="text-action" type="button" onClick={() => setEditingOrder(null)}>Cancelar</button>
+                <button className="primary-action" type="submit">Guardar cambios</button>
+              </form>
+            )}
             {isSupervisor && !order.responsable_id && order.estado === "pendiente" && (
               <form
                 className="data-form"
@@ -1353,21 +1383,6 @@ function Production({
         ))}
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>
-      {editingOrder && (
-        <FormPanel title={`Editar orden #${editingOrder.id}`} onSubmit={(event) => {
-          event.preventDefault();
-          const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
-          onEditOrder(editingOrder.id, payload);
-          setEditingOrder(null);
-        }} saving={false}>
-          <Field label="Producto"><select name="producto" defaultValue={editingOrder.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
-          <VariantFields idPrefix={`orden-${editingOrder.id}`} order={editingOrder} />
-          <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
-          <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
-          <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
-          <button className="text-action" type="button" onClick={() => setEditingOrder(null)}>Cancelar</button>
-        </FormPanel>
-      )}
     </>
   );
 }
@@ -1396,7 +1411,6 @@ function Advance({ data, onSubmit, saving }) {
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
         <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Lote"><input name="lote" maxLength="80" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}
       </FormPanel>

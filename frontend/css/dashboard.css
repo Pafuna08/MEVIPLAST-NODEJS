@@ -365,6 +365,20 @@ th {
   color: #9a2631;
   background: #fde4e6;
 }
+.status.priority {
+  border: 1px solid currentColor;
+  background: transparent;
+  white-space: nowrap;
+}
+.status.priority.alta {
+  color: #9a2631;
+}
+.status.priority.media {
+  color: #8a4b02;
+}
+.status.priority.baja {
+  color: var(--steel);
+}
 .activity-list {
   margin: 0;
   padding: 8px 20px 18px;
@@ -604,6 +618,10 @@ th {
   margin: 4px 0 18px;
   color: var(--red);
   font-weight: 700;
+}
+.order-edit {
+  border-bottom: 1px solid #edf0f3;
+  background: #f7f9fb;
 }
 .order-row > div {
   display: grid;

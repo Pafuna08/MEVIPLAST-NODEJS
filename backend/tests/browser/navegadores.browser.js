@@ -182,7 +182,7 @@ const FLUJOS = [
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Nuevo registro");
     await form.locator("input[name=cantidad]").fill("5");
-    await form.locator("input[name=lote]").fill("NAV-01");
+    await form.locator("textarea[name=observaciones]").fill("NAV-01");
     await form.locator("button[type=submit]").click();
     await esperarAviso(pagina, "Registro guardado");
     await contexto.close();

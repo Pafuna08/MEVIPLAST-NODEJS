@@ -175,7 +175,7 @@ function guiones(datos) {
     },
     operario: async (t) => {
       await medir("Listar producción", "GET", "/produccion", t);
-      await medir("Registrar avance", "POST", `/produccion/${azar(datos.ordenesOperario)}/avance`, t, { cantidad: 10, lote: "PERF" });
+      await medir("Registrar avance", "POST", `/produccion/${azar(datos.ordenesOperario)}/avance`, t, { cantidad: 10, observaciones: "PERF" });
     },
     vendedor: async (t) => {
       await medir("Listar inventario", "GET", "/inventario", t);

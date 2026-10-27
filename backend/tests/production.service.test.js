@@ -117,6 +117,8 @@ test("el supervisor solo ve las órdenes que tiene asignadas", async (t) => {
 
   await productionService.listar({ id: 12, rol: "supervisor" });
   assert.match(query.sql, /AND \(p\.supervisor_id = \? OR p\.supervisor_id IS NULL\)/);
+  // Abiertas primero y, entre ellas, por prioridad (alta, media, baja)
+  assert.match(query.sql, /ORDER BY p\.estado IN \('finalizado', 'cancelado'\),\s+CASE .* FIELD\(p\.prioridad, 'alta', 'media', 'baja'\) END/s);
   assert.deepEqual(query.params, [
     "Adhesivo PP",
     "Adhesivo Seguridad",
@@ -169,7 +171,7 @@ test("registrar avance que completa la meta finaliza la orden e incrementa el in
     estado: "en_proceso",
   });
 
-  await productionService.registrarAvance(5, { cantidad: 40, lote: "L-01" }, { id: 3, rol: "operario" });
+  await productionService.registrarAvance(5, { cantidad: 40 }, { id: 3, rol: "operario" });
 
   const orden = estado.queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
   assert.deepEqual(orden.params.slice(0, 2), [100, "finalizado"]);

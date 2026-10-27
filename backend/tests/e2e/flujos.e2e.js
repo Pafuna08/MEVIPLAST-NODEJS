@@ -113,7 +113,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     const exceso = await llamar("POST", `/produccion/${ordenId}/avance`, tokens.operario, { cantidad: 1500 });
     assert.equal(exceso.status, 400);
     assert.match(exceso.body.mensaje, /supera la meta pendiente/);
-    const avance = await llamar("POST", `/produccion/${ordenId}/avance`, tokens.operario, { cantidad: 1000, lote: "E2E-01" });
+    const avance = await llamar("POST", `/produccion/${ordenId}/avance`, tokens.operario, { cantidad: 1000, observaciones: "E2E-01" });
     assert.equal(avance.status, 200, JSON.stringify(avance.body));
     assert.equal(avance.body.estado, "finalizado");
 

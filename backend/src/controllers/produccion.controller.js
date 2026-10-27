@@ -159,7 +159,6 @@ async function registrarAvance(req, res) {
         req.params.id,
         {
           cantidad,
-          lote: req.body.lote,
           observaciones: req.body.observaciones,
         },
         req.usuario,
