@@ -128,6 +128,114 @@ test("el supervisor solo ve las órdenes que tiene asignadas", async (t) => {
   ]);
 });
 
+function simularAvance(t, orden, { inventarioId = 40 } = {}) {
+  const originalGetConnection = pool.getConnection;
+  const originalQuery = pool.query;
+  const estado = { queries: [], committed: false, rolledBack: false };
+  pool.getConnection = async () => ({
+    beginTransaction: async () => {},
+    commit: async () => {
+      estado.committed = true;
+    },
+    rollback: async () => {
+      estado.rolledBack = true;
+    },
+    release: () => {},
+    query: async (sql, params = []) => {
+      estado.queries.push({ sql, params });
+      if (sql.startsWith("SELECT * FROM produccion")) return [[orden]];
+      if (sql.startsWith("SELECT id FROM inventario")) {
+        return [inventarioId ? [{ id: inventarioId }] : []];
+      }
+      if (sql.startsWith("INSERT INTO inventario")) return [{ insertId: 77 }];
+      return [{ insertId: 1 }];
+    },
+  });
+  pool.query = async () => [[orden], []];
+  t.after(() => {
+    pool.getConnection = originalGetConnection;
+    pool.query = originalQuery;
+  });
+  return estado;
+}
+
+test("registrar avance que completa la meta finaliza la orden e incrementa el inventario en la transacción", async (t) => {
+  const estado = simularAvance(t, {
+    id: 5,
+    producto: "Cargadera",
+    cantidad: 100,
+    cantidad_producida: 60,
+    responsable_id: 3,
+    estado: "en_proceso",
+  });
+
+  await productionService.registrarAvance(5, { cantidad: 40, lote: "L-01" }, { id: 3, rol: "operario" });
+
+  const orden = estado.queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
+  assert.deepEqual(orden.params.slice(0, 2), [100, "finalizado"]);
+  const inventario = estado.queries.find(({ sql }) => sql.startsWith("UPDATE inventario"));
+  assert.deepEqual(inventario.params, [40, 40]);
+  const movimiento = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO movimientos_inventario"));
+  assert.match(movimiento.sql, /'produccion'/);
+  assert.deepEqual(movimiento.params, [40, 3, 5, 40]);
+  assert.equal(estado.committed, true);
+});
+
+test("registrar avance crea la existencia del producto si todavía no existe", async (t) => {
+  const estado = simularAvance(
+    t,
+    { id: 6, producto: "Sencilla PP", cantidad: 50, cantidad_producida: 0, responsable_id: 3, estado: "pendiente" },
+    { inventarioId: null },
+  );
+
+  await productionService.registrarAvance(6, { cantidad: 20 }, { id: 3, rol: "operario" });
+
+  const orden = estado.queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
+  assert.deepEqual(orden.params.slice(0, 2), [20, "en_proceso"]);
+  const creado = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO inventario"));
+  assert.deepEqual(creado.params, ["Sencilla PP", "Sencilla PP", 20, "Produccion"]);
+  const movimiento = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO movimientos_inventario"));
+  assert.equal(movimiento.params[0], 77);
+  assert.equal(estado.committed, true);
+});
+
+test("registrar avance rechaza superar la meta pendiente sin modificar el inventario", async (t) => {
+  const estado = simularAvance(t, {
+    id: 5,
+    producto: "Cargadera",
+    cantidad: 100,
+    cantidad_producida: 60,
+    responsable_id: 3,
+    estado: "en_proceso",
+  });
+
+  await assert.rejects(
+    productionService.registrarAvance(5, { cantidad: 50 }, { id: 3, rol: "operario" }),
+    /supera la meta pendiente \(40\)/,
+  );
+  assert.equal(estado.committed, false);
+  assert.equal(estado.rolledBack, true);
+  assert.equal(estado.queries.some(({ sql }) => /^(UPDATE|INSERT)/.test(sql)), false);
+});
+
+test("un operario no puede registrar avance en la orden de otro operario", async (t) => {
+  const estado = simularAvance(t, {
+    id: 5,
+    producto: "Cargadera",
+    cantidad: 100,
+    cantidad_producida: 0,
+    responsable_id: 3,
+    estado: "en_proceso",
+  });
+
+  await assert.rejects(
+    productionService.registrarAvance(5, { cantidad: 10 }, { id: 8, rol: "operario" }),
+    /tus tareas asignadas/,
+  );
+  assert.equal(estado.rolledBack, true);
+  assert.equal(estado.queries.some(({ sql }) => /^(UPDATE|INSERT)/.test(sql)), false);
+});
+
 test("el supervisor no puede asignar órdenes de otro supervisor", async (t) => {
   const originalGetConnection = pool.getConnection;
   let rolledBack = false;

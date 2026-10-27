@@ -10,18 +10,18 @@ npm run build --prefix frontend
 
 ## Cobertura automatizada
 
-26 pruebas con `node:test` (26 aprobadas el 2026-10-26, commit `a5673a6`):
+30 pruebas con `node:test` (30 aprobadas el 2026-10-27):
 
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
-- `production.service.test.js` (6): edición parcial, plantillas del catálogo, finalización con meta pendiente y alcance del supervisor.
+- `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance (finaliza al completar la meta, crea o incrementa la existencia con su movimiento, rechaza superar la meta y el avance de otro operario).
 - `reportes.service.test.js` (3): límites de periodo calendario y filtro de ventas por rango.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
 - `sanitize.test.js` (3): sanitización de texto, números y objetos.
 - `ventas.service.test.js` (3): límite de 500 unidades por paquete, descuento por paquetes y aislamiento del vendedor.
 
-Sin prueba automatizada todavía: registrar avance de producción, crear orden, consumo de materia prima asociado a una orden y login.
+Sin prueba automatizada todavía: crear orden, consumo de materia prima asociado a una orden y login.
 - Build: Vite compila la entrada React `frontend/dashboard.html`.
 - CI: ejecuta instalación por lockfile, auditoría a nivel crítico, tests backend y build.
 
