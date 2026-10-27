@@ -75,9 +75,10 @@ npm run lint --prefix frontend
 npm test --prefix backend
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
+npm run test:e2e --prefix backend   # requiere MySQL/MariaDB activo; usa una base desechable meviplast_e2e
 ```
 
-La suite tiene 38 pruebas automatizadas (38 aprobadas el 2026-10-27): health check y CORS, bloqueo por intentos fallidos, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+La suite tiene 39 pruebas unitarias y de rutas (39 aprobadas el 2026-10-27) y una suite E2E contra MySQL que recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes y el bloqueo de cuentas. Cubren health check y CORS, bloqueo por intentos fallidos, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 
