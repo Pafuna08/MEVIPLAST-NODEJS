@@ -12,7 +12,9 @@
     "db:init": "node src/config/initDb.js",
     "test": "node --test",
     "lint": "eslint .",
-    "test:e2e": "node --test tests/e2e/flujos.e2e.js"
+    "test:e2e": "node --test tests/e2e/flujos.e2e.js",
+    "test:perf": "node tests/perf/carga.perf.js",
+    "test:browser": "node tests/browser/navegadores.browser.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -28,7 +30,8 @@
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "globals": "^17.13.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "playwright-core": "1.64.0"
   },
   "overrides": {
     "exceljs": {
