@@ -208,11 +208,14 @@ async function loadView(view, role, token) {
   }
   if (view === "usuarios") return api("/api/usuarios", token);
   if (view === "materia") {
-    const [materials, movements] = await Promise.all([
+    // Las órdenes solo hacen falta para el consumo (admin y supervisor)
+    const canConsume = ["admin", "supervisor"].includes(role.apiRole);
+    const [materials, movements, orders] = await Promise.all([
       api("/api/materia-prima", token),
       api("/api/materia-prima/movimientos", token),
+      canConsume ? api("/api/produccion", token) : [],
     ]);
-    return { materials, movements };
+    return { materials, movements, orders };
   }
   if (view === "inventario") {
     const [items, movements] = await Promise.all([
@@ -964,6 +967,23 @@ function Users({
 
 function Materials({ data, role, onSubmit, saving }) {
   const canCreate = role === "admin";
+  // Mismos permisos que la API (materiaPrima.controller · registrarMovimiento)
+  const canManageStock = ["admin", "almacenista"].includes(role);
+  const canConsume = ["admin", "supervisor"].includes(role);
+  const movementTypes = [
+    ...(canManageStock ? [["compra", "Compra"], ["ajuste_entrada", "Ajuste de entrada"], ["ajuste_salida", "Ajuste de salida"]] : []),
+    ...(canConsume ? [["consumo_produccion", "Consumo en una orden"]] : []),
+  ];
+  const [materialId, setMaterialId] = useState("");
+  const [movementType, setMovementType] = useState(movementTypes[0]?.[0] || "");
+  const selectedMaterialId = materialId || String(data.materials[0]?.id || "");
+  // Solo las órdenes activas que usan la bobina elegida admiten consumo (RN-016)
+  const consumableOrders = (data.orders || []).filter((order) =>
+    String(order.materia_prima_id) === selectedMaterialId && ["pendiente", "en_proceso"].includes(order.estado));
+  // Etiqueta corta (PEBD · 10 x 15 · calibre 2 · Transparente); el nombre completo solo si faltan especificaciones
+  const materialLabel = (item) => (item.medida
+    ? [item.tipo, item.medida, item.calibre && `calibre ${item.calibre}`, item.color]
+    : [item.nombre]).filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
   const polymerMaterials = [
     ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)"],
     ["PEAD", "Bobina o rollo de polietileno de alta densidad (PEAD)"],
@@ -971,7 +991,27 @@ function Materials({ data, role, onSubmit, saving }) {
   ];
   return (
     <>
-      <Intro title="Materias primas" description="Registra bobinas y consulta existencias por material, medida, calibre y color." />
+      <Intro title="Materias primas" description="Registra bobinas, compras, ajustes y consumos, y consulta existencias por material, medida, calibre y color." />
+      {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving}>
+        <Field label="Materia prima">
+          <select name="materia_prima_id" value={selectedMaterialId} onChange={(event) => setMaterialId(event.target.value)} required>
+            {data.materials.map((item) => <option key={item.id} value={item.id}>{materialLabel(item)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}
+          </select>
+        </Field>
+        <Field label="Movimiento">
+          <select name="tipo" value={movementType} onChange={(event) => setMovementType(event.target.value)} required>
+            {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </Field>
+        {movementType === "consumo_produccion" && <Field label="Orden que usa esta bobina">
+          <select name="produccion_id" required>
+            {consumableOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} ({order.estado === "en_proceso" ? "en proceso" : order.estado})</option>)}
+            {!consumableOrders.length && <option value="">No hay órdenes activas que usen esta bobina</option>}
+          </select>
+        </Field>}
+        <Field label="Cantidad (kg)"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Observaciones"><input name="observaciones" maxLength="255" placeholder={movementType === "compra" ? "Ej. proveedor o número de remisión" : "Motivo del movimiento"} /></Field>
+      </FormPanel>}
       {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving}>
         <Field label="Material">
           <select name="tipo" defaultValue="" required>

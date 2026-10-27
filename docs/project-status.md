@@ -11,7 +11,6 @@ Corte: 27/10/2026, rama `develop`, commit `55dce18` (PR #1 a #30 fusionados). Si
 
 ## Pendiente antes de `v1.0.0`
 
-- DEF-013: decidir si se restaura en el panel el formulario de compras, ajustes y consumos de materia prima, que se retiró en `4169d09`, o si se saca del alcance.
 - Revisión y aprobación de los PR #12 a #30 por Carlos Herrera.
 - Aceptación del cliente por rol.
 - Probar la recuperación de contraseña con el SMTP real y repetir las pruebas de carga y de navegadores en el servidor de MEVIPLAST.
