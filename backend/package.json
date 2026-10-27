@@ -2,6 +2,8 @@
   "name": "meviplast",
   "version": "1.0.0",
   "description": "Sistema Web MEVIPLAST - Gestion de produccion, materia prima, inventario, ventas, seguridad y reportes",
+  "license": "UNLICENSED",
+  "private": true,
   "main": "server.js",
   "scripts": {
     "prestart": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
