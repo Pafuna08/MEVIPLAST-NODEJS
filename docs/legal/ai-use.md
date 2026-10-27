@@ -48,6 +48,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #34 | Prueba de instalación limpia; correcciones DEF-014 (datos demo por rol) y DEF-015 (ruta de migraciones) |
 | #35 | Medición de la cobertura de pruebas y mínimo exigido en CI |
 | #36 | Contrato OpenAPI y prueba de correspondencia con las rutas |
+| #37 | Diagrama entidad-relación y prueba de correspondencia con el esquema |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 
