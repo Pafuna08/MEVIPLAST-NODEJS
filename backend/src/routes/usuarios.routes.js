@@ -10,6 +10,7 @@ router.use(verificarToken, verificarRol("admin"));
 router.get("/", usuariosController.listar);
 router.post("/", usuariosController.crear);
 router.put("/:id", usuariosController.actualizar);
+router.put("/:id/desbloquear", usuariosController.desbloquear);
 router.delete("/:id", usuariosController.eliminar);
 
 module.exports = router;

@@ -2,19 +2,39 @@ const bcrypt = require("bcryptjs");
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 
+const CAMPOS_PUBLICOS =
+  "id, nombre, usuario, correo, rol, activo, creado_en, bloqueado_hasta, bloqueado_hasta IS NOT NULL AND bloqueado_hasta > NOW() AS bloqueado";
+
 async function listar() {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, correo, rol, activo, creado_en FROM usuarios ORDER BY id DESC"
+    `SELECT ${CAMPOS_PUBLICOS} FROM usuarios ORDER BY id DESC`
   );
   return filas;
 }
 
 async function obtenerPorId(id) {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, correo, rol, activo, creado_en FROM usuarios WHERE id = ?",
+    `SELECT ${CAMPOS_PUBLICOS} FROM usuarios WHERE id = ?`,
     [id]
   );
   return filas[0] || null;
+}
+
+async function desbloquear(id, actorId) {
+  const [resultado] = await pool.query(
+    "UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?",
+    [id]
+  );
+  if (!resultado.affectedRows) return null;
+
+  await registrarAuditoria({
+    usuarioId: actorId,
+    accion: "DESBLOQUEAR_USUARIO",
+    tabla: "usuarios",
+    detalle: `Se desbloqueo el usuario con id ${id}`,
+  });
+
+  return obtenerPorId(id);
 }
 
 async function crear({ nombre, usuario, correo, password, rol }, actorId) {
@@ -61,4 +81,4 @@ async function eliminar(id, actorId) {
   });
 }
 
-module.exports = { listar, obtenerPorId, crear, actualizar, eliminar };
+module.exports = { listar, obtenerPorId, crear, actualizar, eliminar, desbloquear };

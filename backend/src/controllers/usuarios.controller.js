@@ -101,6 +101,17 @@ async function actualizar(req, res) {
   }
 }
 
+async function desbloquear(req, res) {
+  try {
+    const usuario = await usuariosService.desbloquear(req.params.id, req.usuario.id);
+    if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    res.json(usuario);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: "Error al desbloquear usuario" });
+  }
+}
+
 async function eliminar(req, res) {
   try {
     await usuariosService.eliminar(req.params.id, req.usuario.id);
@@ -111,4 +122,4 @@ async function eliminar(req, res) {
   }
 }
 
-module.exports = { listar, crear, actualizar, eliminar };
+module.exports = { listar, crear, actualizar, eliminar, desbloquear };
