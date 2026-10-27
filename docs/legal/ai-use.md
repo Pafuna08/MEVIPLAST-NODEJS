@@ -56,6 +56,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #42 | Vista de auditoría en el panel (observación del equipo en pruebas) |
 | #43 | Medida, calibre y color en las órdenes de producción, para que el avance entre a la variante correcta del inventario (observación del equipo en pruebas) |
 | #44 | Prioridad que ordena las órdenes, edición de la orden en su misma fila y retiro del campo «Lote» (observaciones del equipo en pruebas; el equipo pidió a la IA proponer el uso de la prioridad) |
+| #45 | Medida, calibre y color en las plantillas de órdenes frecuentes (mejora pendiente que el equipo pidió aplicar) |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

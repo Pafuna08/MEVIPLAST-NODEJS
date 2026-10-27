@@ -94,12 +94,16 @@ CREATE TABLE IF NOT EXISTS produccion (
 
 CREATE TABLE IF NOT EXISTS plantillas_produccion (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  producto VARCHAR(120) NOT NULL UNIQUE,
+  producto VARCHAR(120) NOT NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL,
   materia_prima_id INT NULL,
   prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
   creado_por INT NULL,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_plantilla_variante (producto, medida, calibre, color),
   FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE SET NULL,
   FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
 );

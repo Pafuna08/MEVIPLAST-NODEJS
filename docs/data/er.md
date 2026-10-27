@@ -68,7 +68,10 @@ erDiagram
     }
     plantillas_produccion {
         INT id PK
-        VARCHAR producto UK
+        VARCHAR producto UK "UK compuesta: producto, medida, calibre, color"
+        VARCHAR medida UK
+        VARCHAR calibre UK
+        VARCHAR color UK
         DECIMAL cantidad
         INT materia_prima_id FK
         ENUM prioridad

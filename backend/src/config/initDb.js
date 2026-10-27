@@ -149,14 +149,16 @@ async function main() {
   const [materia] = await connection.query(
     "SELECT id FROM materia_prima WHERE tipo = 'PEBD' ORDER BY id LIMIT 1",
   );
+  // Variantes iguales a las existencias DEMO, para que el avance sume a ellas
   const ordenes = [
-    ["Adhesivo PP", 1200, 720, "en_proceso", "alta", laura[0].id],
-    ["Sencilla PP", 450, 0, "pendiente", "media", diego[0].id],
-    ["Cargadera", 800, 800, "finalizado", "alta", laura[0].id],
-    ["Troquel riñón", 600, 180, "en_proceso", "media", operarioDemo[0].id],
+    ["Adhesivo PP", ["10 x 15", "2", "Transparente"], 1200, 720, "en_proceso", "alta", laura[0].id],
+    ["Sencilla PP", ["6 x 9", "1", "Natural"], 450, 0, "pendiente", "media", diego[0].id],
+    ["Cargadera", ["15 x 20", "2", "Blanco"], 800, 800, "finalizado", "alta", laura[0].id],
+    ["Troquel riñón", ["12 x 18", "2", "Transparente"], 600, 180, "en_proceso", "media", operarioDemo[0].id],
   ];
   for (const [
     producto,
+    [medida, calibre, color],
     cantidad,
     producido,
     estado,
@@ -169,9 +171,12 @@ async function main() {
     );
     if (!existe.length)
       await connection.query(
-        "INSERT INTO produccion (producto, cantidad, cantidad_producida, estado, prioridad, materia_prima_id, responsable_id, fecha_fin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO produccion (producto, medida, calibre, color, cantidad, cantidad_producida, estado, prioridad, materia_prima_id, responsable_id, fecha_fin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           producto,
+          medida,
+          calibre,
+          color,
           cantidad,
           producido,
           estado,
