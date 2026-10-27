@@ -9,6 +9,7 @@ const path = require("node:path");
 const { once } = require("node:events");
 const bcrypt = require("bcryptjs");
 const mysql = require("mysql2/promise");
+const { leerEsquema } = require("../../src/config/schema");
 
 const DB = process.env.E2E_DB_NAME || "meviplast_e2e";
 if (!/^meviplast_e2e\w*$/.test(DB)) {
@@ -35,12 +36,7 @@ async function prepararBase() {
   await raiz.query(`DROP DATABASE IF EXISTS \`${DB}\``);
   await raiz.query(`CREATE DATABASE \`${DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await raiz.changeUser({ database: DB });
-  // schema.sql fija la base meviplast_db; se quitan esas líneas para no tocarla
-  const schema = fs
-    .readFileSync(path.join(sqlDir, "schema.sql"), "utf8")
-    .replace(/^\s*CREATE DATABASE[^;]*;/im, "")
-    .replace(/^\s*USE\s+\w+\s*;/im, "");
-  await raiz.query(schema);
+  await raiz.query(leerEsquema());
   const hash = await bcrypt.hash(CLAVE, 4);
   for (const rol of ROLES) {
     await raiz.query(
