@@ -33,8 +33,8 @@ jobs:
         run: npm run lint --prefix frontend
       - name: Audit backend dependencies for critical advisories
         run: npm audit --prefix backend --audit-level=critical
-      - name: Run backend tests
-        run: npm test --prefix backend
+      - name: Run backend tests with coverage (minimum 58% of lines)
+        run: npm run test:coverage --prefix backend
       - name: Audit frontend dependencies for critical advisories
         run: npm audit --prefix frontend --audit-level=critical
       - name: Scan repository for secrets
@@ -69,8 +69,8 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install backend dependencies
         run: npm ci --prefix backend
-      - name: Run end-to-end tests against MariaDB
-        run: npm run test:e2e --prefix backend
+      - name: Run unit and end-to-end tests against MariaDB with coverage (minimum 75% of lines)
+        run: npm run test:coverage:total --prefix backend
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306

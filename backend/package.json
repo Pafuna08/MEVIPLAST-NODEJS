@@ -13,6 +13,8 @@
     "test": "node --test",
     "lint": "eslint .",
     "test:e2e": "node --test tests/e2e/flujos.e2e.js",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=src/** --test-coverage-lines=58",
+    "test:coverage:total": "node --test --experimental-test-coverage --test-coverage-include=src/** --test-coverage-lines=75 tests/*.test.js tests/e2e/flujos.e2e.js",
     "test:perf": "node tests/perf/carga.perf.js",
     "test:browser": "node tests/browser/navegadores.browser.js"
   },
