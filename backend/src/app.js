@@ -3,7 +3,9 @@ const cors = require("cors");
 const path = require("path");
 const apiRoutes = require("./routes");
 const { sanitizarObjeto } = require("./utils/sanitizar");
+const { crearLogger, registrarPeticiones } = require("./utils/logger");
 
+const log = crearLogger("app");
 const app = express();
 
 // Express sirve el panel desde el mismo origen; solo los orígenes listados en
@@ -31,7 +33,7 @@ app.use((req, res, next) => {
 });
 
 // API REST (todos los modulos: seguridad, materia prima, produccion, inventario, ventas, reportes)
-app.use("/api", apiRoutes);
+app.use("/api", registrarPeticiones, apiRoutes);
 
 // El build React tiene prioridad; el resto del sitio estático permanece disponible.
 const frontendPath = path.join(__dirname, "..", "..", "frontend");
@@ -45,7 +47,7 @@ app.use("/api", (req, res) => {
 
 // Manejador de errores centralizado
 app.use((error, req, res, next) => {
-  console.error("Error no controlado:", error);
+  log.error("Error no controlado", { error, metodo: req.method, ruta: req.originalUrl.split("?")[0] });
   res.status(500).json({ mensaje: "Error interno del servidor" });
 });
 

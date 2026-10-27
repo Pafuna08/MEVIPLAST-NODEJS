@@ -47,7 +47,7 @@ npm run test:browser
 
 ## Cobertura automatizada
 
-56 pruebas unitarias y de rutas con `node:test` (56 aprobadas el 2026-10-27):
+60 pruebas unitarias y de rutas con `node:test` (60 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -56,6 +56,7 @@ npm run test:browser
 - `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 16 claves foráneas con la regla de borrado.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.
+- `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 47 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
 - `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance.
@@ -79,8 +80,8 @@ Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuev
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 60,9 % | 66,9 % | 45,7 % |
-| Unitarias + E2E | 77,9 % | 69,0 % | 77,5 % |
+| Unitarias | 61,9 % | 68,4 % | 48,9 % |
+| Unitarias + E2E | 78,5 % | 70,2 % | 78,4 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

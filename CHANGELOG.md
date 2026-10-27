@@ -6,6 +6,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Added
 
+- Registros estructurados del servidor (`src/utils/logger.js`): una línea JSON por evento con fecha, nivel, módulo y mensaje; registro de cada petición a la API sin su cuerpo; campos sensibles ocultos; nivel con `LOG_LEVEL`.
 - Diagrama entidad-relación en Mermaid (`docs/data/er.md`) con las 10 tablas y 16 claves foráneas, y una prueba que falla si deja de coincidir con `schema.sql`.
 - Contrato OpenAPI 3.0.3 (`docs/api/openapi.json`) con las 47 operaciones, sus cuerpos, respuestas y roles, y una prueba que falla si el contrato y las rutas de Express dejan de coincidir.
 - Cobertura de pruebas medida con Node.js (`test:coverage` y `test:coverage:total`): 61 % de líneas con unitarias y 78 % con E2E; el CI exige un mínimo de 58 % y 75 %.
