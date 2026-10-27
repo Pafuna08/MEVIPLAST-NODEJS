@@ -1,4 +1,5 @@
 const reportesService = require("../services/reportes.service");
+const reportesExcel = require("../services/reportesExcel.service");
 
 async function produccion(req, res) {
   try {
@@ -62,4 +63,33 @@ async function auditoria(req, res) {
   }
 }
 
-module.exports = { produccion, detalleProduccion, detalleVentas, ventas, inventario, auditoria };
+// Exporta el detalle del periodo a Excel (RF-028)
+function exportarExcel(tipo) {
+  return async (req, res) => {
+    try {
+      const { buffer, nombreArchivo } = await reportesExcel.libroDetalle(tipo, req.query.periodo);
+      res.set({
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${nombreArchivo}"`,
+      });
+      res.send(buffer);
+    } catch (error) {
+      if (error.message.startsWith("El periodo")) {
+        return res.status(400).json({ mensaje: error.message });
+      }
+      console.error(error);
+      res.status(500).json({ mensaje: "Error al exportar el reporte a Excel" });
+    }
+  };
+}
+
+module.exports = {
+  produccion,
+  detalleProduccion,
+  detalleVentas,
+  excelProduccion: exportarExcel("produccion"),
+  excelVentas: exportarExcel("ventas"),
+  ventas,
+  inventario,
+  auditoria,
+};

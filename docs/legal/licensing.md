@@ -20,6 +20,8 @@ Las licencias de las dependencias son permisivas y compatibles con el uso propie
 | nodemailer | 7.0.13 | MIT-0 |
 | cors | 2.8.6 | MIT |
 | dotenv | 16.6.1 | BSD-2-Clause |
+| exceljs | 4.4.0 | MIT |
+| uuid (de exceljs, forzada con `overrides`) | 11.1.1 | MIT |
 | react, react-dom | 19.3.1 | MIT |
 | vite (desarrollo) | 6.4.4 | MIT |
 | nodemon (desarrollo) | 3.1.14 | MIT |

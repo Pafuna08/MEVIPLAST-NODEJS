@@ -23,7 +23,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, producto, cantidad y precio. El total se calcula y el stock disminuye si hay existencias.
-- **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador.
+- **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador y **Descargar Excel** baja el detalle del periodo en un archivo `.xlsx` con las hojas Resumen, Por producto y Detalle.
 
 ## Supervisor
 
@@ -31,7 +31,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Asignar tareas:** crear órdenes para operarios activos y asociar opcionalmente materia prima; asociar no registra consumo.
 - **Operarios:** consultar equipo y órdenes activas.
 - **Seguimiento:** consultar órdenes y cambiar estados.
-- **Reportes:** consultar resúmenes.
+- **Reportes:** consultar resúmenes, imprimirlos o descargarlos en Excel.
 
 - **Materias primas:** consultar movimientos y registrar consumo asociado a una orden. La asociación de materia prima a la orden no consume stock automáticamente.
 - **Ventas:** registrar ventas; el descuento de inventario y el movimiento relacionado se guardan en una transacción.

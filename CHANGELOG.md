@@ -10,6 +10,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - Endpoint `GET /api/health` para verificar la API y la base de datos.
 - Licencia propietaria y lint con ESLint en backend, frontend y CI.
 - Comprobante de venta imprimible (RF-023): número consecutivo, cliente, producto, cantidades, total y vendedor; se abre al registrar la venta y desde la tabla de ventas, con `GET /api/ventas/:id/comprobante`.
+- Exportación a Excel de los reportes detallados de producción y ventas (RF-028), con `GET /api/reportes/{tipo}/detalle/excel` y el botón "Descargar Excel"; dependencia `exceljs` (MIT).
 - ADR-002 (backend en Node.js), ADR-003 (movimientos de stock en transacción) y ADR-004 (autenticación con JWT).
 
 - Recuperación de contraseña y recordatorio de usuario por correo, con tokens de un solo uso vigentes 30 minutos.

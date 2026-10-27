@@ -216,6 +216,16 @@ textarea {
   font-weight: 800;
   cursor: pointer;
 }
+.primary-action.secondary {
+  color: var(--navy);
+  background: #edf2f8;
+  border: 1px solid var(--line);
+}
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

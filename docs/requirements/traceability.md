@@ -17,7 +17,7 @@ La guía pide una cadena problema → objetivo → stakeholder → alcance → r
 | PRO/OBJ: por asignar desde DOC-01 | STK-03 cliente; STK-06 área administrativa; almacenista | RF-003 Inventario | RN por aprobar | HU-011, HU-012, HU-014; CU pendiente | Panel Inventario/Producción/Ventas; servicios de inventario, producción y ventas | `/api/inventario`, `/api/inventario/movimientos`, `/{id}/salida`, avance de producción, `/api/ventas` | Ledger escrito en la transacción de ingresos, avances, salidas y ventas; integración pendiente | Implementado: saldo y movimientos de inventario quedan vinculados a actor, orden o venta cuando aplica. Aceptación pendiente. |
 | PRO/OBJ: por asignar desde DOC-01 | STK-05 vendedores; STK-03 cliente | RF-004 Ventas | RN por aprobar | HU-013, HU-014, HU-024; CU pendiente | Panel Ventas para vendedor, supervisor y admin | `/api/ventas`, `/api/reportes/ventas`, `/api/inventario` (consulta de existencias) | Permisos, aislamiento de ventas del vendedor y stock transaccional requieren integración | Implementado parcialmente: vendedor registra y consulta solo sus ventas; stock se descuenta y genera movimiento en una transacción. Sin comprobante. Aceptación pendiente. |
 | PRO/OBJ: por asignar desde DOC-01 | STK-01 líder; STK-03 cliente; usuarios | RF-005 Seguridad | RN de permisos por aprobar | HU-016, HU-017, HU-020; HU-018/HU-019 pendientes | Login y panel; `frontend/src/DashboardApp.jsx`, `backend/src/middleware/auth.middleware.js` | `/api/auth/login`, `/api/usuarios` | Pruebas de integración de autenticación, permisos y revocación pendientes | Parcial: JWT/bcrypt y roles presentes; no se localizaron recuperación ni bloqueo de intentos. |
-| PRO/OBJ: por asignar desde DOC-01 | STK-03 cliente; STK-06 área administrativa | Reportes / RNF | Métricas/umbrales por aprobar | HU-021–HU-025 | Panel Reportes; `reportes.service.js` | `/api/reportes/produccion`, `/ventas`, `/inventario`, `/auditoria` | CP de resultados y RNF pendiente | Parcial: resúmenes/bitácora; sin rendimiento por operario ni exportación Excel. |
+| PRO/OBJ: por asignar desde DOC-01 | STK-03 cliente; STK-06 área administrativa | Reportes / RNF | Métricas/umbrales por aprobar | HU-021–HU-025 | Panel Reportes; `reportes.service.js` | `/api/reportes/produccion`, `/ventas`, `/inventario`, `/auditoria` | CP de resultados y RNF pendiente | Parcial: resúmenes, bitácora y exportación a Excel; sin rendimiento por operario. |
 
 ## Estado preliminar por historia
 
@@ -49,7 +49,7 @@ Los estados describen lo encontrado en código y pruebas automatizadas de esta r
 | HU-022 | Consultar rendimiento de operarios | Pendiente | No localizado; acordar indicadores y fórmulas. |
 | HU-023 | Generar reporte de inventario | Parcial | Confirmar cobertura de materias primas y productos terminados. |
 | HU-024 | Visualizar historial de ventas | Parcial | Confirmar búsqueda por fecha/cliente y permisos. |
-| HU-025 | Exportar reportes | Parcial | Imprimir desde navegador no equivale necesariamente a exportar PDF/Excel; definir alcance. |
+| HU-025 | Exportar reportes | En código; sin aceptación | PDF con la impresión del navegador y Excel con `/api/reportes/{tipo}/detalle/excel` (RF-028); falta aceptación del cliente. |
 
 ## Incidencias de trazabilidad del Word
 
