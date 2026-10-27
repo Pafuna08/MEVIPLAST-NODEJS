@@ -790,17 +790,19 @@ function Home({ data, role, navigate }) {
   const produced = data.orders.reduce((sum, order) => sum + Number(order.cantidad_producida || 0), 0);
   const stats = role === "operario"
     ? [
-        ["Mis tareas activas", active.length],
-        ["Producción registrada", number(produced)],
-        ["Completadas", data.orders.filter((order) => order.estado === "finalizado").length],
-        ["Meta pendiente", number(active.reduce((sum, order) => sum + Number(order.cantidad) - Number(order.cantidad_producida || 0), 0))],
+        ["Mis tareas activas", active.length, "TA"],
+        ["Producción registrada", number(produced), "UN"],
+        ["Completadas", data.orders.filter((order) => order.estado === "finalizado").length, "OK"],
+        ["Meta pendiente", number(active.reduce((sum, order) => sum + Number(order.cantidad) - Number(order.cantidad_producida || 0), 0)), "PE"],
       ]
     : [
-        ["Órdenes activas", active.length],
-        ["Producción registrada", number(produced)],
-        ["Inventario terminado", number(data.inventory.reduce((sum, item) => sum + Number(item.cantidad), 0))],
-        ["Ventas", money(data.sales.resumen.total_vendido)],
+        ["Órdenes activas", active.length, "OP"],
+        ["Producción registrada", number(produced), "UN"],
+        ["Inventario terminado", number(data.inventory.reduce((sum, item) => sum + Number(item.cantidad), 0)), "INV"],
+        ["Ventas", money(data.sales.resumen.total_vendido), "$"],
       ];
+  const completed = data.orders.filter((order) => order.estado === "finalizado").length;
+  const soldOut = data.inventory.filter((item) => Number(item.cantidad) === 0).length;
   const destination = role === "operario" ? "registrar" : role === "supervisor" ? "asignar" : "reportes";
   return (
     <>
@@ -810,7 +812,7 @@ function Home({ data, role, navigate }) {
         action={<button className="primary-action" type="button" onClick={() => navigate(destination)}>{role === "operario" ? "Registrar producción" : role === "supervisor" ? "Asignar tarea" : "Ver reportes"}</button>}
       />
       <section className="stats-grid">
-        {stats.map(([label, value]) => <article className="stat-card" key={label}><div className="stat-head"><span>{label}</span><i className="stat-icon">•</i></div><strong>{value}</strong><small>Datos reales</small></article>)}
+        {stats.map(([label, value, code]) => <article className="stat-card" key={label}><div className="stat-head"><span>{label}</span><i className="stat-icon" aria-hidden="true">{code}</i></div><strong>{value}</strong><small>Datos reales</small></article>)}
       </section>
       <div className="dashboard-grid">
         <Panel title="Órdenes recientes" action={<button type="button" onClick={() => navigate(role === "operario" ? "historial" : "produccion")}>Ver todas</button>}>
@@ -819,11 +821,11 @@ function Home({ data, role, navigate }) {
         </Panel>
         <Panel title="Estado">
           <ul className="activity-list">
-            <li><strong>{active.length} órdenes activas</strong><span>Revisa el seguimiento para actualizar.</span></li>
+            <li><strong>{active.length} {active.length === 1 ? "orden activa" : "órdenes activas"}</strong><span>Revisa el seguimiento para actualizar.</span></li>
             {role === "operario" ? (
-              <li><strong>{data.orders.filter((order) => order.estado === "finalizado").length} órdenes completadas</strong><span>Tu historial de producción.</span></li>
+              <li><strong>{completed} {completed === 1 ? "orden completada" : "órdenes completadas"}</strong><span>Tu historial de producción.</span></li>
             ) : (
-              <li><strong>{data.inventory.filter((item) => Number(item.cantidad) === 0).length} productos agotados</strong><span>Inventario actual.</span></li>
+              <li><strong>{soldOut} {soldOut === 1 ? "producto agotado" : "productos agotados"}</strong><span>Inventario actual.</span></li>
             )}
           </ul>
         </Panel>

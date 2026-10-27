@@ -233,7 +233,7 @@ async function login(usuario, password) {
     usuarioId: registro.id,
     accion: "LOGIN",
     tabla: "usuarios",
-    detalle: `Inicio de sesion de ${registro.usuario}`,
+    detalle: `Inicio de sesión de ${registro.usuario}`,
   });
 
   return {

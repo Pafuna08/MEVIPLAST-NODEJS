@@ -35,7 +35,7 @@ window.addEventListener("scroll", updateHeader, { passive: true });
 menuButton?.addEventListener("click", () => {
   const open = menuButton.getAttribute("aria-expanded") === "true";
   menuButton.setAttribute("aria-expanded", String(!open));
-  menuButton.setAttribute("aria-label", open ? "Abrir menu" : "Cerrar menu");
+  menuButton.setAttribute("aria-label", open ? "Abrir menú" : "Cerrar menú");
   navMenu.classList.toggle("open", !open);
 });
 
@@ -97,11 +97,11 @@ contactForm?.addEventListener("submit", (event) => {
   message.value = mensajeLimpio;
 
   if (nombreLimpio.length < 3) {
-    setError(name, "Escribe un nombre valido.");
+    setError(name, "Escribe un nombre válido.");
     valid = false;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
-    setError(email, "Escribe un correo electronico valido.");
+    setError(email, "Escribe un correo electrónico válido.");
     valid = false;
   }
   if (mensajeLimpio.length < 10) {
@@ -111,7 +111,7 @@ contactForm?.addEventListener("submit", (event) => {
 
   if (valid) {
     status.textContent =
-      "Solicitud validada. En una implementacion real se enviaria al servidor.";
+      "Solicitud validada. En una implementación real se enviaría al servidor.";
     contactForm.reset();
   }
 });
