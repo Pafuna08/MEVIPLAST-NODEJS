@@ -30,6 +30,7 @@ Abre el PR hacia `develop` e incluye objetivo, requisito relacionado (RF/HU), ti
 npm run lint --prefix backend
 npm run lint --prefix frontend
 npm test --prefix backend
+npm run test:e2e --prefix backend   # con MySQL activo; usa una base desechable
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 git diff --check

@@ -2,9 +2,9 @@
 
 Sistema web interno para apoyar la gestión de producción, materias primas, inventario terminado, ventas y reportes de MEVIPLAST.
 
-**Estado:** en desarrollo académico. La rama `feature/MEVI-9-completar-backlog` contiene cambios locales aún no integrados ni aceptados. No se ha aprobado como despliegue productivo ni se han verificado disponibilidad, restauración de copias o compatibilidad en todos los navegadores.
+**Estado:** en desarrollo académico. La rama `develop` integra los PR #1 a #31; todavía no hay etiqueta de liberación ni aceptación del cliente. Se verificaron el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
 
-## Funcionalidad presente en la rama en revisión
+## Funcionalidad presente en `develop`
 
 - Autenticación con JWT y contraseñas almacenadas con bcryptjs.
 - Recuperación de contraseña y recordatorio de usuario por correo, con enlace de un solo uso vigente 30 minutos.
@@ -16,14 +16,15 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 - Movimientos de materias primas e inventario terminado registrados junto con sus saldos en transacciones.
 - Edición de órdenes de producción restringida a órdenes pendientes sin avances registrados.
 - Ventas por paquetes (hasta 500 unidades por paquete); el vendedor solo consulta sus ventas y el registro descuenta existencias en la transacción.
-- Reportes de producción y ventas por periodo diario, semanal, mensual o anual.
+- Comprobante de venta imprimible, con número consecutivo.
+- Reportes de producción y ventas por periodo diario, semanal, mensual o anual, imprimibles y descargables en Excel.
 - API REST con autenticación y controles de acceso por rol.
 
-La presencia en código no equivale a aceptación del requisito. La suite E2E con MySQL cubre los flujos principales, pero falta la aceptación del cliente por rol. Los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y el PDF de los reportes usan la impresión del navegador; los reportes detallados también se descargan en Excel. Cerrar sesión elimina el token del navegador; el servidor lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+La presencia en código no equivale a aceptación del requisito. La suite E2E con MySQL cubre los flujos principales, pero falta la aceptación del cliente por rol. Los indicadores de rendimiento por operario no están implementados. Las compras, los ajustes y los consumos de materia prima se registran por la API, pero el panel no tiene su formulario (DEF-013, pendiente de decisión). El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y el PDF de los reportes usan la impresión del navegador; los reportes detallados también se descargan en Excel. Cerrar sesión elimina el token del navegador; el servidor lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
-- Backend: Node.js, Express, JavaScript, JWT, bcryptjs y mysql2.
+- Backend: Node.js, Express, JavaScript, JWT, bcryptjs, mysql2, nodemailer (correo de recuperación) y exceljs (reportes en Excel).
 - Frontend de trabajo: React, JSX y Vite.
 - Sitio público e inicio de sesión: HTML, CSS y JavaScript.
 - Base de datos: MySQL.
@@ -31,7 +32,7 @@ La presencia en código no equivale a aceptación del requisito. La suite E2E co
 
 ## Requisitos previos
 
-- Node.js y npm.
+- Node.js 20 o superior y npm.
 - MySQL compatible y disponible. En el entorno local del equipo se usa XAMPP.
 - Git para clonar el repositorio.
 
@@ -47,7 +48,7 @@ npm run db:init --prefix backend
 npm start --prefix backend
 ```
 
-**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. La migración de roles y movimientos se probó en una instancia temporal aislada de MariaDB con datos ficticios; no se aplicó a una base existente, y la integración de la aplicación con MySQL sigue pendiente. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
+**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. Para actualizar una base existente se aplican las migraciones de `backend/sql/migrations` después de un respaldo verificado (ver [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md)). Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 
@@ -75,10 +76,12 @@ npm run lint --prefix frontend
 npm test --prefix backend
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
-npm run test:e2e --prefix backend   # requiere MySQL/MariaDB activo; usa una base desechable meviplast_e2e
+npm run test:e2e --prefix backend      # requiere MySQL/MariaDB activo; base desechable meviplast_e2e
+npm run test:perf --prefix backend     # prueba de carga; base desechable meviplast_perf
+npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
 ```
 
-La suite tiene 39 pruebas unitarias y de rutas (39 aprobadas el 2026-10-27) y una suite E2E contra MySQL que recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes y el bloqueo de cuentas. Cubren health check y CORS, bloqueo por intentos fallidos, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+Hay 52 pruebas unitarias y de rutas (52 aprobadas el 2026-10-27). Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
 
 ## Estructura
 

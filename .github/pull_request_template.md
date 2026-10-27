@@ -9,7 +9,9 @@ Qué cambia y por qué.
 
 ## Validación
 
+- [ ] `npm run lint --prefix backend` y `npm run lint --prefix frontend`
 - [ ] `npm test --prefix backend`
+- [ ] `npm run test:e2e --prefix backend` (requiere MySQL; base desechable)
 - [ ] `npm audit --prefix backend --audit-level=critical`
 - [ ] `npm run build --prefix frontend`
 - [ ] Pruebas manuales por rol, si aplica

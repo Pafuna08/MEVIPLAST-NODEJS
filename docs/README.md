@@ -1,9 +1,8 @@
 # Documentación del repositorio
 
-- [Evaluación frente a la arquitectura ADSO](adso-review-2026-10-20.md)
 - [Estado del proyecto y brechas](project-status.md)
-- [Matriz de trazabilidad](requirements/traceability.md)
-- [Manual de usuario, borrador](user-guide.md)
+- [Trazabilidad y estado por historia](requirements/traceability.md)
+- [Manual de usuario](user-guide.md)
 - [Arquitectura](architecture/overview.md)
 - [Catálogo API](api/endpoints.md)
 - [Esquema de datos](data/schema.md)
@@ -15,4 +14,5 @@
 - [ADR-004: autenticación con JWT y permisos por rol](adr/ADR-004-autenticacion-jwt.md)
 - [Respaldo y restauración](operations/backup-restore.md)
 - [Decisión de licencia](legal/licensing.md)
-- [Declaración de uso de IA, borrador](legal/ai-use.md)
+- [Declaración de uso de IA, borrador por firmar](legal/ai-use.md)
+- [Evaluación frente a la arquitectura ADSO del 2026-10-20 (histórica)](adso-review-2026-10-20.md)
