@@ -6,8 +6,15 @@ const { sanitizarObjeto } = require("./utils/sanitizar");
 
 const app = express();
 
+// Express sirve el panel desde el mismo origen; solo los orígenes listados en
+// CORS_ORIGINS (separados por comas) pueden llamar a la API desde otro dominio.
+const origenesPermitidos = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origen) => origen.trim())
+  .filter(Boolean);
+
 // Middlewares globales
-app.use(cors());
+app.use(cors({ origin: origenesPermitidos.length ? origenesPermitidos : false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {

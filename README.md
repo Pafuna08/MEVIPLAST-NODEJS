@@ -50,6 +50,8 @@ npm start --prefix backend
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 
+Para verificar el despliegue, `GET /api/health` responde 200 si la API y la base de datos están disponibles y 503 si la base de datos no responde. La API no acepta llamadas desde otros dominios salvo los listados en `CORS_ORIGINS`; el panel servido por Express no lo necesita.
+
 ### Recuperación de cuenta por correo
 
 La pantalla `recuperar.html` permite pedir un enlace de restablecimiento (válido 30 minutos y de un solo uso) o solicitar que se envíe el nombre de usuario. Configura `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` y opcionalmente `SMTP_FROM` en `backend/.env`; usa una contraseña de aplicación del proveedor SMTP y no la guardes en Git. La migración `20261022_recovery_tokens.sql` crea la tabla de tokens. Las cuentas anteriores deben recibir un correo desde Gestión de usuarios antes de poder recuperarlas.
@@ -74,7 +76,7 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
-La suite tiene 30 pruebas automatizadas (30 aprobadas el 2026-10-27): recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+La suite tiene 33 pruebas automatizadas (33 aprobadas el 2026-10-27): health check y CORS, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 

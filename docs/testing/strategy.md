@@ -10,9 +10,10 @@ npm run build --prefix frontend
 
 ## Cobertura automatizada
 
-30 pruebas con `node:test` (30 aprobadas el 2026-10-27):
+33 pruebas con `node:test` (33 aprobadas el 2026-10-27):
 
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
+- `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance (finaliza al completar la meta, crea o incrementa la existencia con su movimiento, rechaza superar la meta y el avance de otro operario).

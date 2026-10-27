@@ -4,6 +4,7 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Los 
 
 | Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
 | ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| GET         | `/health`                                                            | Público                                | Verificar que la API y la base de datos respondan (200 / 503) |
 | POST        | `/auth/login`                                                        | Público                                | Iniciar sesión y recibir JWT           |
 | POST        | `/auth/recuperar-password`                                           | Público                                | Solicitar enlace de recuperación por correo |
 | POST        | `/auth/recordar-usuario`                                             | Público                                | Enviar nombre de usuario al correo asociado |
