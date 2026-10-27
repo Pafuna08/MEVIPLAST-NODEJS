@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const mysql = require("mysql2/promise");
+const { leerEsquema, validarNombreBase } = require("./schema");
 require("dotenv").config();
 
 async function main() {
@@ -21,14 +22,13 @@ async function main() {
     multipleStatements: true,
   });
 
-  console.log("Ejecutando sql/schema.sql ...");
-  const schemaPath = path.join(__dirname, "..", "..", "sql", "schema.sql");
-  const schema = fs.readFileSync(schemaPath, "utf8");
-  await connection.query(schema);
-
-  await connection.changeUser({
-    database: process.env.DB_NAME || "meviplast_db",
-  });
+  const nombreBase = validarNombreBase(process.env.DB_NAME || "meviplast_db");
+  console.log(`Ejecutando sql/schema.sql en ${nombreBase} ...`);
+  await connection.query(
+    `CREATE DATABASE IF NOT EXISTS \`${nombreBase}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
+  );
+  await connection.changeUser({ database: nombreBase });
+  await connection.query(leerEsquema());
 
   // Migracion segura para instalaciones creadas antes de los campos de avance.
   await connection.query(`ALTER TABLE produccion

@@ -47,7 +47,7 @@ npm run db:init --prefix backend
 npm start --prefix backend
 ```
 
-**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. La migración de roles y movimientos se probó en una instancia temporal aislada de MariaDB con datos ficticios; no se aplicó a una base existente, y la integración de la aplicación con MySQL sigue pendiente. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
+**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. La migración de roles y movimientos se probó en una instancia temporal aislada de MariaDB con datos ficticios; no se aplicó a una base existente, y la integración de la aplicación con MySQL sigue pendiente. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 
