@@ -67,6 +67,8 @@ Vite lee `PORT` desde `backend/.env` y reenvía `/api` al backend. Para forzar o
 ## Pruebas y build
 
 ```powershell
+npm run lint --prefix backend
+npm run lint --prefix frontend
 npm test --prefix backend
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
