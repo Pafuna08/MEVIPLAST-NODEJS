@@ -1,8 +1,20 @@
 # Estado del proyecto
 
-- Revisión documental anterior: [`adso-review-2026-10-20.md`](adso-review-2026-10-20.md), fotografía de `develop` en `f89abcb`; no describe los cambios posteriores de la rama feature.
-- Matriz de trazabilidad: [`requirements/traceability.md`](requirements/traceability.md).
-- Manual de usuario: [`user-guide.md`](user-guide.md), borrador pendiente de validación.
-- Rama funcional revisada: `feature/MEVI-9-completar-backlog`, HEAD `9f49d80`, con cambios locales sin commit (revisión del 2026-10-21).
+Corte: 27/10/2026, rama `develop`, commit `55dce18` (PR #1 a #30 fusionados). Sin etiqueta de liberación.
 
-Este archivo funciona como índice breve. La matriz de trazabilidad presenta el estado preliminar por historia para la rama funcional revisada. Los resultados describen inspección estática y pruebas automatizadas, no aprobación del instructor, aceptación del cliente ni certificación de despliegue productivo. La migración se probó en una instancia temporal aislada con datos ficticios; no se ejecutó contra la instancia XAMPP existente ni una base real. Los documentos Word fuente se mantienen fuera del repositorio para no exponer datos personales.
+- Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 52 unitarias, 8 E2E con MySQL, prueba de carga y prueba en Edge, Chrome y Firefox.
+- Evidencias: [`evidence/README.md`](evidence/README.md).
+- Decisiones: [`adr/`](adr/) (ADR-001 a ADR-004).
+- Manual de usuario: [`user-guide.md`](user-guide.md).
+- Revisión documental anterior: [`adso-review-2026-10-20.md`](adso-review-2026-10-20.md) (histórica, describe `develop` en `f89abcb`).
+
+## Pendiente antes de `v1.0.0`
+
+- DEF-013: decidir si se restaura en el panel el formulario de compras, ajustes y consumos de materia prima, que se retiró en `4169d09`, o si se saca del alcance.
+- Revisión y aprobación de los PR #12 a #30 por Carlos Herrera.
+- Aceptación del cliente por rol.
+- Probar la recuperación de contraseña con el SMTP real y repetir las pruebas de carga y de navegadores en el servidor de MEVIPLAST.
+- Completar y firmar la declaración de uso de IA ([`legal/ai-use.md`](legal/ai-use.md)).
+
+Este archivo describe el código y sus pruebas, no la aprobación del instructor ni la aceptación del cliente. Los documentos Word fuente se mantienen fuera del repositorio para no exponer datos personales.
