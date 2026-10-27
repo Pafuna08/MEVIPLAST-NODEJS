@@ -14,6 +14,11 @@ router.get(
   verificarRol("admin", "supervisor", "vendedor"),
   controller.listar,
 );
+router.get(
+  "/:id/comprobante",
+  verificarRol("admin", "supervisor", "vendedor"),
+  controller.comprobante,
+);
 router.post(
   "/",
   verificarRol("admin", "supervisor", "vendedor"),

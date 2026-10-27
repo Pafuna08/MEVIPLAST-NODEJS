@@ -21,6 +21,23 @@ async function obtenerPorId(id) {
   return filas[0] || null;
 }
 
+// Datos del comprobante imprimible (RF-023). El vendedor solo ve los de sus ventas.
+async function obtenerComprobante(id, actor) {
+  const soloPropias = actor?.rol === "vendedor";
+  const [filas] = await pool.query(
+    `SELECT v.id, v.cliente, v.producto, v.cantidad, v.cantidad_paquetes, v.unidades_paquete,
+            v.precio_paquete, v.precio_unitario, v.total, v.fecha,
+            i.familia, i.medida, i.calibre, i.color, u.nombre AS vendedor
+     FROM ventas v
+     LEFT JOIN inventario i ON i.id = v.inventario_id
+     LEFT JOIN usuarios u ON u.id = v.usuario_id
+     WHERE v.id = ?${soloPropias ? " AND v.usuario_id = ?" : ""}`,
+    soloPropias ? [id, actor.id] : [id],
+  );
+  if (!filas[0]) return null;
+  return { ...filas[0], numero: `V-${String(filas[0].id).padStart(6, "0")}` };
+}
+
 async function registrar(
   { cliente, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete },
   actorId,
@@ -99,4 +116,4 @@ async function registrar(
   return obtenerPorId(saleId);
 }
 
-module.exports = { listar, obtenerPorId, registrar };
+module.exports = { listar, obtenerPorId, obtenerComprobante, registrar };

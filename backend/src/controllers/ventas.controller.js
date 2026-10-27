@@ -29,4 +29,19 @@ async function registrar(req, res) {
   }
 }
 
-module.exports = { listar, registrar };
+async function comprobante(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ mensaje: "Identificador de venta inválido" });
+  }
+  try {
+    const venta = await ventasService.obtenerComprobante(id, req.usuario);
+    if (!venta) return res.status(404).json({ mensaje: "Venta no encontrada" });
+    res.json(venta);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: "Error al generar el comprobante" });
+  }
+}
+
+module.exports = { listar, registrar, comprobante };

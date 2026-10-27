@@ -101,3 +101,36 @@ test("el vendedor solo consulta sus propias ventas", async (t) => {
   assert.match(query.sql, /WHERE v\.usuario_id = \?/);
   assert.deepEqual(query.params, [12]);
 });
+
+test("el comprobante del vendedor se limita a sus ventas y lleva número consecutivo", async (t) => {
+  const originalQuery = pool.query;
+  let query;
+  pool.query = async (sql, params) => {
+    query = { sql, params };
+    return [[{ id: 15, cliente: "Cliente de prueba", total: 70000 }], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  const comprobante = await salesService.obtenerComprobante(15, { id: 12, rol: "vendedor" });
+  assert.match(query.sql, /WHERE v\.id = \? AND v\.usuario_id = \?/);
+  assert.deepEqual(query.params, [15, 12]);
+  assert.equal(comprobante.numero, "V-000015");
+});
+
+test("el administrador consulta el comprobante de cualquier venta", async (t) => {
+  const originalQuery = pool.query;
+  let query;
+  pool.query = async (sql, params) => {
+    query = { sql, params };
+    return [[], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  assert.equal(await salesService.obtenerComprobante(99, { id: 1, rol: "admin" }), null);
+  assert.doesNotMatch(query.sql, /usuario_id = \?/);
+  assert.deepEqual(query.params, [99]);
+});
