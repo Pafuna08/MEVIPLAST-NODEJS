@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   password_hash VARCHAR(255) NOT NULL,
   rol ENUM('admin', 'supervisor', 'operario', 'vendedor', 'almacenista') NOT NULL,
   activo TINYINT(1) NOT NULL DEFAULT 1,
+  intentos_fallidos INT NOT NULL DEFAULT 0,
+  bloqueado_hasta DATETIME NULL,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_usuarios_correo (correo)
 );

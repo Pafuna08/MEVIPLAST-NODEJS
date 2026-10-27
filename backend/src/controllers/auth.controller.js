@@ -11,7 +11,7 @@ async function iniciarSesion(req, res) {
     const resultado = await authService.login(usuario, password);
 
     if (!resultado.ok) {
-      return res.status(401).json({ mensaje: resultado.mensaje });
+      return res.status(resultado.bloqueado ? 423 : 401).json({ mensaje: resultado.mensaje });
     }
 
     return res.json({ token: resultado.token, usuario: resultado.usuario });

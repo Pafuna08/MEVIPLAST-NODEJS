@@ -9,6 +9,11 @@ require("dotenv").config();
 const RESPUESTA_RECUPERACION =
   "Si existe una cuenta asociada a ese correo, recibirás un mensaje con los siguientes pasos.";
 const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// RN-024: tras MAX_INTENTOS fallidos consecutivos la cuenta se bloquea MINUTOS_BLOQUEO minutos
+const MAX_INTENTOS = Number(process.env.LOGIN_MAX_INTENTOS) || 5;
+const MINUTOS_BLOQUEO = Number(process.env.LOGIN_BLOQUEO_MINUTOS) || 15;
+const MENSAJE_CREDENCIALES = "Usuario o contrasena incorrectos";
+const MENSAJE_BLOQUEO = `La cuenta está bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${MINUTOS_BLOQUEO} minutos o solicita el desbloqueo al administrador.`;
 
 function crearTransportadorCorreo() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD } = process.env;
@@ -139,7 +144,7 @@ async function restablecerPassword(token, password) {
     }
     userId = tokens[0].usuario_id;
     await connection.query(
-      "UPDATE usuarios SET password_hash = ? WHERE id = ? AND activo = 1",
+      "UPDATE usuarios SET password_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ? AND activo = 1",
       [passwordHash, userId],
     );
     const [updated] = await connection.query(
@@ -172,18 +177,47 @@ async function restablecerPassword(token, password) {
 
 async function login(usuario, password) {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, password_hash, rol, activo FROM usuarios WHERE usuario = ?",
+    "SELECT id, nombre, usuario, password_hash, rol, activo, intentos_fallidos, bloqueado_hasta, bloqueado_hasta > NOW() AS bloqueado FROM usuarios WHERE usuario = ?",
     [usuario],
   );
 
   const registro = filas[0];
   if (!registro || !registro.activo) {
-    return { ok: false, mensaje: "Usuario o contrasena incorrectos" };
+    return { ok: false, mensaje: MENSAJE_CREDENCIALES };
+  }
+
+  // Mientras dure el bloqueo no se evalúa la contraseña, ni siquiera si es correcta
+  if (Number(registro.bloqueado)) {
+    return { ok: false, bloqueado: true, mensaje: MENSAJE_BLOQUEO };
   }
 
   const passwordValida = await bcrypt.compare(password, registro.password_hash);
   if (!passwordValida) {
-    return { ok: false, mensaje: "Usuario o contrasena incorrectos" };
+    // bloqueado_hasta se asigna antes del contador porque MySQL usa los valores ya actualizados
+    await pool.query(
+      `UPDATE usuarios SET
+        bloqueado_hasta = CASE WHEN intentos_fallidos + 1 >= ? THEN DATE_ADD(NOW(), INTERVAL ? MINUTE) ELSE NULL END,
+        intentos_fallidos = CASE WHEN intentos_fallidos + 1 >= ? THEN 0 ELSE intentos_fallidos + 1 END
+       WHERE id = ?`,
+      [MAX_INTENTOS, MINUTOS_BLOQUEO, MAX_INTENTOS, registro.id],
+    );
+    if (Number(registro.intentos_fallidos) + 1 >= MAX_INTENTOS) {
+      await registrarAuditoria({
+        usuarioId: registro.id,
+        accion: "BLOQUEO_CUENTA",
+        tabla: "usuarios",
+        detalle: `Cuenta ${registro.usuario} bloqueada ${MINUTOS_BLOQUEO} minutos tras ${MAX_INTENTOS} intentos fallidos`,
+      });
+      return { ok: false, bloqueado: true, mensaje: MENSAJE_BLOQUEO };
+    }
+    return { ok: false, mensaje: MENSAJE_CREDENCIALES };
+  }
+
+  if (Number(registro.intentos_fallidos) || registro.bloqueado_hasta) {
+    await pool.query(
+      "UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?",
+      [registro.id],
+    );
   }
 
   const payload = {

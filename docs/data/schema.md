@@ -24,4 +24,6 @@ La migración `backend/sql/migrations/20261026_replace_legacy_materials.sql` eli
 
 La migración `backend/sql/migrations/20261026_finished_product_sales_catalog.sql` limita el inventario terminado y la producción a Adhesivo PP, Adhesivo Seguridad, Sencilla PP, Bolsas para la basura, Cargadera y Troquel riñón. Agrega medida, calibre y color por variante, elimina los productos, ventas y movimientos anteriores no pertenecientes al catálogo confirmado, y registra las ventas por paquetes (hasta 500 unidades por paquete), descontando las unidades del stock. No se usa un campo de categoría; se excluyen Sello fondo y Sin categoría.
 
+La migración `backend/sql/migrations/20261027_login_lockout.sql` agrega a `usuarios` los campos `intentos_fallidos` y `bloqueado_hasta` para el bloqueo temporal por intentos fallidos (HU-019). Solo agrega columnas; no modifica datos existentes.
+
 La migración `backend/sql/migrations/20261026_seed_demo_inventory.sql` agrega existencias DEMO de ejemplo a las seis materias primas y a las seis líneas de producto terminado. No registra ventas ni movimientos y solo actualiza materias primas de ejemplo que todavía están en cero y sin proveedor; las variantes de producto terminado solo se insertan si no existen. En las ubicaciones y proveedores se indica DEMO para distinguirlas de existencias reales.

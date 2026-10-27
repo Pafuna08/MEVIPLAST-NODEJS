@@ -43,7 +43,7 @@ Los estados describen lo encontrado en código y pruebas automatizadas de esta r
 | HU-016 | Iniciar sesión | En código; sin aceptación | JWT/bcrypt presentes; validar expiración y flujos con pruebas de integración. |
 | HU-017 | Gestionar roles y permisos | Parcial | Roles de vendedor/almacenista en esta rama; aprobar reglas y probar cada rol. |
 | HU-018 | Recuperar contraseña | Pendiente | No localizada; definir flujo y criterio de aceptación. |
-| HU-019 | Bloquear intentos fallidos | Pendiente | No localizado; definir umbral, duración y desbloqueo. |
+| HU-019 | Bloquear intentos fallidos | En código; sin aceptación | 5 intentos seguidos bloquean 15 minutos (configurable); el administrador desbloquea. Pruebas en `auth.lockout.test.js`; falta prueba con MySQL. |
 | HU-020 | Cerrar sesión | Parcial | Flujo de logout presente; confirmar revocación de JWT y aceptación. |
 | HU-021 | Generar reporte de producción | Parcial | Validar fechas, cantidades y filtros. |
 | HU-022 | Consultar rendimiento de operarios | Pendiente | No localizado; acordar indicadores y fórmulas. |

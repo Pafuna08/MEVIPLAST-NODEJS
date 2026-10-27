@@ -593,6 +593,16 @@ export default function DashboardApp() {
     }
   }
 
+  async function unlockUser(user) {
+    try {
+      await api(`/api/usuarios/${user.id}/desbloquear`, token, { method: "PUT" });
+      setToast("Cuenta desbloqueada.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
   async function updateUserEmail(userId, correo) {
     try {
       await api(`/api/usuarios/${userId}`, token, {
@@ -647,6 +657,7 @@ export default function DashboardApp() {
     submitForm,
     saving,
     toggleUser,
+    unlockUser,
     updateUserEmail,
     requestDelete: (user) => {
       if (user.usuario === session.username) {
@@ -750,6 +761,7 @@ function renderView({
   submitForm,
   saving,
   toggleUser,
+  unlockUser,
   updateUserEmail,
   requestDelete,
   updateOrderStatus,
@@ -760,7 +772,7 @@ function renderView({
 }) {
   if (view === "reporte-detalle") return <ReportDetail data={data} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
-  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
+  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
   if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
@@ -825,10 +837,13 @@ function Users({
   onSubmit,
   saving,
   onToggle,
+  onUnlock,
   onUpdateEmail,
   onDelete,
   role,
 }) {
+  const lockedUntil = (user) =>
+    new Date(user.bloqueado_hasta).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
   const [emailUser, setEmailUser] = useState(null);
   return (
     <>
@@ -843,7 +858,7 @@ function Users({
       <Panel title="Usuarios registrados">
         <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
           key: user.id,
-          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
+          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}{Number(user.bloqueado) ? ` · Bloqueado hasta las ${lockedUntil(user)}` : ""}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{Number(user.bloqueado) ? <button className="text-action" type="button" onClick={() => onUnlock(user)}>Desbloquear</button> : null}{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
         }))} />
       </Panel>
     </>
