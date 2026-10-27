@@ -34,6 +34,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Los formularios del panel ya no muestran textos de ejemplo dentro de los campos (como «Ej. 25»); se conservan las listas de sugerencias de medida, calibre y color.
 - Documentación revisada contra el código de `55dce18`: `traceability.md` se genera desde la misma fuente que la matriz de trazabilidad; `project-status.md`, `SECURITY.md` y la guía de usuario reflejan el estado actual, incluido DEF-013.
 - Las migraciones del 2026-10-26 retiran materias primas, productos, ventas y movimientos ajenos al catálogo confirmado.
 
