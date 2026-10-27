@@ -65,3 +65,19 @@ test("detalleVentas filtra los registros por el rango seleccionado", async (t) =
     assert.deepEqual(query.params, ["2026-10-01", "2026-11-01"]);
   }
 });
+
+test("la bitácora limita los registros entre 1 y 1 000 y ordena del más reciente al más antiguo", async (t) => {
+  const originalQuery = pool.query;
+  const llamadas = [];
+  pool.query = async (sql, params) => {
+    llamadas.push({ sql, params });
+    return [[], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  for (const limite of [50, 5000, 0, -3, "abc", undefined]) await reportesService.bitacoraAuditoria(limite);
+  assert.deepEqual(llamadas.map((l) => l.params[0]), [50, 1000, 100, 1, 100, 100]);
+  assert.match(llamadas[0].sql, /ORDER BY a\.fecha DESC, a\.id DESC/);
+});

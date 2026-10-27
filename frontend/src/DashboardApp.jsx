@@ -40,6 +40,7 @@ const roleViews = {
       ["produccion", "PR", "Producción"],
       ["ventas", "VT", "Ventas"],
       ["reportes", "RP", "Reportes"],
+      ["auditoria", "AU", "Auditoría"],
     ],
   },
   Supervisor: {
@@ -96,6 +97,7 @@ const viewTitles = {
   historial: "Mi historial",
   ventas: "Ventas",
   reportes: "Reportes",
+  auditoria: "Auditoría",
 };
 
 const sanitizeText = (value, maxLength = 255) =>
@@ -285,6 +287,9 @@ async function loadView(view, role, token) {
   }
   if (view === "reportes") {
     return {};
+  }
+  if (view === "auditoria") {
+    return { events: await api("/api/reportes/auditoria?limite=500", token) };
   }
   return null;
 }
@@ -897,6 +902,7 @@ function renderView({
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports />;
+  if (view === "auditoria") return <Audit data={data} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }
 
@@ -1444,6 +1450,35 @@ function Sales({ data, onSubmit, saving, onReceipt }) {
         <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
       <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
+    </>
+  );
+}
+
+// Bitácora de auditoría (RF-029): últimos 500 eventos, solo administrador
+function Audit({ data }) {
+  const [search, setSearch] = useState("");
+  const names = { LOGIN: "Inicio de sesión", RESTABLECER_PASSWORD: "Restablecer contraseña", CONSUMO_PRODUCCION: "Consumo en producción" };
+  const readable = (action) => {
+    if (names[action]) return names[action];
+    const text = String(action || "").toLowerCase().replace(/_/g, " ").replace(/\bproduccion\b/g, "producción");
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+  const term = search.trim().toLowerCase();
+  const events = data.events.filter((event) => !term || [event.realizado_por, readable(event.accion), event.tabla_afectada, event.detalle, event.fecha]
+    .some((value) => String(value || "").toLowerCase().includes(term)));
+  return (
+    <>
+      <Intro title="Auditoría" description="Acciones registradas en el sistema: quién hizo qué y cuándo. Se muestran los últimos 500 eventos." />
+      <Panel
+        title={`Eventos (${events.length}${term ? ` de ${data.events.length}` : ""})`}
+        action={<label className="panel-search">Buscar <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></label>}
+      >
+        <DataTable columns={["Fecha", "Usuario", "Acción", "Tabla", "Detalle"]} rows={events.map((event) => ({
+          key: event.id,
+          cells: <><td>{event.fecha}</td><td>{sanitizeText(event.realizado_por || "Sistema")}</td><td>{readable(event.accion)}</td><td>{sanitizeText(event.tabla_afectada)}</td><td>{sanitizeText(event.detalle || "—")}</td></>,
+        }))} />
+        {!events.length && <p className="empty">{term ? "Ningún evento coincide con la búsqueda." : "Todavía no hay eventos registrados."}</p>}
+      </Panel>
     </>
   );
 }

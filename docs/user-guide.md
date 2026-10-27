@@ -24,6 +24,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, línea, variante, paquetes, unidades por paquete y precio por paquete. El total se calcula, el stock disminuye si hay existencias y se abre el comprobante.
 - **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador y **Descargar Excel** baja el detalle del periodo en un archivo `.xlsx` con las hojas Resumen, Por producto y Detalle.
+- **Auditoría:** bitácora de acciones (inicios de sesión, cambios de usuarios, órdenes, movimientos y ventas) con fecha, usuario, acción y detalle; muestra los últimos 500 eventos y tiene un buscador.
 
 ## Supervisor
 

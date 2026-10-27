@@ -48,7 +48,7 @@ npm run test:browser
 
 ## Cobertura automatizada
 
-62 pruebas unitarias y de rutas con `node:test` (62 aprobadas el 2026-10-27):
+63 pruebas unitarias y de rutas con `node:test` (63 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -61,7 +61,7 @@ npm run test:browser
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 47 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
 - `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance.
-- `reportes.service.test.js` (3): límites de periodo calendario y filtro de ventas por rango.
+- `reportes.service.test.js` (4): límites de periodo calendario, filtro de ventas por rango y límite de la bitácora (1 a 1 000, del más reciente al más antiguo).
 - `reportesExcel.service.test.js` (2): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula y periodo inválido.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
 - `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» no se convierten en número.
