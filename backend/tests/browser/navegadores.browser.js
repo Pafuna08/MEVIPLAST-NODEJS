@@ -58,28 +58,35 @@ async function prepararBase() {
     );
     ids[rol] = r.insertId;
   }
-  await raiz.query("INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD 10 x 15', 'PEBD', '10 x 15', '2', 'Transparente', 500, 50)");
+  const [bobina] = await raiz.query("INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD 10 x 15', 'PEBD', '10 x 15', '2', 'Transparente', 500, 50)");
   for (const familia of productosTerminados) {
     await raiz.query(
       "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000, 'Bodega')",
       [`${familia} · 10 x 15 · calibre 2 · Transparente`, familia],
     );
   }
-  // Una orden en proceso por navegador, para que el operario registre avance en cada uno
+  // Una orden en proceso por navegador, que usa la bobina: el operario registra avance y el supervisor consumo
   for (let i = 0; i < NAVEGADORES.length; i += 1) {
     await raiz.query(
-      "INSERT INTO produccion (producto, cantidad, supervisor_id, responsable_id, estado) VALUES ('Cargadera', 100000, ?, ?, 'en_proceso')",
-      [ids.supervisor, ids.operario],
+      "INSERT INTO produccion (producto, cantidad, materia_prima_id, supervisor_id, responsable_id, estado) VALUES ('Cargadera', 100000, ?, ?, ?, 'en_proceso')",
+      [bobina.insertId, ids.supervisor, ids.operario],
     );
   }
   return raiz;
 }
 
+// Los errores de la API se guardan en un archivo para poder diagnosticar si se cae a mitad de la prueba
+const LOG_API = path.join(require("node:os").tmpdir(), "meviplast-browser-api.log");
+
 async function levantarApi() {
+  const log = fs.openSync(LOG_API, "w");
   const proceso = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, "..", ".."),
     env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "browser-only-secret", CORS_ORIGINS: "" },
-    stdio: "ignore",
+    stdio: ["ignore", log, log],
+  });
+  proceso.on("exit", (codigo) => {
+    if (codigo !== null) console.error(`   La API terminó con código ${codigo}; revisa ${LOG_API}`);
   });
   for (let i = 0; i < 60; i += 1) {
     try {
@@ -181,6 +188,53 @@ const FLUJOS = [
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
     return "avance guardado";
+  }],
+  ["Almacenista: compra de materia prima", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "almacenista");
+    await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
+    await pagina.waitForLoadState("networkidle");
+    const form = formulario(pagina, "Registrar movimiento");
+    await form.locator("select[name=tipo]").selectOption("compra");
+    await form.locator("input[name=cantidad]").fill("25");
+    await form.locator("input[name=observaciones]").fill("Remisión de prueba");
+    await form.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Registro guardado");
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return "compra guardada";
+  }],
+  ["Almacenista: ajuste mayor al saldo (rechazo)", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "almacenista");
+    await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
+    await pagina.waitForLoadState("networkidle");
+    const form = formulario(pagina, "Registrar movimiento");
+    await form.locator("select[name=tipo]").selectOption("ajuste_salida");
+    await form.locator("input[name=cantidad]").fill("999999");
+    await form.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Stock insuficiente");
+    await contexto.close();
+    // El 400 de la API es el rechazo esperado
+    const otros = problemas.filter((p) => p !== "API 400 /api/materia-prima/movimientos");
+    if (otros.length) throw new Error(otros.join("; "));
+    return "rechazado con «Stock insuficiente»";
+  }],
+  ["Supervisor: consumo de materia prima en una orden", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "supervisor");
+    await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
+    await pagina.waitForLoadState("networkidle");
+    const form = formulario(pagina, "Registrar movimiento");
+    await form.locator("select[name=tipo]").selectOption("consumo_produccion");
+    const orden = await form.locator("select[name=produccion_id] option").first().innerText();
+    if (!orden.startsWith("#")) throw new Error(`sin órdenes para consumir: ${orden}`);
+    await form.locator("input[name=cantidad]").fill("5");
+    await form.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Registro guardado");
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `consumo en la orden ${orden.split(" ")[0]}`;
   }],
   ["Almacenista: ingreso de inventario", async (navegador, nombre) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);

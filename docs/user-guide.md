@@ -19,7 +19,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 
 - **Inicio:** resumen operativo, órdenes, inventario y ventas.
 - **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista. Si una cuenta muestra «Bloqueado hasta las…», usa **Desbloquear** para habilitarla antes de que termine el bloqueo.
-- **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock. Las compras, los ajustes y los consumos asociados a una orden hoy no tienen formulario en el panel (DEF-013); solo se registran por la API.
+- **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock. En **Registrar movimiento** se eligen la bobina, el tipo (compra, ajuste de entrada, ajuste de salida o consumo en una orden), la cantidad en kg y una observación. El consumo solo ofrece las órdenes activas que usan esa bobina.
 - **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, línea, variante, paquetes, unidades por paquete y precio por paquete. El total se calcula, el stock disminuye si hay existencias y se abre el comprobante.
@@ -32,7 +32,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Operarios:** consultar equipo y órdenes activas.
 - **Seguimiento:** consultar órdenes y cambiar estados.
 - **Reportes:** consultar resúmenes, imprimirlos o descargarlos en Excel.
-- **Materias primas:** consultar existencias y movimientos. El consumo asociado a una orden hoy no tiene formulario en el panel (DEF-013); asociar la materia prima a la orden no consume stock automáticamente.
+- **Materias primas:** consultar existencias y movimientos, y registrar el consumo de una bobina en una orden activa que la usa (**Registrar movimiento → Consumo en una orden**). Asociar la materia prima a la orden no consume stock automáticamente.
 
 El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el menú (DEF-007, por decidir con el cliente).
 
@@ -50,7 +50,7 @@ El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el me
 
 ## Almacenista
 
-- **Materias primas:** consultar existencias e historial de movimientos. Las compras y los ajustes hoy no tienen formulario en el panel (DEF-013).
+- **Materias primas:** registrar compras y ajustes de entrada o salida (**Registrar movimiento**), y consultar existencias e historial. Una salida mayor al saldo se rechaza sin cambios.
 - **Inventario:** registrar ingresos y salidas manuales, y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
 
 ## Problemas frecuentes
@@ -60,7 +60,7 @@ El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el me
 - Si una vista no carga, comprueba conexión y usa **Reintentar**; si persiste, reporta perfil, sección y hora.
 - Si aparece stock insuficiente, solicita revisar la existencia al responsable autorizado.
 - Si una salida excede el saldo disponible, revisa el stock antes de volver a intentar; la operación se rechaza sin aplicar cambios parciales.
-- Las modificaciones de órdenes están limitadas a órdenes pendientes sin avance. El consumo de materia prima debe registrarse explícitamente y asociarse a la orden (hoy solo por la API, DEF-013).
+- Las modificaciones de órdenes están limitadas a órdenes pendientes sin avance. El consumo de materia prima debe registrarse explícitamente y asociarse a la orden.
 
 ## Aprobación pendiente
 

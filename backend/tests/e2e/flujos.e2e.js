@@ -240,6 +240,44 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "vendedor" })).status, 200);
   });
 
+  await t.test("DEF-013 / RF-015 / RF-016: compras, ajustes y consumo por orden de materia prima", async () => {
+    const creada = await llamar("POST", "/materia-prima", tokens.admin, {
+      tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Transparente", peso_rollo: 100,
+    });
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    const materiaId = creada.body.id;
+    const saldo = async () => Number((await db.query("SELECT cantidad FROM materia_prima WHERE id = ?", [materiaId]))[0][0].cantidad);
+    const mover = (token, cuerpo) => llamar("POST", "/materia-prima/movimientos", token, { materia_prima_id: materiaId, ...cuerpo });
+
+    assert.equal((await mover(tokens.almacenista, { tipo: "compra", cantidad: 50, observaciones: "Remisión E2E" })).status, 201);
+    assert.equal(await saldo(), 150);
+    const exceso = await mover(tokens.almacenista, { tipo: "ajuste_salida", cantidad: 999 });
+    assert.equal(exceso.status, 400);
+    assert.match(exceso.body.mensaje, /Stock insuficiente/);
+    assert.equal(await saldo(), 150, "el ajuste rechazado no cambia el saldo");
+
+    // Consumo: solo en una orden activa que usa esa bobina, y solo admin o supervisor
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Sencilla PP", cantidad: 200, prioridad: "media", supervisor_id: ids.supervisor, materia_prima_id: materiaId,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const otra = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Cargadera", cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
+    });
+    assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
+    assert.equal((await mover(tokens.supervisor, { tipo: "compra", cantidad: 5 })).status, 403);
+    const sinAsociar = await mover(tokens.supervisor, { tipo: "consumo_produccion", cantidad: 5, produccion_id: otra.body.id });
+    assert.equal(sinAsociar.status, 400);
+    assert.match(sinAsociar.body.mensaje, /no está asociada/);
+    assert.equal((await mover(tokens.supervisor, { tipo: "consumo_produccion", cantidad: 30, produccion_id: orden.body.id })).status, 201);
+    assert.equal(await saldo(), 120);
+    const [[consumo]] = await db.query(
+      "SELECT COUNT(*) AS n FROM movimientos_materia_prima WHERE materia_prima_id = ? AND tipo = 'consumo_produccion' AND produccion_id = ?",
+      [materiaId, orden.body.id],
+    );
+    assert.equal(Number(consumo.n), 1);
+  });
+
   await t.test("la migración de bloqueo se aplica sobre una base anterior y es idempotente", async () => {
     await db.query("ALTER TABLE usuarios DROP COLUMN bloqueado_hasta, DROP COLUMN intentos_fallidos");
     const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_login_lockout.sql"), "utf8");

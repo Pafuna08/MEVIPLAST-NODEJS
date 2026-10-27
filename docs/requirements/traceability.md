@@ -4,7 +4,7 @@ Estado del código en `develop`, commit `55dce18` (27/10/2026). Se genera desde 
 
 «Implementado» describe el código y las pruebas, no la aceptación: ninguna historia está aceptada por el cliente todavía.
 
-Historias: 17 implementadas, 7 parciales y 1 pendiente de 25. Requisitos funcionales: 24 implementados, 4 parciales y 1 pendiente de 29.
+Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcionales: 26 implementados, 2 parciales y 1 pendiente de 29.
 
 ## Historias de usuario (por rol)
 
@@ -13,20 +13,20 @@ Historias: 17 implementadas, 7 parciales y 1 pendiente de 25. Requisitos funcion
 | HU-006 | Administrador | Registrar materias primas | RF-014 | Implementado | Catálogo de bobinas PEBD, PEAD y PP con medida, calibre, color y peso de rollo. |
 | HU-017 | Administrador | Gestionar roles y permisos | RF-002 | Parcial | Cinco roles fijos; el administrador asigna el rol. Los permisos por rol están en el código, no son configurables. |
 | HU-009 | Administrador | Consultar disponibilidad de insumos | RF-017 | Implementado | Listado y alerta de bajo stock (cantidad ≤ stock mínimo). El stock mínimo inicia en 0 y debe configurarse. |
-| HU-010 | Administrador | Registrar compras de materiales | RF-015 | Parcial | Movimiento tipo compra con fecha y usuario; no registra costo ni número de factura. Sin formulario en el panel (DEF-013). |
+| HU-010 | Administrador | Registrar compras de materiales | RF-015 | Parcial | Movimiento tipo compra con fecha y usuario; no registra costo ni número de factura. |
 | HU-011 | Administrador | Registrar productos terminados | RF-018 | Implementado | Catálogo de 6 líneas con variantes (medida, calibre, color); ingresos y salidas manuales con ledger. |
 | HU-022 | Administrador | Consultar rendimiento de operarios | RF-027 | Pendiente | No implementado. Acordar indicador y fórmula con el cliente. |
 | HU-023 | Administrador | Generar reporte de inventario | RF-026 | Parcial | Lista existencias de producto terminado; no incluye materias primas en el mismo reporte. |
 | HU-015 | Administrador | Generar reportes de ventas | RF-025 | Implementado | Resumen y detalle por periodo diario, semanal, mensual y anual. |
 | HU-025 | Administrador | Exportar reportes | RF-028 | Implementado | PDF con la impresión del navegador y Excel con «Descargar Excel» (PR #28). |
 | HU-001 | Supervisor | Asignar tareas de producción | RF-007, RF-008, RF-013 | Implementado | El administrador crea la orden para un supervisor activo; el supervisor la asigna a un operario activo. Plantillas frecuentes disponibles. |
-| HU-008 | Supervisor | Registrar consumo de materiales | RF-016 | Parcial | Consumo explícito asociado a una orden que usa esa materia prima; no es automático. Disponible en la API; el panel no tiene el formulario (DEF-013). |
+| HU-008 | Supervisor | Registrar consumo de materiales | RF-016 | Implementado | Consumo explícito asociado a una orden activa que usa esa materia prima; no es automático. Probado en E2E (CP-062) y en navegadores (CP-033). |
 | HU-004 | Supervisor | Consultar historial de producción | RF-024 | Parcial | Detalle por periodo calendario; falta filtro por operario y producto. |
 | HU-005 | Supervisor | Modificar órdenes de producción | RF-012 | Implementado | Solo órdenes pendientes sin avance; campos editables restringidos. |
 | HU-021 | Supervisor | Generar reporte de producción | RF-024 | Implementado | Resumen por estado y detalle de unidades producidas por periodo. |
 | HU-002 | Operario | Consultar tareas asignadas | RF-009 | Implementado | El operario solo recibe las órdenes cuyo responsable es su cuenta. |
 | HU-003 | Operario | Registrar producción realizada | RF-010, RF-011 | Implementado | Avance > 0 y ≤ meta pendiente; incrementa inventario y finaliza la orden al completar la meta. |
-| HU-007 | Almacenista | Actualizar cantidades disponibles | RF-015 | Parcial | Solo mediante movimientos (compra, ajuste de entrada/salida) en la API; la cantidad no se edita directamente. El panel no tiene el formulario desde el 26/10 (DEF-013). |
+| HU-007 | Almacenista | Actualizar cantidades disponibles | RF-015 | Implementado | Solo mediante movimientos (compra, ajuste de entrada/salida) desde «Registrar movimiento»; la cantidad no se edita directamente. Formulario restaurado en DEF-013 (PR #33). |
 | HU-013 | Vendedor | Registrar ventas | RF-020, RF-023 | Implementado | Venta por paquetes (1–500 unidades por paquete) con comprobante imprimible (RF-023, PR #27). |
 | HU-014 | Vendedor | Actualizar stock automáticamente | RF-021 | Implementado | Venta, descuento y movimiento se confirman en una sola transacción con bloqueo de fila. |
 | HU-012 | Vendedor | Consultar inventario disponible | RF-019 | Implementado | El vendedor consulta existencias sin poder modificarlas. |
@@ -54,8 +54,8 @@ Historias: 17 implementadas, 7 parciales y 1 pendiente de 25. Requisitos funcion
 | RF-012 | Editar orden pendiente | Implementado | MVP | API-06 | CP-011, CP-012 |
 | RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013 |
 | RF-014 | Registrar materia prima | Implementado | MVP | API-04 | CP-007, CP-008, CP-048 |
-| RF-015 | Registrar compras y ajustes | Parcial | MVP | API-05 | CP-009, CP-010 |
-| RF-016 | Registrar consumo por orden | Parcial | MVP | API-05 | — |
+| RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062 |
+| RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062 |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
 | RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048 |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | — |
@@ -72,7 +72,6 @@ Historias: 17 implementadas, 7 parciales y 1 pendiente de 25. Requisitos funcion
 
 ## Brechas abiertas
 
-- DEF-013: el panel no tiene el formulario de compras, ajustes y consumos de materia prima (retirado en `4169d09`); la API sí los registra. Afecta HU-007, HU-008 y HU-010 (RF-015 y RF-016).
 - HU-022 / RF-027: falta que el cliente defina el indicador de rendimiento por operario.
 - CP-030: probar la recuperación de contraseña con el SMTP real de MEVIPLAST (con un servidor local ya está probada, CP-061).
 - Aceptación del cliente por rol y etiqueta `v1.0.0`.

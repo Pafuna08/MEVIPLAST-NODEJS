@@ -35,6 +35,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- Formulario «Registrar movimiento» de materias primas, retirado por error en el cambio de catálogos (DEF-013): compras y ajustes para administrador y almacenista, y consumo en una orden activa que usa la bobina para administrador y supervisor.
 - Acceso del operario a su panel.
 - Nombres de producto mal formados ocultos en ventas y dashboards.
 - Tildes faltantes en el sitio público, el inicio de sesión y los mensajes de autenticación.

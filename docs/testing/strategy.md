@@ -23,6 +23,7 @@ npm run test:e2e --prefix backend
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
+- DEF-013 (CP-062): compra, ajuste mayor al saldo (rechazo sin cambios), permisos por tipo de movimiento, consumo en una orden que no usa la bobina (rechazo) y consumo válido ligado a la orden.
 - Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
 
 ## Rendimiento (RNF-004)
@@ -42,7 +43,7 @@ npx playwright-core install chromium firefox   # una sola vez por equipo
 npm run test:browser
 ```
 
-`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 10 flujos críticos en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
+`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
 
@@ -67,7 +68,7 @@ CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
 
 ## Cobertura pendiente
 
-- Flujos E2E de materias primas (consumo asociado a una orden) y edición de órdenes.
+- Flujo E2E de edición de órdenes.
 - Envío de un correo de recuperación real con el SMTP de MEVIPLAST.
 - Rendimiento medido en el servidor y la red de la empresa.
 - Compatibilidad con el Firefox oficial y con la penúltima versión de cada navegador.
