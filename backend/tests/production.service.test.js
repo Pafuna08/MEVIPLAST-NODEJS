@@ -27,8 +27,8 @@ test("actualizarOrden preserva relaciones omitidas y permite limpiar materia pri
     release: () => {},
     query: async (sql, params = []) => {
       queries.push({ sql, params });
-      if (sql.startsWith("SELECT id, estado")) {
-        return [[{ id: 7, estado: "pendiente", cantidad_producida: 0 }]];
+      if (sql.startsWith("SELECT id, producto, estado")) {
+        return [[{ id: 7, producto: "Adhesivo PP", estado: "pendiente", cantidad_producida: 0 }]];
       }
       if (sql.startsWith("UPDATE produccion")) {
         updatedOrder = { sql, params };
@@ -197,6 +197,66 @@ test("registrar avance crea la existencia del producto si todavía no existe", a
   const movimiento = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO movimientos_inventario"));
   assert.equal(movimiento.params[0], 77);
   assert.equal(estado.committed, true);
+});
+
+test("registrar avance de una orden con variante suma a esa variante del inventario", async (t) => {
+  const estado = simularAvance(t, {
+    id: 8,
+    producto: "Cargadera",
+    medida: "40x60 cm",
+    calibre: "2",
+    color: "Negro",
+    cantidad: 100,
+    cantidad_producida: 0,
+    responsable_id: 3,
+    estado: "en_proceso",
+  });
+
+  await productionService.registrarAvance(8, { cantidad: 30 }, { id: 3, rol: "operario" });
+
+  const busqueda = estado.queries.find(({ sql }) => sql.startsWith("SELECT id FROM inventario"));
+  assert.match(busqueda.sql, /medida = \? AND calibre = \? AND color = \?/);
+  assert.deepEqual(busqueda.params, ["Cargadera", "40x60 cm", "2", "Negro"]);
+  const inventario = estado.queries.find(({ sql }) => sql.startsWith("UPDATE inventario"));
+  assert.deepEqual(inventario.params, [30, 40]);
+});
+
+test("registrar avance crea la variante de la orden con ubicación por asignar si no existe", async (t) => {
+  const estado = simularAvance(
+    t,
+    { id: 9, producto: "Sencilla PP", medida: "20x30 cm", calibre: "1.5", color: "Transparente", cantidad: 50, cantidad_producida: 0, responsable_id: 3, estado: "pendiente" },
+    { inventarioId: null },
+  );
+
+  await productionService.registrarAvance(9, { cantidad: 20 }, { id: 3, rol: "operario" });
+
+  const creado = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO inventario"));
+  assert.deepEqual(creado.params, [
+    "Sencilla PP · 20x30 cm · calibre 1.5 · Transparente",
+    "Sencilla PP",
+    "20x30 cm",
+    "1.5",
+    "Transparente",
+    20,
+    "Por ubicar",
+  ]);
+});
+
+test("crear orden exige medida, calibre y color", async () => {
+  await assert.rejects(
+    productionService.crear(
+      { producto: "Cargadera", cantidad: 10, medida: "40x60 cm", calibre: "", color: "Negro", supervisor_id: 2 },
+      { id: 1, rol: "admin" },
+    ),
+    /calibre es obligatorio/,
+  );
+});
+
+test("actualizarOrden exige medida, calibre y color juntos", async () => {
+  await assert.rejects(
+    productionService.actualizarOrden(1, { medida: "40x60 cm" }, 2),
+    /medida, calibre y color juntos/,
+  );
 });
 
 test("registrar avance rechaza superar la meta pendiente sin modificar el inventario", async (t) => {

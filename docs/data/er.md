@@ -51,6 +51,9 @@ erDiagram
     produccion {
         INT id PK
         VARCHAR producto
+        VARCHAR medida
+        VARCHAR calibre
+        VARCHAR color
         DECIMAL cantidad "meta"
         INT materia_prima_id FK
         INT supervisor_id FK
@@ -140,5 +143,5 @@ erDiagram
 ## Lectura rápida
 
 - **Ledgers (ADR-003):** cada cambio de `materia_prima.cantidad` o `inventario.cantidad` deja una fila en su tabla de movimientos, en la misma transacción. Con `RESTRICT` no se puede borrar una bobina o variante que tenga movimientos.
-- **Trazabilidad:** un consumo de bobina apunta a su orden (`produccion_id`); un avance de producción y una venta apuntan a su orden o venta en `movimientos_inventario`.
+- **Trazabilidad:** un consumo de bobina apunta a su orden (`produccion_id`); un avance de producción y una venta apuntan a su orden o venta en `movimientos_inventario`. Una orden con medida, calibre y color suma su avance a esa variante de `inventario`.
 - **Usuarios:** al borrar un usuario, su historial se conserva con `usuario_id` en NULL; por eso se recomienda desactivarlo en lugar de borrarlo.

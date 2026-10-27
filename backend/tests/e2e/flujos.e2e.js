@@ -91,10 +91,16 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
   });
 
   await t.test("CP-028: orden → asignación → avance → inventario → venta → reportes", async () => {
-    const orden = await llamar("POST", "/produccion", tokens.admin, {
+    const sinVariante = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Cargadera", cantidad: 1000, prioridad: "alta", supervisor_id: ids.supervisor,
     });
+    assert.equal(sinVariante.status, 400, "la orden exige medida, calibre y color");
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
+      cantidad: 1000, prioridad: "alta", supervisor_id: ids.supervisor,
+    });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    assert.equal(orden.body.medida, "40x60 cm");
     const ordenId = orden.body.id;
 
     const asignada = await llamar("PUT", `/produccion/${ordenId}/asignar`, tokens.supervisor, { responsable_id: ids.operario });
@@ -111,7 +117,11 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(avance.status, 200, JSON.stringify(avance.body));
     assert.equal(avance.body.estado, "finalizado");
 
-    const [[stock]] = await db.query("SELECT id, cantidad FROM inventario WHERE familia = 'Cargadera'");
+    // El avance entra a la variante exacta de la orden, creada con ubicación por asignar
+    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad, ubicacion FROM inventario WHERE familia = 'Cargadera'");
+    assert.equal(variantes.length, 1);
+    const [stock] = variantes;
+    assert.deepEqual([stock.medida, stock.calibre, stock.color, stock.ubicacion], ["40x60 cm", "2", "Negro", "Por ubicar"]);
     assert.equal(Number(stock.cantidad), 1000);
     const [[mov]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE produccion_id = ? AND tipo = 'produccion'", [ordenId]);
     assert.equal(Number(mov.n), 1);
@@ -258,11 +268,13 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
     // Consumo: solo en una orden activa que usa esa bobina, y solo admin o supervisor
     const orden = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Sencilla PP", cantidad: 200, prioridad: "media", supervisor_id: ids.supervisor, materia_prima_id: materiaId,
+      producto: "Sencilla PP", medida: "20x30 cm", calibre: "1.5", color: "Transparente",
+      cantidad: 200, prioridad: "media", supervisor_id: ids.supervisor, materia_prima_id: materiaId,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const otra = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
+      producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
+      cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
     });
     assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
     assert.equal((await mover(tokens.supervisor, { tipo: "compra", cantidad: 5 })).status, 403);

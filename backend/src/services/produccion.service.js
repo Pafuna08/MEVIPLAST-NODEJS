@@ -1,11 +1,18 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
+const { validarVariante } = require("./inventario.service");
 
 function validarProducto(producto) {
   if (!productosTerminados.includes(producto)) {
     throw new Error("Selecciona una línea de producto válida");
   }
+}
+
+// Medida, calibre y color de la orden: la variante del inventario que recibirá el avance
+function varianteOrden(producto, { medida, calibre, color }) {
+  const etiqueta = validarVariante({ familia: producto, medida, calibre, color });
+  return { medida: medida.trim(), calibre: calibre.trim(), color: color.trim(), etiqueta };
 }
 
 async function listar(usuario) {
@@ -98,6 +105,7 @@ async function crear(datos, actor) {
     prioridad,
   } = datos;
   validarProducto(producto);
+  const variante = varianteOrden(producto, datos);
   let supervisorId = null;
   let responsableId = Number(responsable_id) || null;
   if (actor.rol === "admin") {
@@ -119,9 +127,12 @@ async function crear(datos, actor) {
     if (!operarios.length) throw new Error("El responsable debe ser un operario activo");
   }
   const [resultado] = await pool.query(
-    "INSERT INTO produccion (producto, cantidad, materia_prima_id, supervisor_id, responsable_id, prioridad) VALUES (?, ?, ?, ?, ?, ?)",
+    "INSERT INTO produccion (producto, medida, calibre, color, cantidad, materia_prima_id, supervisor_id, responsable_id, prioridad) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       producto,
+      variante.medida,
+      variante.calibre,
+      variante.color,
       cantidad,
       materia_prima_id || null,
       supervisorId,
@@ -134,7 +145,7 @@ async function crear(datos, actor) {
     usuarioId: actor.id,
     accion: "CREAR_ORDEN_PRODUCCION",
     tabla: "produccion",
-    detalle: `Orden de producción creada para '${producto}' (${cantidad})`,
+    detalle: `Orden de producción creada para '${variante.etiqueta}' (${cantidad})`,
   });
 
   return obtenerPorId(resultado.insertId);
@@ -189,6 +200,9 @@ async function actualizarOrden(id, datos, actor) {
   const actorId = actor?.id ?? actor;
   const camposPermitidos = new Set([
     "producto",
+    "medida",
+    "calibre",
+    "color",
     "cantidad",
     "responsable_id",
     "materia_prima_id",
@@ -199,6 +213,10 @@ async function actualizarOrden(id, datos, actor) {
   if (campos.some((campo) => !camposPermitidos.has(campo))) {
     throw new Error("La orden contiene campos no editables");
   }
+  const camposVariante = ["medida", "calibre", "color"].filter((campo) => campos.includes(campo));
+  if (camposVariante.length && camposVariante.length < 3) {
+    throw new Error("Indica medida, calibre y color juntos");
+  }
 
   const connection = await pool.getConnection();
   let transactionStarted = false;
@@ -206,7 +224,7 @@ async function actualizarOrden(id, datos, actor) {
     await connection.beginTransaction();
     transactionStarted = true;
     const [filas] = await connection.query(
-      "SELECT id, estado, cantidad_producida, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
+      "SELECT id, producto, estado, cantidad_producida, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
       [id],
     );
     const orden = filas[0];
@@ -229,6 +247,9 @@ async function actualizarOrden(id, datos, actor) {
       throw new Error("El producto no puede estar vacío");
     }
     if (producto !== undefined) validarProducto(producto.trim());
+    const variante = camposVariante.length
+      ? varianteOrden(producto !== undefined ? producto.trim() : orden.producto, datos)
+      : null;
     if (
       cantidad !== undefined &&
       (!Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0)
@@ -259,6 +280,10 @@ async function actualizarOrden(id, datos, actor) {
     if (producto !== undefined) {
       actualizaciones.push("producto = ?");
       valores.push(producto.trim());
+    }
+    if (variante) {
+      actualizaciones.push("medida = ?", "calibre = ?", "color = ?");
+      valores.push(variante.medida, variante.calibre, variante.color);
     }
     if (cantidad !== undefined) {
       actualizaciones.push("cantidad = ?");
@@ -406,10 +431,18 @@ async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
       "UPDATE produccion SET cantidad_producida = ?, estado = ?, lote = COALESCE(?, lote), observaciones = COALESCE(?, observaciones), fecha_fin = CASE WHEN ? = 'finalizado' THEN NOW() ELSE fecha_fin END WHERE id = ?",
       [nuevoTotal, estado, lote || null, observaciones || null, estado, id],
     );
-    const [inventario] = await connection.query(
-      "SELECT id FROM inventario WHERE familia = ? AND medida IS NULL AND calibre IS NULL AND color IS NULL FOR UPDATE",
-      [producto],
-    );
+    // Las órdenes con variante suman a esa variante (y la crean si aún no existe);
+    // las anteriores a la migración siguen usando el registro genérico de la línea
+    const conVariante = Boolean(orden.medida && orden.calibre && orden.color);
+    const [inventario] = conVariante
+      ? await connection.query(
+          "SELECT id FROM inventario WHERE familia = ? AND medida = ? AND calibre = ? AND color = ? FOR UPDATE",
+          [producto, orden.medida, orden.calibre, orden.color],
+        )
+      : await connection.query(
+          "SELECT id FROM inventario WHERE familia = ? AND medida IS NULL AND calibre IS NULL AND color IS NULL FOR UPDATE",
+          [producto],
+        );
     let inventarioId;
     if (inventario.length) {
       inventarioId = inventario[0].id;
@@ -417,6 +450,13 @@ async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
         "UPDATE inventario SET cantidad = cantidad + ? WHERE id = ?",
         [cantidadNumerica, inventarioId],
       );
+    } else if (conVariante) {
+      const etiqueta = `${producto} · ${orden.medida} · calibre ${orden.calibre} · ${orden.color}`;
+      const [creado] = await connection.query(
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [etiqueta, producto, orden.medida, orden.calibre, orden.color, cantidadNumerica, "Por ubicar"],
+      );
+      inventarioId = creado.insertId;
     } else {
       const [creado] = await connection.query(
         "INSERT INTO inventario (producto, familia, cantidad, ubicacion) VALUES (?, ?, ?, ?)",

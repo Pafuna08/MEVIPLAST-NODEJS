@@ -35,6 +35,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Las órdenes de producción exigen medida, calibre y color además de la línea (migración `20261027_production_variant.sql`). El avance suma a esa variante del inventario terminado y, si no existe, la crea con ubicación «Por ubicar»; antes todo iba a un registro genérico de la línea, sin variante, que no se podía vender por variante. Las órdenes anteriores conservan el comportamiento anterior.
 - La salida manual de inventario exige un motivo de una lista (y un detalle si es «Otro»); el motivo queda en el movimiento, en la auditoría y en la nueva columna «Motivo / observación». Los tipos de movimiento se muestran con nombre legible («Salida manual» en lugar de `salida_manual`).
 - Los formularios del panel ya no muestran textos de ejemplo dentro de los campos (como «Ej. 25»); se conservan las listas de sugerencias de medida, calibre y color.
 - Documentación revisada contra el código de `55dce18`: `traceability.md` se genera desde la misma fuente que la matriz de trazabilidad; `project-status.md`, `SECURITY.md` y la guía de usuario reflejan el estado actual, incluido DEF-013.
