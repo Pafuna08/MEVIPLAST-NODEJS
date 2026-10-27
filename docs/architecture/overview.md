@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-  User[Administrador / Supervisor / Operario] --> Browser[Navegador]
+  User[Administrador / Supervisor / Operario / Vendedor / Almacenista] --> Browser[Navegador]
   Browser --> React[Panel React + Vite]
   Browser --> Static[Login y sitio público HTML/CSS/JS]
   React -->|HTTP JSON + Bearer JWT| Express[API Express]
@@ -13,7 +13,10 @@ flowchart LR
   Routes --> Controllers[Controladores]
   Controllers --> Services[Servicios]
   Services --> MySQL[(MySQL meviplast_db)]
+  Services -->|recuperación de cuenta| SMTP[Servidor SMTP]
 ```
+
+La API también genera los comprobantes de venta (datos que el panel imprime) y los reportes en Excel (`exceljs`, en `reportesExcel.service.js`). En cada petición protegida, `verificarToken` comprueba la firma del token y que el usuario siga activo y con el mismo rol (ADR-004).
 
 En desarrollo, Vite sirve el panel y proxifica `/api` al puerto `PORT` de `backend/.env` (por defecto 3000). En ejecución compilada, Vite genera `frontend/dist` y Express sirve primero el build y luego el resto de archivos estáticos.
 

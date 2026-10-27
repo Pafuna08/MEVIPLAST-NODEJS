@@ -1,17 +1,17 @@
 # Manual de usuario MEVIPLAST
 
-**Borrador 0.1 - 2026-10-20. Pendiente de validación por usuarios e instructor.** Los pasos describen la interfaz localizada y deben actualizarse al cambiar el producto. No usar cuentas demo fuera de desarrollo.
+**Versión 0.2 - 2026-10-27, según `develop` en `55dce18`. Pendiente de validación por usuarios e instructor.** Resumen del Manual de Usuario (MEV-DOC-09 del paquete documental, con capturas por rol). Los pasos deben actualizarse al cambiar el producto. No usar cuentas demo fuera de desarrollo.
 
 - Código: DOC-09-MEV-01
-- Estado: Borrador
-- Elaboración, responsable de revisión y aprobación: pendientes de confirmar por el equipo.
+- Estado: En revisión
+- Elaboración: Pablo E. Fuenmayor Osuna; revisión: Carlos Herrera Sibaja; aprobación: pendiente.
 
 ## Acceso
 
 1. Abre la URL entregada por el responsable técnico.
 2. Ingresa el usuario y contraseña asignados.
 3. El panel abre en `/dashboard.html` con navegación según el rol de la cuenta.
-4. Usa **Cerrar sesión** para retirar la sesión del navegador.
+4. Usa **Cerrar sesión** para retirar la sesión del navegador. La sesión vence a las 8 horas; si vence, o si el administrador desactiva tu cuenta o cambia tu rol, el panel te devuelve al inicio de sesión.
 
 El backend valida permisos. No compartas contraseña ni token. Si aparece un error de permisos, informa el perfil, sección y hora sin adjuntar credenciales.
 
@@ -22,7 +22,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock. Las compras, los ajustes y los consumos asociados a una orden hoy no tienen formulario en el panel (DEF-013); solo se registran por la API.
 - **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
-- **Ventas:** registrar cliente, producto, cantidad y precio. El total se calcula y el stock disminuye si hay existencias.
+- **Ventas:** registrar cliente, línea, variante, paquetes, unidades por paquete y precio por paquete. El total se calcula, el stock disminuye si hay existencias y se abre el comprobante.
 - **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador y **Descargar Excel** baja el detalle del periodo en un archivo `.xlsx` con las hojas Resumen, Por producto y Detalle.
 
 ## Supervisor
@@ -32,9 +32,9 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Operarios:** consultar equipo y órdenes activas.
 - **Seguimiento:** consultar órdenes y cambiar estados.
 - **Reportes:** consultar resúmenes, imprimirlos o descargarlos en Excel.
+- **Materias primas:** consultar existencias y movimientos. El consumo asociado a una orden hoy no tiene formulario en el panel (DEF-013); asociar la materia prima a la orden no consume stock automáticamente.
 
-- **Materias primas:** consultar movimientos y registrar consumo asociado a una orden. La asociación de materia prima a la orden no consume stock automáticamente.
-- **Ventas:** registrar ventas; el descuento de inventario y el movimiento relacionado se guardan en una transacción.
+El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el menú (DEF-007, por decidir con el cliente).
 
 ## Operario
 
@@ -60,8 +60,8 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - Si una vista no carga, comprueba conexión y usa **Reintentar**; si persiste, reporta perfil, sección y hora.
 - Si aparece stock insuficiente, solicita revisar la existencia al responsable autorizado.
 - Si una salida excede el saldo disponible, revisa el stock antes de volver a intentar; la operación se rechaza sin aplicar cambios parciales.
-- Las modificaciones de órdenes están limitadas a órdenes pendientes sin avance. El consumo de materia prima debe registrarse explícitamente y asociarse a la orden.
+- Las modificaciones de órdenes están limitadas a órdenes pendientes sin avance. El consumo de materia prima debe registrarse explícitamente y asociarse a la orden (hoy solo por la API, DEF-013).
 
 ## Aprobación pendiente
 
-Hacer un recorrido guiado por cada perfil, anexar capturas con datos ficticios y validar lenguaje, accesibilidad y permisos. Este borrador no reemplaza la aceptación DOC-07/DOC-09.
+Hacer un recorrido guiado por cada perfil con usuarios de MEVIPLAST y validar lenguaje, accesibilidad y permisos. Las capturas con datos ficticios están en el Manual de Usuario (MEV-DOC-09). Esta guía no reemplaza la aceptación DOC-07/DOC-09.

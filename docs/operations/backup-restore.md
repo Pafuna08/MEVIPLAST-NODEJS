@@ -2,7 +2,7 @@
 
 ## Estado
 
-Este procedimiento es una guía operativa, no una automatización validada. El equipo debe ensayarlo en una base desechable y registrar fecha, versión, responsable y resultado antes de considerarlo un control de recuperación aprobado. Nunca subas respaldos al repositorio.
+Procedimiento manual ensayado el 2026-10-27 en una base desechable (resultado al final de este documento). No es una automatización: cada respaldo lo ejecuta una persona. Falta acordar con el cliente la frecuencia, el RPO y el RTO. Nunca subas respaldos al repositorio.
 
 ## Respaldo manual en Windows/XAMPP
 
