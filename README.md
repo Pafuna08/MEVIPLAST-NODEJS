@@ -48,7 +48,9 @@ npm run db:init --prefix backend
 npm start --prefix backend
 ```
 
-**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. Para actualizar una base existente se aplican las migraciones de `backend/sql/migrations` después de un respaldo verificado (ver [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md)). Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
+**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. Crea una cuenta de demostración por rol (`admin`, `supervisor`, `operario`, `vendedor` y `almacenista`), bobinas, órdenes y existencias DEMO, y se puede ejecutar dos veces sin duplicar datos.
+
+Para actualizar una base existente se aplican las migraciones de `backend/sql/migrations` después de un respaldo verificado (ver [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md)). `db:init` las aplica en orden solo con `DB_APPLY_MIGRATIONS=true` y `DB_BACKUP_CONFIRMED=true`, y registra cada una en la tabla `schema_migrations`. **No uses esas variables sobre una base cuyas migraciones se aplicaron a mano** (por ejemplo, el `meviplast_db` local del equipo): la tabla no las tiene registradas y se volverían a ejecutar, incluidas las que borran datos fuera del catálogo. Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 

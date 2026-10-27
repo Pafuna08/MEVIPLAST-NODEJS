@@ -17,3 +17,4 @@ Usa identificadores `EV-AAAA-MM-DD-NN`. Cada registro debe indicar requisito o c
 | EV-2026-10-27-06 | RNF-004 rendimiento | Prueba de carga, 5 usuarios, 1 480 registros | p95 de 60 a 69 ms (umbral 3 s), 0 errores | [`EV-2026-10-27-rnf.md`](EV-2026-10-27-rnf.md) |
 | EV-2026-10-27-07 | RNF-007 compatibilidad | Edge 156, Chrome 156, Firefox 157 | 30 de 30 flujos sin bloqueo | [`EV-2026-10-27-rnf.md`](EV-2026-10-27-rnf.md) |
 | EV-2026-10-27-08 | DEF-013 formulario de materia prima | E2E + navegadores | 9 de 9 E2E; 39 de 39 flujos | [`EV-2026-10-27-rnf.md`](EV-2026-10-27-rnf.md) |
+| EV-2026-10-27-09 | PROD-04 instalación limpia; DEF-014, DEF-015 | Clon nuevo + README | Instala y arranca; 2 hallazgos corregidos | [`EV-2026-10-27-instalacion.md`](EV-2026-10-27-instalacion.md) |
