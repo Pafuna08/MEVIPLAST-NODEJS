@@ -47,6 +47,8 @@ npx playwright-core install chromium firefox   # una sola vez por equipo
 npm run test:browser
 ```
 
+Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usuario (disco C:). Para guardarlos en otro disco, defina la misma ruta al instalar y al ejecutar, por ejemplo `$env:PLAYWRIGHT_BROWSERS_PATH = "J:\playwright-navegadores"`.
+
 `backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
