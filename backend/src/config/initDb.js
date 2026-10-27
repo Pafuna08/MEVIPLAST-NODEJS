@@ -1,8 +1,8 @@
 /**
  * Script de inicializacion de base de datos.
- * Ejecuta el esquema (sql/schema.sql) y siembra los 3 usuarios demo
- * que hoy existen "hardcodeados" en public/js/login.js, pero ahora
- * con contrasena cifrada (bcrypt) guardada en MySQL.
+ * Ejecuta el esquema (sql/schema.sql) y siembra una cuenta demo por rol,
+ * con contrasena cifrada (bcrypt), ademas de materias primas, ordenes y
+ * existencias DEMO. Solo para bases nuevas o desechables.
  *
  * Uso: npm run db:init
  */
@@ -55,6 +55,18 @@ async function main() {
       usuario: "operario",
       password: "oper123",
       rol: "operario",
+    },
+    {
+      nombre: "Vendedor",
+      usuario: "vendedor",
+      password: "vend123",
+      rol: "vendedor",
+    },
+    {
+      nombre: "Almacenista",
+      usuario: "almacenista",
+      password: "alma123",
+      rol: "almacenista",
     },
   ];
 
@@ -170,14 +182,22 @@ async function main() {
         ],
       );
   }
-  const migracionesPath = path.join(
+  // Existencias DEMO de materias primas y producto terminado. El script solo
+  // completa filas DEMO vacías e inserta variantes que no existen.
+  const semillaDemo = path.join(
     __dirname,
-    "..",
     "..",
     "..",
     "sql",
     "migrations",
+    "20261026_seed_demo_inventory.sql",
   );
+  if (fs.existsSync(semillaDemo)) {
+    await connection.query(fs.readFileSync(semillaDemo, "utf8"));
+    console.log("Existencias DEMO cargadas.");
+  }
+
+  const migracionesPath = path.join(__dirname, "..", "..", "sql", "migrations");
   if (
     fs.existsSync(migracionesPath) &&
     process.env.DB_APPLY_MIGRATIONS === "true"

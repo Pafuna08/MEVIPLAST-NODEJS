@@ -35,6 +35,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- `db:init` crea una cuenta de demostración por rol (antes faltaban vendedor y almacenista) y carga las existencias DEMO de producto terminado, que antes quedaban en cero (DEF-014). Hallado en la prueba de instalación limpia.
+- `db:init` buscaba las migraciones en una ruta inexistente, así que `DB_APPLY_MIGRATIONS=true` no aplicaba nada ni mostraba aviso (DEF-015).
 - Formulario «Registrar movimiento» de materias primas, retirado por error en el cambio de catálogos (DEF-013): compras y ajustes para administrador y almacenista, y consumo en una orden activa que usa la bobina para administrador y supervisor.
 - Acceso del operario a su panel.
 - Nombres de producto mal formados ocultos en ventas y dashboards.
