@@ -74,7 +74,7 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
-La suite tiene 26 pruebas automatizadas (26 aprobadas el 2026-10-26): recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+La suite tiene 30 pruebas automatizadas (30 aprobadas el 2026-10-27): recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 
