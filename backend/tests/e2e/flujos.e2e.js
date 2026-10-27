@@ -197,6 +197,22 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.deepEqual(acciones.map((a) => a.accion).sort(), ["BLOQUEO_CUENTA", "DESBLOQUEAR_USUARIO"]);
   });
 
+  await t.test("ADR-004: el token deja de servir al desactivar al usuario o cambiarle el rol", async () => {
+    const vendedor = `/usuarios/${ids.vendedor}`;
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 200);
+
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { activo: 0 })).status, 200);
+    const inactivo = await llamar("GET", "/ventas", tokens.vendedor);
+    assert.equal(inactivo.status, 401);
+    assert.match(inactivo.body.mensaje, /ya no es válida/);
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { activo: 1 })).status, 200);
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 200, "vuelve a servir al reactivarlo");
+
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "almacenista" })).status, 200);
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 401, "el token conserva el rol anterior");
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "vendedor" })).status, 200);
+  });
+
   await t.test("la migración de bloqueo se aplica sobre una base anterior y es idempotente", async () => {
     await db.query("ALTER TABLE usuarios DROP COLUMN bloqueado_hasta, DROP COLUMN intentos_fallidos");
     const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_login_lockout.sql"), "utf8");

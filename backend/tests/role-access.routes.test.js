@@ -10,7 +10,13 @@ const { pool } = require("../src/config/database");
 
 test("las lecturas de materias primas y producción respetan los roles", async (t) => {
   const originalQuery = pool.query;
-  pool.query = async (sql) => {
+  // Un id por rol, para que el middleware encuentre a cada usuario activo con su rol
+  const ids = { admin: 1, supervisor: 2, operario: 3, vendedor: 4, almacenista: 5 };
+  pool.query = async (sql, params = []) => {
+    if (sql.includes("FROM usuarios WHERE id = ?")) {
+      const rol = Object.keys(ids).find((clave) => ids[clave] === params[0]);
+      return [[{ activo: 1, rol }], []];
+    }
     if (sql.includes("FROM materia_prima WHERE id = ?")) {
       return [[{ id: 1, nombre: "Resina" }], []];
     }
@@ -31,14 +37,14 @@ test("las lecturas de materias primas y producción respetan los roles", async (
   const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
 
   async function get(path, rol) {
-    const token = jwt.sign({ id: 7, rol }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: ids[rol], rol }, process.env.JWT_SECRET);
     return fetch(`${baseUrl}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   }
 
   async function post(path, rol, body) {
-    const token = jwt.sign({ id: 7, rol }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: ids[rol], rol }, process.env.JWT_SECRET);
     return fetch(`${baseUrl}${path}`, {
       method: "POST",
       headers: {

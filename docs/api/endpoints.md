@@ -1,6 +1,6 @@
 # Catálogo de API
 
-Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Los roles y respuestas siguientes se derivan de los routers y middleware del backend; este catálogo no sustituye todavía una especificación OpenAPI validada.
+Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Responden 401 si falta el token, si está vencido o es inválido, o si el usuario fue desactivado, eliminado o cambió de rol desde que inició sesión; el panel cierra la sesión al recibir 401. Responden 403 cuando el rol no tiene permiso para la ruta. Los roles y respuestas siguientes se derivan de los routers y middleware del backend; este catálogo no sustituye todavía una especificación OpenAPI validada.
 
 | Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
 | ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
