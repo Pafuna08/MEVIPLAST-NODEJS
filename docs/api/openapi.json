@@ -1233,7 +1233,7 @@
         "tags": [
           "Producción"
         ],
-        "summary": "Crear plantilla",
+        "summary": "Crear plantilla (una por variante; 409 si ya existe)",
         "x-requisitos": "RF-013",
         "requestBody": {
           "required": true,
@@ -1243,6 +1243,15 @@
                 "type": "object",
                 "properties": {
                   "producto": {
+                    "type": "string"
+                  },
+                  "medida": {
+                    "type": "string"
+                  },
+                  "calibre": {
+                    "type": "string"
+                  },
+                  "color": {
                     "type": "string"
                   },
                   "cantidad": {
@@ -1262,6 +1271,9 @@
                 },
                 "required": [
                   "producto",
+                  "medida",
+                  "calibre",
+                  "color",
                   "cantidad"
                 ]
               }

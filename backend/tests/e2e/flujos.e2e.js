@@ -322,4 +322,54 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(columnas.length, 2);
     assert.equal((await login("e2e_admin")).status, 200);
   });
+
+  await t.test("edición de órdenes: solo pendientes sin avance y con la variante completa", async () => {
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Troquel riñón", medida: "12 x 18", calibre: "2", color: "Transparente",
+      cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const id = orden.body.id;
+    assert.equal((await llamar("PUT", `/produccion/${id}`, tokens.admin, { medida: "20 x 30" })).status, 400);
+    const editada = await llamar("PUT", `/produccion/${id}`, tokens.supervisor, {
+      medida: "20 x 30", calibre: "3", color: "Blanco", cantidad: 150, prioridad: "alta",
+    });
+    assert.equal(editada.status, 200, JSON.stringify(editada.body));
+    assert.deepEqual(
+      [editada.body.medida, editada.body.calibre, editada.body.color, Number(editada.body.cantidad), editada.body.prioridad],
+      ["20 x 30", "3", "Blanco", 150, "alta"],
+    );
+    // La orden de CP-028 ya tiene avance: no se puede editar
+    const [[conAvance]] = await db.query("SELECT id FROM produccion WHERE cantidad_producida > 0 LIMIT 1");
+    assert.equal((await llamar("PUT", `/produccion/${conAvance.id}`, tokens.admin, { cantidad: 5000 })).status, 400);
+  });
+
+  await t.test("plantillas: una por variante, con la variante obligatoria", async () => {
+    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300 };
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300 })).status, 400);
+    const creada = await llamar("POST", "/produccion/plantillas", tokens.admin, base);
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.medida, "15 x 20");
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, base)).status, 409);
+    const otraVariante = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, color: "Negro" });
+    assert.equal(otraVariante.status, 201, "la misma línea admite otra variante");
+  });
+
+  await t.test("la migración de variante en plantillas se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("DELETE FROM plantillas_produccion");
+    await db.query(
+      "ALTER TABLE plantillas_produccion DROP INDEX uq_plantilla_variante, DROP COLUMN medida, DROP COLUMN calibre, DROP COLUMN color, ADD UNIQUE KEY producto (producto)",
+    );
+    await db.query("INSERT INTO plantillas_produccion (producto, cantidad) VALUES ('Sencilla PP', 100)");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_template_variant.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [indices] = await db.query(
+      "SELECT DISTINCT index_name AS nombre FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'plantillas_produccion' AND non_unique = 0",
+      [DB],
+    );
+    assert.deepEqual(indices.map((i) => i.nombre).sort(), ["PRIMARY", "uq_plantilla_variante"]);
+    const [[anterior]] = await db.query("SELECT producto, medida FROM plantillas_produccion");
+    assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
+  });
 });

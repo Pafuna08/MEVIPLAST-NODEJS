@@ -69,6 +69,31 @@ test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async ()
   );
 });
 
+test("crear plantilla exige la variante y la guarda", async (t) => {
+  await assert.rejects(
+    productionService.crearPlantilla({ producto: "Cargadera", cantidad: 20, medida: "15 x 20" }, 1),
+    /calibre es obligatorio/,
+  );
+
+  const originalQuery = pool.query;
+  let insert;
+  pool.query = async (sql, params) => {
+    if (sql.startsWith("INSERT INTO plantillas_produccion")) {
+      insert = params;
+      return [{ insertId: 4 }];
+    }
+    return [[{ id: 4 }]];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+  await productionService.crearPlantilla(
+    { producto: "Cargadera", medida: " 15 x 20 ", calibre: "2", color: "Blanco", cantidad: 300 },
+    1,
+  );
+  assert.deepEqual(insert.slice(0, 5), ["Cargadera", "15 x 20", "2", "Blanco", 300]);
+});
+
 test("no se puede finalizar una orden sin completar la meta", async (t) => {
   const originalGetConnection = pool.getConnection;
   let rollbackCount = 0;

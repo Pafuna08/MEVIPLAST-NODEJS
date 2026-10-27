@@ -1188,7 +1188,7 @@ function Production({
                 {templates.map((template) => (
                   <div className="order-row" key={template.id}>
                     <div>
-                      <strong>{safeProductName(template.producto) || "Producto no válido"}</strong>
+                      <strong>{safeProductName(template.producto) || "Producto no válido"}{orderVariant(template)}</strong>
                       <span>
                         Meta habitual: {number(template.cantidad)}
                         {template.materia_prima_nombre
@@ -1227,7 +1227,7 @@ function Production({
           >
             {selectedTemplate && (
               <p className="form-hint">
-                Plantilla seleccionada: {safeProductName(selectedTemplate.producto) || "Producto no válido"}. Puedes ajustar sus datos antes de crear la orden.
+                Plantilla seleccionada: {safeProductName(selectedTemplate.producto) || "Producto no válido"}{orderVariant(selectedTemplate)}. Puedes ajustar sus datos antes de crear la orden.
               </p>
             )}
             <Field label="Producto">
@@ -1241,7 +1241,7 @@ function Production({
                 {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
               </select>
             </Field>
-            <VariantFields idPrefix="orden-nueva" />
+            <VariantFields key={`variante-${selectedTemplateId}`} idPrefix="orden-nueva" order={selectedTemplate} />
             <Field label="Meta de producción">
               <input
                 key={`cantidad-${selectedTemplateId}`}
@@ -1305,6 +1305,7 @@ function Production({
             <Field label="Producto">
               <select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
             </Field>
+            <VariantFields idPrefix="plantilla-nueva" />
             <Field label="Meta habitual">
               <input name="cantidad" type="number" min="0.01" step="0.01" required />
             </Field>

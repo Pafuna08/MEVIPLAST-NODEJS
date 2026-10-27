@@ -35,6 +35,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Las plantillas de órdenes frecuentes guardan medida, calibre y color, y «Usar plantilla» los llena en la orden (migración `20261027_template_variant.sql`). La clave única pasa de la línea a la variante, así que una línea puede tener varias plantillas. Las órdenes DEMO de `db:init` traen la variante de las existencias DEMO.
 - La prioridad de las órdenes ahora tiene efecto: las órdenes abiertas se listan de alta a baja prioridad (las cerradas al final) y muestran la etiqueta «Prioridad alta/media/baja». Antes solo se guardaba.
 - «Editar orden» se abre debajo de la orden elegida, no al final de la página, y se cierra al guardar con éxito.
 - Se retiró el campo «Lote» del registro de avance y de la API (`POST /produccion/{id}/avance`), porque no se usaba; la columna `produccion.lote` se conserva por los datos históricos.

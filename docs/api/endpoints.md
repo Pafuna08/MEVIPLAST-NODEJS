@@ -22,7 +22,7 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | GET         | `/produccion/operarios`                                              | Admin, supervisor                      | Consultar operarios activos            |
 | GET         | `/produccion/supervisores`                                           | Admin                                  | Consultar supervisores activos         |
 | GET         | `/produccion/plantillas`                                             | Admin, supervisor                      | Consultar plantillas de órdenes        |
-| POST        | `/produccion/plantillas`                                             | Admin                                  | Crear plantilla de orden               |
+| POST        | `/produccion/plantillas`                                             | Admin                                  | Crear plantilla de orden con su variante (409 si ya existe) |
 | DELETE      | `/produccion/plantillas/{id}`                                        | Admin                                  | Eliminar plantilla                     |
 | POST        | `/produccion`                                                        | Admin (a un supervisor), supervisor (a un operario) | Crear orden con línea, medida, calibre y color |
 | PUT         | `/produccion/{id}/asignar`                                           | Supervisor de la orden                 | Asignar operario a orden pendiente sin avance |

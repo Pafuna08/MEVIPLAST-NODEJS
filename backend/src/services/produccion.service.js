@@ -5,7 +5,9 @@ const { validarVariante } = require("./inventario.service");
 
 function validarProducto(producto) {
   if (!productosTerminados.includes(producto)) {
-    throw new Error("Selecciona una línea de producto válida");
+    const error = new Error("Selecciona una línea de producto válida");
+    error.statusCode = 400;
+    throw error;
   }
 }
 
@@ -61,7 +63,7 @@ async function listarPlantillas() {
      FROM plantillas_produccion p
      LEFT JOIN materia_prima m ON m.id = p.materia_prima_id
      WHERE p.producto IN (${productosTerminados.map(() => "?").join(", ")})
-     ORDER BY p.producto`,
+     ORDER BY p.producto, p.medida, p.calibre, p.color`,
     productosTerminados,
   );
   return filas;
@@ -70,10 +72,14 @@ async function listarPlantillas() {
 async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
   validarProducto(producto);
+  const variante = varianteOrden(producto, datos);
   const [resultado] = await pool.query(
-    "INSERT INTO plantillas_produccion (producto, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [
       producto.trim(),
+      variante.medida,
+      variante.calibre,
+      variante.color,
       Number(cantidad),
       Number(materia_prima_id) || null,
       prioridad || "media",

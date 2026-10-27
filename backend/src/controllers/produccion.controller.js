@@ -54,8 +54,9 @@ async function crearPlantilla(req, res) {
   } catch (error) {
     log.error("Error al atender la petición", { error });
     if (error.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ mensaje: "Ya existe una plantilla para ese producto" });
+      return res.status(409).json({ mensaje: "Ya existe una plantilla para esa variante" });
     }
+    if (error.statusCode === 400) return res.status(400).json({ mensaje: error.message });
     res.status(500).json({ mensaje: "Error al guardar plantilla de producción" });
   }
 }

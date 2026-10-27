@@ -10,7 +10,7 @@ La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schem
 | `materia_prima` | Existencia y especificaciones de bobinas PEBD, PEAD y PP | Medida, calibre, color y peso por rollo |
 | `movimientos_materia_prima` | Ledger de materia prima | Compras, ajustes de entrada/salida y consumos asociados a una orden; no se puede borrar una materia prima con movimientos (ADR-003) |
 | `produccion`    | Orden y avance acumulado                  | Supervisor asignado y operario responsable; línea con medida, calibre y color (variante que recibe el avance); registra observaciones (la columna `lote` se conserva por historial, pero el sistema ya no la usa) |
-| `plantillas_produccion` | Recetas/órdenes frecuentes reutilizables | El administrador mantiene plantillas para crear órdenes con datos sugeridos |
+| `plantillas_produccion` | Recetas/órdenes frecuentes reutilizables | El administrador mantiene plantillas para crear órdenes con datos sugeridos; una por variante (línea, medida, calibre y color) |
 | `inventario`    | Existencia agregada de producto terminado | Una fila por variante (familia, medida, calibre, color) |
 | `movimientos_inventario` | Ledger de producto terminado | Saldos iniciales, ingresos, producción, salidas y ventas, enlazados a la orden o la venta (ADR-003) |
 | `ventas`        | Venta, paquetes, precio y fecha           | `total` calculado por MySQL; movimiento enlazado al descontar stock; el comprobante se arma desde esta tabla (número `V-` + id) |
