@@ -9,6 +9,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable) y desbloqueo por el administrador.
 - Endpoint `GET /api/health` para verificar la API y la base de datos.
 - Licencia propietaria y lint con ESLint en backend, frontend y CI.
+- ADR-002 (backend en Node.js), ADR-003 (movimientos de stock en transacción) y ADR-004 (autenticación con JWT).
 
 - Recuperación de contraseña y recordatorio de usuario por correo, con tokens de un solo uso vigentes 30 minutos.
 - Ruta de órdenes de producción: el administrador asigna un supervisor y este asigna el operario; plantillas de órdenes frecuentes.
