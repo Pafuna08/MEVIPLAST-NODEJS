@@ -54,7 +54,9 @@ Para actualizar una base existente se aplican las migraciones de `backend/sql/mi
 
 Express sirve el build de React desde `frontend/dist`; el script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto. El puerto se puede cambiar en `backend/.env`.
 
-Para verificar el despliegue, `GET /api/health` responde 200 si la API y la base de datos están disponibles y 503 si la base de datos no responde. La API no acepta llamadas desde otros dominios salvo los listados en `CORS_ORIGINS`; el panel servido por Express no lo necesita.
+Para verificar el despliegue, `GET /api/health` responde 200 si la API y la base de datos están disponibles y 503 si la base de datos no responde.
+
+El servidor escribe sus registros como una línea JSON por evento, con `fecha`, `nivel`, `modulo` y `mensaje`: el arranque, la conexión a MySQL, cada petición a la API (método, ruta, estado, duración y usuario, nunca el cuerpo) y los errores. Los eventos normales van a la salida estándar y las advertencias y errores a la de errores. El nivel se elige con `LOG_LEVEL` (`info` por defecto) y los campos sensibles se ocultan. Para guardarlos, redirige la salida a un archivo o usa el servicio que ejecute el servidor. La API no acepta llamadas desde otros dominios salvo los listados en `CORS_ORIGINS`; el panel servido por Express no lo necesita.
 
 ### Recuperación de cuenta por correo
 
@@ -84,7 +86,7 @@ npm run test:perf --prefix backend     # prueba de carga; base desechable mevipl
 npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
 ```
 
-Hay 56 pruebas unitarias y de rutas (56 aprobadas el 2026-10-27), incluidas las que verifican que el contrato OpenAPI coincide con las rutas de Express y el diagrama entidad-relación con `schema.sql`. Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
+Hay 60 pruebas unitarias y de rutas (60 aprobadas el 2026-10-27), incluidas las que verifican que el contrato OpenAPI coincide con las rutas de Express y el diagrama entidad-relación con `schema.sql`. Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78,5 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
 
 ## Estructura
 

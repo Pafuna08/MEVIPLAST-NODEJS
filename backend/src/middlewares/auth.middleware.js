@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { pool } = require("../config/database");
+const log = require("../utils/logger").crearLogger("auth");
 require("dotenv").config();
 
 const MENSAJE_SESION_INVALIDA = "Tu sesión ya no es válida. Inicia sesión de nuevo.";
@@ -29,7 +30,7 @@ async function verificarToken(req, res, next) {
       return res.status(401).json({ mensaje: MENSAJE_SESION_INVALIDA });
     }
   } catch (error) {
-    console.error(error);
+    log.error("No se pudo verificar la sesión", { error });
     return res.status(500).json({ mensaje: "Error interno al verificar la sesión" });
   }
 

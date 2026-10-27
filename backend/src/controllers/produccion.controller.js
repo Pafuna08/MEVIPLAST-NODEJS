@@ -1,10 +1,11 @@
 const produccionService = require("../services/produccion.service");
+const log = require("../utils/logger").crearLogger("produccion");
 
 async function listar(req, res) {
   try {
     res.json(await produccionService.listar(req.usuario));
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar produccion" });
   }
 }
@@ -13,7 +14,7 @@ async function listarOperarios(req, res) {
   try {
     res.json(await produccionService.listarOperarios());
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar operarios" });
   }
 }
@@ -22,7 +23,7 @@ async function listarSupervisores(req, res) {
   try {
     res.json(await produccionService.listarSupervisores());
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar supervisores" });
   }
 }
@@ -31,7 +32,7 @@ async function listarPlantillas(req, res) {
   try {
     res.json(await produccionService.listarPlantillas());
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar plantillas de producción" });
   }
 }
@@ -51,7 +52,7 @@ async function crearPlantilla(req, res) {
     );
     res.status(201).json(plantilla);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ mensaje: "Ya existe una plantilla para ese producto" });
     }
@@ -64,7 +65,7 @@ async function eliminarPlantilla(req, res) {
     await produccionService.eliminarPlantilla(req.params.id);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al eliminar plantilla de producción" });
   }
 }
@@ -83,7 +84,7 @@ async function crear(req, res) {
     const nuevo = await produccionService.crear(req.body, req.usuario);
     res.status(201).json(nuevo);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(400).json({ mensaje: error.message || "Error al crear orden de produccion" });
   }
 }
@@ -102,7 +103,7 @@ async function asignarOperario(req, res) {
       ),
     );
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(400).json({ mensaje: error.message || "Error al asignar operario" });
   }
 }
@@ -123,7 +124,7 @@ async function cambiarEstado(req, res) {
     );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al cambiar estado de produccion" });
@@ -139,7 +140,7 @@ async function actualizar(req, res) {
     );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al actualizar orden" });
@@ -165,7 +166,7 @@ async function registrarAvance(req, res) {
       ),
     );
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al registrar avance" });
@@ -177,7 +178,7 @@ async function eliminar(req, res) {
     await produccionService.eliminar(req.params.id, req.usuario.id);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al eliminar orden de produccion" });
   }
 }

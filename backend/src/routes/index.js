@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const { pool } = require("../config/database");
+const log = require("../utils/logger").crearLogger("health");
 
 const authRoutes = require("./auth.routes");
 const usuariosRoutes = require("./usuarios.routes");
@@ -17,7 +18,7 @@ router.get("/health", async (req, res) => {
     await pool.query("SELECT 1");
     res.json({ estado: "ok", baseDatos: "ok" });
   } catch (error) {
-    console.error("Health check: base de datos no disponible:", error.message);
+    log.warn("Base de datos no disponible", { error: error.message });
     res.status(503).json({ estado: "error", baseDatos: "no disponible" });
   }
 });

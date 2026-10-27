@@ -1,4 +1,5 @@
 const { pool } = require("../config/database");
+const log = require("./logger").crearLogger("auditoria");
 
 /**
  * Registra una accion en la bitacora de auditoria.
@@ -13,7 +14,7 @@ async function registrarAuditoria({ usuarioId, accion, tabla, detalle }) {
     );
   } catch (error) {
     // La auditoria nunca debe tumbar la operacion principal
-    console.error("No se pudo registrar auditoria:", error.message);
+    log.error("No se pudo registrar la auditoría", { accion, tabla, error: error.message });
   }
 }
 

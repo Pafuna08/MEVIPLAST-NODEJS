@@ -1,4 +1,5 @@
 const authService = require("../services/auth.service");
+const log = require("../utils/logger").crearLogger("auth");
 
 async function iniciarSesion(req, res) {
   try {
@@ -16,14 +17,14 @@ async function iniciarSesion(req, res) {
 
     return res.json({ token: resultado.token, usuario: resultado.usuario });
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     return res.status(500).json({ mensaje: "Error interno al iniciar sesión" });
   }
 }
 
 function responderErrorRecuperacion(res, error, mensaje) {
   if (error.status) return res.status(error.status).json({ mensaje: error.message });
-  console.error(error);
+  log.error("Error al atender la petición", { error });
   if (error.code === "SMTP_NOT_CONFIGURED") {
     return res.status(503).json({ mensaje: "La recuperación por correo no está disponible: falta configurar SMTP." });
   }

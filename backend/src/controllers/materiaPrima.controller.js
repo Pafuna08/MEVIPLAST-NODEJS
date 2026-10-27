@@ -1,11 +1,12 @@
 const materiaPrimaService = require("../services/materiaPrima.service");
+const log = require("../utils/logger").crearLogger("materia-prima");
 
 async function listar(req, res) {
   try {
     const datos = await materiaPrimaService.listar();
     res.json(datos);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar materia prima" });
   }
 }
@@ -16,7 +17,7 @@ async function obtener(req, res) {
     if (!item) return res.status(404).json({ mensaje: "No encontrado" });
     res.json(item);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al obtener materia prima" });
   }
 }
@@ -32,7 +33,7 @@ async function crear(req, res) {
     const nuevo = await materiaPrimaService.crear(req.body, req.usuario.id);
     res.status(201).json(nuevo);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(error.statusCode || 500)
       .json({ mensaje: error.message || "Error al crear materia prima" });
@@ -48,7 +49,7 @@ async function actualizar(req, res) {
     );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al actualizar materia prima" });
   }
 }
@@ -58,7 +59,7 @@ async function eliminar(req, res) {
     await materiaPrimaService.eliminar(req.params.id, req.usuario.id);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al eliminar materia prima" });
   }
 }
@@ -68,7 +69,7 @@ async function bajoStock(req, res) {
     const datos = await materiaPrimaService.listarBajoStock();
     res.json(datos);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al consultar stock bajo" });
   }
 }
@@ -79,7 +80,7 @@ async function listarMovimientos(req, res) {
       await materiaPrimaService.listarMovimientos(req.params.id || null),
     );
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(500)
       .json({ mensaje: "Error al consultar movimientos de materia prima" });
@@ -114,7 +115,7 @@ async function registrarMovimiento(req, res) {
     );
     res.status(201).json(resultado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al registrar movimiento" });

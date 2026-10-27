@@ -1,10 +1,11 @@
 const ventasService = require("../services/ventas.service");
+const log = require("../utils/logger").crearLogger("ventas");
 
 async function listar(req, res) {
   try {
     res.json(await ventasService.listar(req.usuario));
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar ventas" });
   }
 }
@@ -22,7 +23,7 @@ async function registrar(req, res) {
     const venta = await ventasService.registrar(req.body, req.usuario.id);
     res.status(201).json(venta);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al registrar la venta" });
@@ -39,7 +40,7 @@ async function comprobante(req, res) {
     if (!venta) return res.status(404).json({ mensaje: "Venta no encontrada" });
     res.json(venta);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al generar el comprobante" });
   }
 }

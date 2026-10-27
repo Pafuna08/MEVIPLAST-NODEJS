@@ -1,10 +1,11 @@
 const inventarioService = require("../services/inventario.service");
+const log = require("../utils/logger").crearLogger("inventario");
 
 async function listar(req, res) {
   try {
     res.json(await inventarioService.listar());
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar inventario" });
   }
 }
@@ -23,7 +24,7 @@ async function ingresar(req, res) {
     );
     res.status(201).json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(error.statusCode || 500)
       .json({ mensaje: error.message || "Error al ingresar al inventario" });
@@ -42,7 +43,7 @@ async function salida(req, res) {
     );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(400)
       .json({ mensaje: error.message || "Error al registrar salida" });
@@ -53,7 +54,7 @@ async function movimientos(req, res) {
   try {
     res.json(await inventarioService.listarMovimientos(req.params.id || null));
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res
       .status(500)
       .json({ mensaje: "Error al consultar movimientos de inventario" });

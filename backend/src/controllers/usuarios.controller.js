@@ -1,4 +1,5 @@
 const usuariosService = require("../services/usuarios.service");
+const log = require("../utils/logger").crearLogger("usuarios");
 const ROLES_VALIDOS = [
   "admin",
   "supervisor",
@@ -12,7 +13,7 @@ async function listar(req, res) {
     const usuarios = await usuariosService.listar();
     res.json(usuarios);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar usuarios" });
   }
 }
@@ -47,7 +48,7 @@ async function crear(req, res) {
     );
     res.status(201).json(nuevo);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     if (error.code === "ER_DUP_ENTRY") {
       if (error.message.includes("uq_usuarios_correo")) {
         return res
@@ -91,7 +92,7 @@ async function actualizar(req, res) {
     );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     if (error.code === "ER_DUP_ENTRY") {
       return res
         .status(409)
@@ -107,7 +108,7 @@ async function desbloquear(req, res) {
     if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
     res.json(usuario);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al desbloquear usuario" });
   }
 }
@@ -117,7 +118,7 @@ async function eliminar(req, res) {
     await usuariosService.eliminar(req.params.id, req.usuario.id);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al eliminar usuario" });
   }
 }
