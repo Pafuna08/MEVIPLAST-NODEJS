@@ -32,3 +32,25 @@ test("sanitizarObjeto limpia strings y guarda ints en numeros", () => {
   assert.equal(salida.cantidad, 20);
   assert.equal(salida.descripcion, "texto");
 });
+
+test("sanitizarObjeto no convierte en número textos cuya clave contiene «id» o «min»", () => {
+  const salida = sanitizarObjeto({
+    prioridad: "alta",
+    medida: "10 x 15",
+    calibre: "2",
+    inventario_id: "7",
+    unidades_paquete: "500",
+    precio_paquete: "30000",
+    stock_minimo: "25",
+    activo: "1",
+  });
+
+  assert.equal(salida.prioridad, "alta");
+  assert.equal(salida.medida, "10 x 15");
+  assert.equal(salida.calibre, "2");
+  assert.equal(salida.inventario_id, 7);
+  assert.equal(salida.unidades_paquete, 500);
+  assert.equal(salida.precio_paquete, 30000);
+  assert.equal(salida.stock_minimo, 25);
+  assert.equal(salida.activo, 1);
+});

@@ -54,8 +54,9 @@ function sanitizarObjeto(valor) {
       if (!nombre) return;
 
       const claveNormalizada = nombre.toLowerCase();
+      // Coincidencia por clave completa: «prioridad» o «medida» contienen «id» y deben seguir siendo texto
       const esNumero =
-        /(cantidad|precio|stock|min|max|total|id|activo|cantidad_producida|cantidad_total)/i.test(
+        /^(id|activo)$|_id$|^(cantidad|precio|stock|total|unidades)(_|$)/.test(
           claveNormalizada,
         );
 

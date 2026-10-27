@@ -126,7 +126,8 @@ function sanitizePayload(value) {
           ? 255
           : 80,
       );
-      const normalized = /(cantidad|precio|stock|min|max|total|id|activo)/i.test(
+      // Igual que en el backend: «prioridad» o «medida» contienen «id» y deben seguir siendo texto
+      const normalized = /^(id|activo)$|_id$|^(cantidad|precio|stock|total|unidades)(_|$)/.test(
         lowerKey,
       )
         ? Number(clean) || 0
