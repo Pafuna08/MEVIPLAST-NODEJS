@@ -3,8 +3,9 @@
 Corte: 27/10/2026, rama `develop`, commit `55dce18` (PR #1 a #30 fusionados). Sin etiqueta de liberación.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 54 unitarias, 9 E2E con MySQL, prueba de carga y prueba en Edge, Chrome y Firefox; cobertura medida en CI.
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 56 unitarias, 9 E2E con MySQL, prueba de carga y prueba en Edge, Chrome y Firefox; cobertura medida en CI.
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json).
+- Datos: [`data/schema.md`](data/schema.md) y diagrama entidad-relación [`data/er.md`](data/er.md).
 - Evidencias: [`evidence/README.md`](evidence/README.md).
 - Decisiones: [`adr/`](adr/) (ADR-001 a ADR-004).
 - Manual de usuario: [`user-guide.md`](user-guide.md).

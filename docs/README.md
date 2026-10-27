@@ -5,7 +5,7 @@
 - [Manual de usuario](user-guide.md)
 - [Arquitectura](architecture/overview.md)
 - [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json)
-- [Esquema de datos](data/schema.md)
+- [Esquema de datos](data/schema.md) y [diagrama entidad-relación](data/er.md)
 - [Estrategia de pruebas](testing/strategy.md)
 - [Índice de evidencias](evidence/README.md)
 - [ADR-001: panel React](adr/ADR-001-panel-react.md)

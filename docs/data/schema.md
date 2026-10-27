@@ -1,6 +1,6 @@
 # Esquema de datos
 
-La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schema.sql); la inicialización y migración inicial están en `backend/src/config/initDb.js`.
+La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schema.sql); la inicialización y migración inicial están en `backend/src/config/initDb.js`. El diagrama entidad-relación, con todas las columnas y las 16 claves foráneas, está en [`er.md`](er.md).
 
 | Tabla           | Propósito                                 | Relaciones / notas                                                    |
 | --------------- | ----------------------------------------- | --------------------------------------------------------------------- |

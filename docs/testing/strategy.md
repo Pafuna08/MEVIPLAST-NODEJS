@@ -47,12 +47,13 @@ npm run test:browser
 
 ## Cobertura automatizada
 
-54 pruebas unitarias y de rutas con `node:test` (54 aprobadas el 2026-10-27):
+56 pruebas unitarias y de rutas con `node:test` (56 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `auth.smtp.test.js` (1): la recuperación entrega el correo a un servidor SMTP local con el enlace de un solo uso.
+- `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 16 claves foráneas con la regla de borrado.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
