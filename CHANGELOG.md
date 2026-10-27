@@ -11,6 +11,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - Licencia propietaria y lint con ESLint en backend, frontend y CI.
 - Comprobante de venta imprimible (RF-023): número consecutivo, cliente, producto, cantidades, total y vendedor; se abre al registrar la venta y desde la tabla de ventas, con `GET /api/ventas/:id/comprobante`.
 - Exportación a Excel de los reportes detallados de producción y ventas (RF-028), con `GET /api/reportes/{tipo}/detalle/excel` y el botón "Descargar Excel"; dependencia `exceljs` (MIT).
+- Prueba de carga `npm run test:perf` (RNF-004: p95 de 60 a 69 ms con 5 usuarios y 1 480 registros) y prueba multinavegador `npm run test:browser` (RNF-007: 30 de 30 flujos en Edge 156, Chrome 156 y Firefox 157), con bases desechables.
 - ADR-002 (backend en Node.js), ADR-003 (movimientos de stock en transacción) y ADR-004 (autenticación con JWT).
 
 - Recuperación de contraseña y recordatorio de usuario por correo, con tokens de un solo uso vigentes 30 minutos.

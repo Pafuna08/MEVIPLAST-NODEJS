@@ -3,8 +3,9 @@
 ## Comandos
 
 ```powershell
+npm run lint --prefix backend
 npm test --prefix backend
-npm audit --prefix backend --audit-level=critical
+npm audit --prefix backend
 npm run build --prefix frontend
 ```
 
@@ -17,38 +18,60 @@ npm run test:e2e --prefix backend
 `backend/tests/e2e/flujos.e2e.js` crea una base desechable (`E2E_DB_NAME`, por defecto `meviplast_e2e`), levanta la API, ejecuta los flujos y elimina la base al terminar (`E2E_KEEP_DB=true` la conserva). Se niega a ejecutarse si el nombre no empieza por `meviplast_e2e`, para no tocar `meviplast_db`. En CI corre en un job aparte con un contenedor MariaDB 10.4.
 
 - Health check con base real.
-- CP-028: orden del administrador → asignación del supervisor → avance del operario (rechazo por exceso y finalización) → inventario y movimiento → venta del vendedor → reportes semanales de producción y ventas.
+- CP-028: orden del administrador → asignación del supervisor → avance del operario (rechazo por exceso y finalización) → inventario y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
 - CP-029: acceso directo a 13 endpoints con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
+- ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
 - Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
+
+## Rendimiento (RNF-004)
+
+```powershell
+npm run test:perf --prefix backend
+```
+
+`backend/tests/perf/carga.perf.js` crea `meviplast_perf` con unos 1 500 registros, levanta la API como proceso aparte y simula cinco usuarios concurrentes, uno por rol, con sus operaciones habituales. Falla si el percentil 95 supera 3 s o si alguna respuesta es un error. No corre en CI: los tiempos de los servidores compartidos de GitHub no son representativos. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
+
+## Compatibilidad (RNF-007)
+
+```powershell
+npm run build --prefix frontend
+cd backend
+npx playwright-core install chromium firefox   # una sola vez por equipo
+npm run test:browser
+```
+
+`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 10 flujos críticos en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
 
-39 pruebas unitarias y de rutas con `node:test` (39 aprobadas el 2026-10-27):
+52 pruebas unitarias y de rutas con `node:test` (52 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
+- `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
+- `auth.smtp.test.js` (1): la recuperación entrega el correo a un servidor SMTP local con el enlace de un solo uso.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
-- `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance (finaliza al completar la meta, crea o incrementa la existencia con su movimiento, rechaza superar la meta y el avance de otro operario).
+- `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance.
 - `reportes.service.test.js` (3): límites de periodo calendario y filtro de ventas por rango.
+- `reportesExcel.service.test.js` (2): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula y periodo inválido.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
-- `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» (prioridad, medida) no se convierten en número.
-- `ventas.service.test.js` (3): límite de 500 unidades por paquete, descuento por paquetes y aislamiento del vendedor.
+- `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» no se convierten en número.
+- `schema.test.js` (2): el esquema se carga en la base indicada por `DB_NAME` y el nombre rechaza caracteres de inyección.
+- `ventas.service.test.js` (5): límite de 500 unidades por paquete, descuento por paquetes, aislamiento del vendedor y comprobante.
 
-Sin prueba automatizada todavía: crear orden, consumo de materia prima asociado a una orden y login.
-- Build: Vite compila la entrada React `frontend/dashboard.html`.
-- CI: ejecuta instalación por lockfile, auditoría a nivel crítico, tests backend y build.
+CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
 
 ## Cobertura pendiente
 
-- Flujos E2E pendientes: materias primas (compra y consumo por orden), edición de órdenes, recuperación de contraseña con SMTP real y pruebas del panel en el navegador.
-- Validación de rendimiento (<3 s) bajo carga acordada.
-- Matriz de compatibilidad y usabilidad en Chrome, Edge y Firefox.
-- Respaldo y restauración de base de datos comprobados.
-- La migración de roles y ledger se probó en una instancia temporal aislada MariaDB 10.4.32 con datos ficticios y dos ejecuciones; también se probó un conjunto limitado de rutas HTTP contra otra instancia temporal. No se aplicó a una base existente. La cobertura de integración completa, respaldo/restauración y autorización operativa sigue pendiente antes de cualquier aplicación compartida/real.
-- La auditoría todavía reporta vulnerabilidades altas transitivas en herramientas de desarrollo; revisar `SECURITY.md`.
+- Flujos E2E de materias primas (consumo asociado a una orden) y edición de órdenes.
+- Envío de un correo de recuperación real con el SMTP de MEVIPLAST.
+- Rendimiento medido en el servidor y la red de la empresa.
+- Compatibilidad con el Firefox oficial y con la penúltima versión de cada navegador.
+- Usabilidad (RNF-006) y accesibilidad (RNF-012) con usuarios de MEVIPLAST.
+- Aceptación del cliente por rol.
 
 Los resultados del smoke test con base aislada están en [`../evidence/EV-2026-10-21.md`](../evidence/EV-2026-10-21.md), los de instalación por lockfile en [`../evidence/EV-2026-10-20.md`](../evidence/EV-2026-10-20.md) y la evidencia histórica de navegación en [`../evidence/EV-2026-10-19.md`](../evidence/EV-2026-10-19.md).
