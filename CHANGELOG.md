@@ -2,9 +2,27 @@
 
 Los cambios relevantes se registran aquí. El proyecto todavía no tiene una versión estable etiquetada.
 
-## Unreleased - 2026-10-19
+## Unreleased - 2026-10-26
 
 ### Added
+
+- Recuperación de contraseña y recordatorio de usuario por correo, con tokens de un solo uso vigentes 30 minutos.
+- Ruta de órdenes de producción: el administrador asigna un supervisor y este asigna el operario; plantillas de órdenes frecuentes.
+- Reportes de producción y ventas con detalle por periodo diario, semanal, mensual y anual.
+- Catálogo de materias primas PEBD, PEAD y PP con medida, calibre, color y peso de rollo.
+- Catálogo de seis líneas de producto terminado con variantes y ventas por paquetes de hasta 500 unidades.
+- Existencias DEMO de ejemplo para materias primas y producto terminado.
+
+### Changed
+
+- Las migraciones del 2026-10-26 retiran materias primas, productos, ventas y movimientos ajenos al catálogo confirmado.
+
+### Fixed
+
+- Acceso del operario a su panel.
+- Nombres de producto mal formados ocultos en ventas y dashboards.
+
+### Added (2026-10-19)
 
 - Dashboard unificado por rol con React y Vite.
 - Perfiles de vendedor y almacenista con vistas y permisos específicos.
