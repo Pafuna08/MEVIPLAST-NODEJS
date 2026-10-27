@@ -29,6 +29,9 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 - Acceso del operario a su panel.
 - Nombres de producto mal formados ocultos en ventas y dashboards.
+- Tildes faltantes en el sitio público, el inicio de sesión y los mensajes de autenticación.
+- El inicio de sesión y el sitio público nombran los cinco roles del sistema.
+- Singular y plural en el resumen operativo ("1 producto agotado") y siglas en lugar de puntos en las tarjetas.
 
 ### Added (2026-10-19)
 

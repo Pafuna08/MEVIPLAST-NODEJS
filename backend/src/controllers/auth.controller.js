@@ -17,7 +17,7 @@ async function iniciarSesion(req, res) {
     return res.json({ token: resultado.token, usuario: resultado.usuario });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ mensaje: "Error interno al iniciar sesion" });
+    return res.status(500).json({ mensaje: "Error interno al iniciar sesión" });
   }
 }
 

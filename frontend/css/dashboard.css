@@ -244,6 +244,7 @@ textarea {
   color: var(--navy);
   background: #eaf0f6;
   font-size: 0.72rem;
+  font-style: normal;
   font-weight: 900;
 }
 .stat-card strong {
