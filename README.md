@@ -27,7 +27,7 @@ La presencia en código no equivale a aceptación del requisito. La suite E2E co
 - Frontend de trabajo: React, JSX y Vite.
 - Sitio público e inicio de sesión: HTML, CSS y JavaScript.
 - Base de datos: MySQL.
-- Node.js: 18 o superior; CI configurado con Node.js 22.
+- Node.js: 20 o superior (lo exige `nodemailer` 10); CI configurado con Node.js 22.
 
 ## Requisitos previos
 

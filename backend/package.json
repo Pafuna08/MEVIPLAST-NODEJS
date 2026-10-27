@@ -22,7 +22,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.10.0",
-    "nodemailer": "^7.0.13"
+    "nodemailer": "^10.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -36,6 +36,6 @@
     }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

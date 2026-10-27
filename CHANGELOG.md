@@ -25,6 +25,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - La API solo acepta llamadas de otros dominios listados en `CORS_ORIGINS`.
 - El token de un usuario desactivado, eliminado o con el rol cambiado deja de servir de inmediato (401), en lugar de seguir vigente hasta 8 horas.
 - Un token vencido o inválido responde 401 en lugar de 403, para que el panel cierre la sesión y lleve al login.
+- `nodemailer` 7.0.13 → 10.2.1 y `body-parser` 1.20.8 → 1.20.9 (dependencia de Express): `npm audit` queda sin vulnerabilidades. El backend requiere Node.js 20 o superior.
 
 ### Changed
 
