@@ -19,7 +19,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 
 - **Inicio:** resumen operativo, órdenes, inventario y ventas.
 - **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista. Si una cuenta muestra «Bloqueado hasta las…», usa **Desbloquear** para habilitarla antes de que termine el bloqueo.
-- **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock; registrar compras, ajustes y consumos asociados a una orden.
+- **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock. Las compras, los ajustes y los consumos asociados a una orden hoy no tienen formulario en el panel (DEF-013); solo se registran por la API.
 - **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, producto, cantidad y precio. El total se calcula y el stock disminuye si hay existencias.
@@ -50,7 +50,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 
 ## Almacenista
 
-- **Materias primas:** registrar compras y ajustes, consultar existencias e historial de movimientos.
+- **Materias primas:** consultar existencias e historial de movimientos. Las compras y los ajustes hoy no tienen formulario en el panel (DEF-013).
 - **Inventario:** registrar ingresos y salidas manuales, y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
 
 ## Problemas frecuentes

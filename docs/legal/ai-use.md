@@ -42,6 +42,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #28 | Exportación de reportes a Excel (RF-028) |
 | #29 | Actualización de `nodemailer` y `body-parser` por alertas de seguridad, con prueba SMTP |
 | #30 | Pruebas de rendimiento (RNF-004) y de navegadores (RNF-007), con su evidencia |
+| #31 | Revisión de la documentación del repositorio contra el código actual |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

@@ -4,7 +4,9 @@
 
 Este repositorio es un proyecto académico en desarrollo, no un servicio aprobado para producción. El backend usa JWT, bcryptjs, permisos por rol y consultas parametrizadas en los servicios revisados; esto no reemplaza una auditoría de seguridad ni pruebas de despliegue.
 
-La auditoría consultada el 2026-10-19 encontró tres vulnerabilidades altas en dependencias de desarrollo relacionadas con `nodemon`/`chokidar`/`braces`. Se corrigieron los hallazgos críticos y moderados mediante actualizaciones compatibles. No se aplicó `npm audit fix --force`, porque proponía degradar `nodemon` a una versión mayor anterior. Revisa la auditoría antes de una entrega o despliegue.
+El 2026-10-27 `npm audit` reportó 0 vulnerabilidades en backend y frontend, después de actualizar `nodemailer` a la 10.2.1 y `body-parser` a la 1.20.9 (PR #29). El CI falla si aparece una vulnerabilidad crítica. Repite la auditoría antes de cada entrega o despliegue.
+
+Controles relevantes: bloqueo de la cuenta tras 5 intentos fallidos, CORS limitado a `CORS_ORIGINS` y rechazo del token de un usuario desactivado o con el rol cambiado ([ADR-004](docs/adr/ADR-004-autenticacion-jwt.md)). Limitación conocida: cerrar sesión borra el token del navegador, pero no lo revoca en el servidor; vence a las 8 horas.
 
 ## Reporte responsable
 
