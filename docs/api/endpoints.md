@@ -1,6 +1,6 @@
 # Catálogo de API
 
-Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Responden 401 si falta el token, si está vencido o es inválido, o si el usuario fue desactivado, eliminado o cambió de rol desde que inició sesión; el panel cierra la sesión al recibir 401. Responden 403 cuando el rol no tiene permiso para la ruta. Los roles y respuestas siguientes se derivan de los routers y middleware del backend; este catálogo no sustituye todavía una especificación OpenAPI validada.
+Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Responden 401 si falta el token, si está vencido o es inválido, o si el usuario fue desactivado, eliminado o cambió de rol desde que inició sesión; el panel cierra la sesión al recibir 401. Responden 403 cuando el rol no tiene permiso para la ruta. Los roles y respuestas siguientes se derivan de los routers y middleware del backend. El contrato formal está en [`openapi.json`](openapi.json) (OpenAPI 3.0.3): cuerpos de petición, códigos de respuesta y roles por ruta (`x-roles`). La prueba `backend/tests/openapi.test.js` falla si el contrato y las rutas registradas en Express no coinciden.
 
 | Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
 | ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |

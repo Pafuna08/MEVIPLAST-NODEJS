@@ -47,6 +47,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #33 | Corrección DEF-013: formulario de movimientos de materia prima restaurado, con prueba E2E y de navegadores; la decisión de restaurarlo la tomó el equipo |
 | #34 | Prueba de instalación limpia; correcciones DEF-014 (datos demo por rol) y DEF-015 (ruta de migraciones) |
 | #35 | Medición de la cobertura de pruebas y mínimo exigido en CI |
+| #36 | Contrato OpenAPI y prueba de correspondencia con las rutas |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

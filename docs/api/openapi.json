@@ -1,0 +1,2695 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API MEVIPLAST",
+    "version": "1.0.0",
+    "description": "Contrato de la API REST de MEVIPLAST. Todas las rutas protegidas exigen `Authorization: Bearer <token>`. `x-roles` indica los roles que admite cada ruta según `backend/src/routes`; algunas reglas por propiedad (p. ej., el vendedor solo ve sus ventas) se aplican en los servicios. La prueba `backend/tests/openapi.test.js` verifica que este contrato tenga exactamente las rutas registradas en Express."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Mismo servidor que sirve el panel"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sistema"
+    },
+    {
+      "name": "Autenticación"
+    },
+    {
+      "name": "Usuarios"
+    },
+    {
+      "name": "Materias primas"
+    },
+    {
+      "name": "Producción"
+    },
+    {
+      "name": "Inventario"
+    },
+    {
+      "name": "Ventas"
+    },
+    {
+      "name": "Reportes"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Estado de la API y de la base de datos",
+        "responses": {
+          "200": {
+            "description": "API y base disponibles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Salud"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no responde",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Salud"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Iniciar sesión",
+        "x-requisitos": "RF-001, RF-004",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "usuario": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                },
+                "required": [
+                  "usuario",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token de 8 h y datos públicos del usuario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sesion"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "description": "Usuario o contraseña incorrectos (mensaje genérico)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Cuenta bloqueada temporalmente por intentos fallidos (RN-024)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/recuperar-password": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Pedir enlace de recuperación de contraseña",
+        "x-requisitos": "RF-003",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "correo": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "correo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta uniforme, exista o no la cuenta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "503": {
+            "description": "SMTP no configurado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/recordar-usuario": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Enviar el nombre de usuario al correo",
+        "x-requisitos": "RF-003",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "correo": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "correo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta uniforme, exista o no la cuenta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "503": {
+            "description": "SMTP no configurado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/restablecer-password": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Cambiar la contraseña con el token del enlace (un solo uso, 30 min)",
+        "x-requisitos": "RF-003",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{64}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          }
+        },
+        "security": []
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar usuarios",
+        "x-requisitos": "RF-002",
+        "responses": {
+          "200": {
+            "description": "Usuarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Usuario"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Crear usuario",
+        "x-requisitos": "RF-002",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "usuario": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "rol": {
+                    "$ref": "#/components/schemas/Rol"
+                  }
+                },
+                "required": [
+                  "nombre",
+                  "usuario",
+                  "correo",
+                  "password",
+                  "rol"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/usuarios/{id}": {
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Actualizar nombre, correo, rol o estado",
+        "x-requisitos": "RF-002",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "rol": {
+                    "$ref": "#/components/schemas/Rol"
+                  },
+                  "activo": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Eliminar usuario (no la propia cuenta)",
+        "x-requisitos": "RF-002",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/usuarios/{id}/desbloquear": {
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Desbloquear una cuenta bloqueada por intentos fallidos",
+        "x-requisitos": "RF-004",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/materia-prima": {
+      "get": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Listar bobinas",
+        "x-requisitos": "RF-017",
+        "responses": {
+          "200": {
+            "description": "Bobinas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MateriaPrima"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Registrar bobina (el peso del rollo es la existencia inicial)",
+        "x-requisitos": "RF-014",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "enum": [
+                      "PEBD",
+                      "PEAD",
+                      "PP"
+                    ]
+                  },
+                  "medida": {
+                    "type": "string"
+                  },
+                  "calibre": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "peso_rollo": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "tipo",
+                  "medida",
+                  "calibre",
+                  "color",
+                  "peso_rollo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bobina creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/materia-prima/bajo-stock": {
+      "get": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Bobinas con existencia menor o igual al mínimo",
+        "x-requisitos": "RF-017",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/materia-prima/movimientos": {
+      "get": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Movimientos de todas las bobinas",
+        "x-requisitos": "RF-017",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Registrar compra, ajuste o consumo en una orden",
+        "x-requisitos": "RF-015, RF-016",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "materia_prima_id": {
+                    "type": "integer"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "enum": [
+                      "compra",
+                      "ajuste_entrada",
+                      "ajuste_salida",
+                      "consumo_produccion"
+                    ],
+                    "description": "compra y ajustes: admin y almacenista; consumo_produccion: admin y supervisor (si no, 403)"
+                  },
+                  "cantidad": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  },
+                  "produccion_id": {
+                    "type": "integer",
+                    "description": "Obligatorio en consumo: orden activa que usa la bobina (RN-016)"
+                  },
+                  "observaciones": {
+                    "type": "string",
+                    "maxLength": 255
+                  }
+                },
+                "required": [
+                  "materia_prima_id",
+                  "tipo",
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Saldo actualizado y movimiento registrado en la misma transacción",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/materia-prima/{id}": {
+      "get": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Consultar una bobina",
+        "x-requisitos": "RF-017",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      },
+      "put": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Actualizar datos de la bobina (la cantidad solo cambia con movimientos)",
+        "x-requisitos": "RF-014",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string"
+                  },
+                  "unidad": {
+                    "type": "string"
+                  },
+                  "proveedor": {
+                    "type": "string"
+                  },
+                  "stock_minimo": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "almacenista"
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Eliminar bobina sin movimientos",
+        "x-requisitos": "RF-014",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/materia-prima/{id}/movimientos": {
+      "get": {
+        "tags": [
+          "Materias primas"
+        ],
+        "summary": "Movimientos de una bobina",
+        "x-requisitos": "RF-017",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/produccion": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Listar órdenes (el supervisor ve las suyas; el operario, las asignadas)",
+        "x-requisitos": "RF-009",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Crear orden (admin → supervisor; supervisor → operario)",
+        "x-requisitos": "RF-007",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "producto": {
+                    "type": "string",
+                    "description": "Línea del catálogo (RN-012)"
+                  },
+                  "cantidad": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  },
+                  "prioridad": {
+                    "type": "string",
+                    "enum": [
+                      "baja",
+                      "media",
+                      "alta"
+                    ]
+                  },
+                  "supervisor_id": {
+                    "type": "integer",
+                    "description": "Obligatorio si crea el administrador"
+                  },
+                  "responsable_id": {
+                    "type": "integer",
+                    "description": "Obligatorio si crea el supervisor"
+                  },
+                  "materia_prima_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "producto",
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Orden creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/produccion/operarios": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Operarios activos",
+        "x-requisitos": "RF-008",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/produccion/supervisores": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Supervisores activos",
+        "x-requisitos": "RF-007",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/produccion/plantillas": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Plantillas de órdenes frecuentes",
+        "x-requisitos": "RF-013",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Crear plantilla",
+        "x-requisitos": "RF-013",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "producto": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "number"
+                  },
+                  "prioridad": {
+                    "type": "string",
+                    "enum": [
+                      "baja",
+                      "media",
+                      "alta"
+                    ]
+                  },
+                  "materia_prima_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "producto",
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Plantilla creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/produccion/plantillas/{id}": {
+      "delete": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Eliminar plantilla",
+        "x-requisitos": "RF-013",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/produccion/{id}": {
+      "put": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Editar orden pendiente sin avance (RN-011)",
+        "x-requisitos": "RF-012",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "producto": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "number"
+                  },
+                  "responsable_id": {
+                    "type": "integer"
+                  },
+                  "materia_prima_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "prioridad": {
+                    "type": "string",
+                    "enum": [
+                      "baja",
+                      "media",
+                      "alta"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Eliminar orden",
+        "x-requisitos": "RF-007",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/produccion/{id}/asignar": {
+      "put": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Asignar operario a una orden pendiente sin avance",
+        "x-requisitos": "RF-008",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "responsable_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "responsable_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "supervisor"
+        ]
+      }
+    },
+    "/produccion/{id}/estado": {
+      "put": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Cambiar estado según RN-008 (el operario solo inicia)",
+        "x-requisitos": "RF-011",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "pendiente",
+                      "en_proceso",
+                      "finalizado",
+                      "cancelado"
+                    ]
+                  }
+                },
+                "required": [
+                  "estado"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario"
+        ]
+      }
+    },
+    "/produccion/{id}/avance": {
+      "post": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Registrar avance (> 0 y ≤ meta pendiente); finaliza al completar la meta",
+        "x-requisitos": "RF-010",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cantidad": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  },
+                  "lote": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "observaciones": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "operario"
+        ]
+      }
+    },
+    "/inventario": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Existencias por variante",
+        "x-requisitos": "RF-019",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista",
+          "vendedor"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Ingreso manual de una variante del catálogo",
+        "x-requisitos": "RF-018",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "familia": {
+                    "type": "string",
+                    "description": "Línea del catálogo (RN-012)"
+                  },
+                  "medida": {
+                    "type": "string"
+                  },
+                  "calibre": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "ubicacion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "familia",
+                  "medida",
+                  "calibre",
+                  "color",
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Existencia creada o incrementada con su movimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/inventario/movimientos": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Movimientos de inventario",
+        "x-requisitos": "RF-019",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/inventario/{id}/movimientos": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Movimientos de una variante",
+        "x-requisitos": "RF-019",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/inventario/{id}/salida": {
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Salida manual (sin saldo negativo, RN-015)",
+        "x-requisitos": "RF-018",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cantidad": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "cantidad"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista"
+        ]
+      }
+    },
+    "/ventas": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Listar ventas (el vendedor solo las suyas, RN-020)",
+        "x-requisitos": "RF-022",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "vendedor"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Registrar venta por paquetes y descontar stock en la misma transacción",
+        "x-requisitos": "RF-020, RF-021",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cliente": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "inventario_id": {
+                    "type": "integer"
+                  },
+                  "cantidad_paquetes": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "unidades_paquete": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 500
+                  },
+                  "precio_paquete": {
+                    "type": "number",
+                    "exclusiveMinimum": true,
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "cliente",
+                  "inventario_id",
+                  "cantidad_paquetes",
+                  "unidades_paquete",
+                  "precio_paquete"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Venta registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "vendedor"
+        ]
+      }
+    },
+    "/ventas/{id}/comprobante": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Datos del comprobante imprimible (número V-000000)",
+        "x-requisitos": "RF-023",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comprobante",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comprobante"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "description": "Venta inexistente o de otro vendedor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensaje"
+                }
+              }
+            }
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "vendedor"
+        ]
+      }
+    },
+    "/reportes/produccion": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Resumen de órdenes por estado",
+        "x-requisitos": "RF-024",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/produccion/detalle": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de producción del periodo calendario actual",
+        "x-requisitos": "RF-024",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/produccion/detalle/excel": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de producción en Excel",
+        "x-requisitos": "RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Excel"
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/ventas": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Resumen de ventas por rango",
+        "x-requisitos": "RF-025",
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/ventas/detalle": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de ventas del periodo calendario actual",
+        "x-requisitos": "RF-025",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/ventas/detalle/excel": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de ventas en Excel",
+        "x-requisitos": "RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Excel"
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/inventario": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Existencias de producto terminado",
+        "x-requisitos": "RF-026",
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
+    "/reportes/auditoria": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Bitácora de auditoría",
+        "x-requisitos": "RF-029",
+        "parameters": [
+          {
+            "name": "limite",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token de POST /auth/login; vence a las 8 h y se rechaza si el usuario se desactiva o cambia de rol (ADR-004)."
+      }
+    },
+    "schemas": {
+      "Mensaje": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mensaje"
+        ]
+      },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "supervisor",
+          "operario",
+          "vendedor",
+          "almacenista"
+        ]
+      },
+      "Salud": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "baseDatos": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "no disponible"
+            ]
+          }
+        }
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "usuario": {
+            "type": "string"
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "rol": {
+            "$ref": "#/components/schemas/Rol"
+          },
+          "activo": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "bloqueado": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "bloqueado_hasta": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Sesion": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "usuario": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "usuario": {
+                "type": "string"
+              },
+              "rol": {
+                "$ref": "#/components/schemas/Rol"
+              }
+            }
+          }
+        },
+        "required": [
+          "token",
+          "usuario"
+        ]
+      },
+      "MateriaPrima": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "medida": {
+            "type": "string",
+            "nullable": true
+          },
+          "calibre": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "peso_rollo": {
+            "type": "number",
+            "nullable": true
+          },
+          "cantidad": {
+            "type": "number"
+          },
+          "unidad": {
+            "type": "string"
+          },
+          "proveedor": {
+            "type": "string",
+            "nullable": true
+          },
+          "stock_minimo": {
+            "type": "number"
+          }
+        }
+      },
+      "Comprobante": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string",
+            "example": "V-000015"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cliente": {
+            "type": "string"
+          },
+          "producto": {
+            "type": "string"
+          },
+          "familia": {
+            "type": "string",
+            "nullable": true
+          },
+          "medida": {
+            "type": "string",
+            "nullable": true
+          },
+          "calibre": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "cantidad": {
+            "type": "number"
+          },
+          "cantidad_paquetes": {
+            "type": "integer"
+          },
+          "unidades_paquete": {
+            "type": "integer"
+          },
+          "precio_paquete": {
+            "type": "number"
+          },
+          "precio_unitario": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "vendedor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      }
+    },
+    "responses": {
+      "Validacion": {
+        "description": "Datos inválidos o regla de negocio incumplida (mensaje legible)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          }
+        }
+      },
+      "SesionInvalida": {
+        "description": "Sin token, token inválido o vencido, o usuario desactivado o con rol cambiado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          }
+        }
+      },
+      "SinPermiso": {
+        "description": "El rol no tiene permiso para esta ruta",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          }
+        }
+      },
+      "NoEncontrado": {
+        "description": "Recurso no encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          }
+        }
+      },
+      "Conflicto": {
+        "description": "Conflicto (dato duplicado o autoeliminación)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          }
+        }
+      },
+      "Excel": {
+        "description": "Archivo .xlsx con hojas Resumen, Por producto y Detalle",
+        "headers": {
+          "Content-Disposition": {
+            "schema": {
+              "type": "string",
+              "example": "attachment; filename=\"reporte-ventas-mensual-2026-10-01.xlsx\""
+            }
+          }
+        },
+        "content": {
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      }
+    }
+  }
+}
