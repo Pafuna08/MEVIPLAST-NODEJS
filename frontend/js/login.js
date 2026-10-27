@@ -3,6 +3,8 @@ const rolesInfo = {
   admin: { nombre: "Administrador", destino: "dashboard.html" },
   supervisor: { nombre: "Supervisor", destino: "dashboard.html" },
   operario: { nombre: "Operario", destino: "dashboard.html" },
+  vendedor: { nombre: "Vendedor", destino: "dashboard.html" },
+  almacenista: { nombre: "Almacenista", destino: "dashboard.html" },
 };
 
 const sanitizeText = (value, maxLength = 255) =>
@@ -50,14 +52,6 @@ toggle.addEventListener("click", () => {
     "aria-label",
     visible ? "Mostrar contraseña" : "Ocultar contraseña",
   );
-});
-
-document.querySelectorAll("[data-user]").forEach((button) => {
-  button.addEventListener("click", () => {
-    username.value = button.dataset.user;
-    password.value = button.dataset.password;
-    status.textContent = "";
-  });
 });
 
 form.addEventListener("submit", async (event) => {

@@ -1,0 +1,25 @@
+name: Tarea técnica
+description: Registrar mantenimiento, deuda técnica o infraestructura
+title: "chore: "
+labels: ["technical"]
+body:
+  - type: textarea
+    id: reason
+    attributes:
+      label: Motivo
+      description: ¿Qué riesgo, deuda o necesidad técnica atiende?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Alcance
+      description: Incluye impacto, dependencias y áreas afectadas.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Aceptación y validación
+    validations:
+      required: true

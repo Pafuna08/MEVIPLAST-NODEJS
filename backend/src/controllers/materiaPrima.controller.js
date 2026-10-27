@@ -23,21 +23,29 @@ async function obtener(req, res) {
 
 async function crear(req, res) {
   try {
-    const { nombre, tipo, cantidad } = req.body;
-    if (!nombre || !tipo || cantidad === undefined) {
-      return res.status(400).json({ mensaje: "nombre, tipo y cantidad son obligatorios" });
+    const { tipo, medida, calibre, color, peso_rollo } = req.body;
+    if (!tipo || !medida || !calibre || !color || peso_rollo === undefined) {
+      return res
+        .status(400)
+        .json({ mensaje: "Material, medida, calibre, color y peso del rollo son obligatorios" });
     }
     const nuevo = await materiaPrimaService.crear(req.body, req.usuario.id);
     res.status(201).json(nuevo);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: "Error al crear materia prima" });
+    res
+      .status(error.statusCode || 500)
+      .json({ mensaje: error.message || "Error al crear materia prima" });
   }
 }
 
 async function actualizar(req, res) {
   try {
-    const actualizado = await materiaPrimaService.actualizar(req.params.id, req.body, req.usuario.id);
+    const actualizado = await materiaPrimaService.actualizar(
+      req.params.id,
+      req.body,
+      req.usuario.id,
+    );
     res.json(actualizado);
   } catch (error) {
     console.error(error);
@@ -65,4 +73,61 @@ async function bajoStock(req, res) {
   }
 }
 
-module.exports = { listar, obtener, crear, actualizar, eliminar, bajoStock };
+async function listarMovimientos(req, res) {
+  try {
+    res.json(
+      await materiaPrimaService.listarMovimientos(req.params.id || null),
+    );
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ mensaje: "Error al consultar movimientos de materia prima" });
+  }
+}
+
+async function registrarMovimiento(req, res) {
+  try {
+    const { materia_prima_id, tipo, cantidad } = req.body;
+    if (!materia_prima_id || !tipo || cantidad === undefined) {
+      return res
+        .status(400)
+        .json({
+          mensaje: "materia_prima_id, tipo y cantidad son obligatorios",
+        });
+    }
+    const rolesPorTipo = {
+      compra: ["admin", "almacenista"],
+      ajuste_entrada: ["admin", "almacenista"],
+      ajuste_salida: ["admin", "almacenista"],
+      consumo_produccion: ["admin", "supervisor"],
+    };
+    if (!rolesPorTipo[tipo]?.includes(req.usuario.rol)) {
+      return res
+        .status(403)
+        .json({ mensaje: "Tu rol no puede registrar este tipo de movimiento" });
+    }
+    const resultado = await materiaPrimaService.registrarMovimiento(
+      materia_prima_id,
+      req.body,
+      req.usuario,
+    );
+    res.status(201).json(resultado);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(400)
+      .json({ mensaje: error.message || "Error al registrar movimiento" });
+  }
+}
+
+module.exports = {
+  listar,
+  obtener,
+  crear,
+  actualizar,
+  eliminar,
+  bajoStock,
+  listarMovimientos,
+  registrarMovimiento,
+};

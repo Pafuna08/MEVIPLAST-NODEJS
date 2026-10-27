@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
 
+const finishedProductFamilies = [
+  "Adhesivo PP",
+  "Adhesivo Seguridad",
+  "Sencilla PP",
+  "Bolsas para la basura",
+  "Cargadera",
+  "Troquel riñón",
+];
+
 const roleViews = {
   Administrador: {
     apiRole: "admin",
@@ -24,6 +33,7 @@ const roleViews = {
       ["asignar", "AT", "Asignar tareas"],
       ["operarios", "OP", "Operarios"],
       ["produccion", "SP", "Seguimiento"],
+      ["materia", "MP", "Materias primas"],
       ["reportes", "RP", "Reportes"],
     ],
   },
@@ -36,6 +46,21 @@ const roleViews = {
       ["tareas", "TA", "Mis tareas"],
       ["registrar", "RG", "Registrar producción"],
       ["historial", "HI", "Mi historial"],
+    ],
+  },
+  Vendedor: {
+    apiRole: "vendedor",
+    title: "Gestión de ventas",
+    initials: "VE",
+    views: [["ventas", "VT", "Ventas"]],
+  },
+  Almacenista: {
+    apiRole: "almacenista",
+    title: "Control de almacén",
+    initials: "AL",
+    views: [
+      ["materia", "MP", "Materias primas"],
+      ["inventario", "IT", "Inventario"],
     ],
   },
 };
@@ -71,6 +96,19 @@ const sanitizeText = (value, maxLength = 255) =>
     .trim()
     .slice(0, maxLength);
 
+function safeProductName(value) {
+  const product = String(value ?? "").trim();
+  if (
+    !product ||
+    /[<>]|&(?:lt|gt|#0*60|#0*62);|javascript\s*:|data\s*:\s*text\/html|(?:^|\s)on\w+\s*=/i.test(
+      product,
+    )
+  ) {
+    return null;
+  }
+  return sanitizeText(product, 255) || null;
+}
+
 function sanitizePayload(value) {
   if (Array.isArray(value)) return value.map(sanitizePayload);
   if (!value || typeof value !== "object") return value;
@@ -81,7 +119,7 @@ function sanitizePayload(value) {
       if (typeof item !== "string") return [key, sanitizePayload(item)];
       const clean = sanitizeText(
         item,
-        /(password|observaciones|cliente|producto|nombre|usuario|tipo|proveedor|ubicacion|lote)/i.test(
+        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|lote)/i.test(
           lowerKey,
         )
           ? 255
@@ -93,7 +131,9 @@ function sanitizePayload(value) {
         ? Number(clean) || 0
         : lowerKey.includes("usuario")
           ? clean.toLowerCase().replace(/[^a-z0-9._-]/g, "")
-          : clean;
+          : lowerKey.includes("correo")
+            ? clean.toLowerCase()
+            : clean;
       return [key, normalized];
     }),
   );
@@ -110,9 +150,13 @@ const currencyFormat = new Intl.NumberFormat("es-CO", {
 const number = (value) => numberFormat.format(Number(value || 0));
 const money = (value) => currencyFormat.format(Number(value || 0));
 const roleName = (value) =>
-  ({ admin: "Administrador", supervisor: "Supervisor", operario: "Operario" })[
-    value
-  ] || value;
+  ({
+    admin: "Administrador",
+    supervisor: "Supervisor",
+    operario: "Operario",
+    vendedor: "Vendedor",
+    almacenista: "Almacenista",
+  })[value] || value;
 
 async function api(url, token, options = {}) {
   const response = await fetch(url, {
@@ -125,11 +169,14 @@ async function api(url, token, options = {}) {
   });
   const data = response.status === 204 ? null : await response.json().catch(() => ({}));
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401) {
     localStorage.removeItem("meviplastToken");
     localStorage.removeItem("meviplastSession");
     window.location.replace("/login.html");
     return null;
+  }
+  if (response.status === 403) {
+    throw new Error(data?.mensaje || "No tienes permisos para esta sección.");
   }
   if (!response.ok) {
     throw new Error(data?.mensaje || "No fue posible completar la operación.");
@@ -138,22 +185,58 @@ async function api(url, token, options = {}) {
 }
 
 async function loadView(view, role, token) {
+  if (view === "reporte-detalle") {
+    const params = new URLSearchParams(window.location.search);
+    const tipo = params.get("reporte");
+    const periodo = params.get("periodo");
+    const recurso = tipo === "produccion" ? "produccion" : "ventas";
+    return api(`/api/reportes/${recurso}/detalle?periodo=${encodeURIComponent(periodo)}`, token);
+  }
   if (view === "inicio") {
-    const [orders, inventory] = await Promise.all([
-      api("/api/produccion", token),
+    const orders = await api("/api/produccion", token);
+    if (role.apiRole === "operario") {
+      return { orders, inventory: [] };
+    }
+    const [inventory, sales] = await Promise.all([
       api("/api/inventario", token),
+      api("/api/reportes/ventas", token),
     ]);
-    const sales =
-      role.apiRole === "operario"
-        ? null
-        : await api("/api/reportes/ventas", token);
     return { orders, inventory, sales };
   }
   if (view === "usuarios") return api("/api/usuarios", token);
-  if (view === "materia") return api("/api/materia-prima", token);
-  if (view === "inventario") return api("/api/inventario", token);
+  if (view === "materia") {
+    const [materials, movements] = await Promise.all([
+      api("/api/materia-prima", token),
+      api("/api/materia-prima/movimientos", token),
+    ]);
+    return { materials, movements };
+  }
+  if (view === "inventario") {
+    const [items, movements] = await Promise.all([
+      api("/api/inventario", token),
+      api("/api/inventario/movimientos", token),
+    ]);
+    return { items, movements };
+  }
   if (["produccion", "tareas", "historial", "registrar"].includes(view)) {
-    return api("/api/produccion", token);
+    const orders = await api("/api/produccion", token);
+    if (role.apiRole === "admin") {
+      const [materials, supervisors, templates] = await Promise.all([
+        api("/api/materia-prima", token),
+        api("/api/produccion/supervisores", token),
+        api("/api/produccion/plantillas", token),
+      ]);
+      return { orders, materials, supervisors, templates };
+    }
+    if (role.apiRole === "supervisor") {
+      const [operators, materials, templates] = await Promise.all([
+        api("/api/produccion/operarios", token),
+        api("/api/materia-prima", token),
+        api("/api/produccion/plantillas", token),
+      ]);
+      return { orders, operators, materials, templates };
+    }
+    return orders;
   }
   if (view === "asignar") {
     const [operators, materials] = await Promise.all([
@@ -177,12 +260,7 @@ async function loadView(view, role, token) {
     return { sales, inventory };
   }
   if (view === "reportes") {
-    const [production, sales, inventory] = await Promise.all([
-      api("/api/reportes/produccion", token),
-      api("/api/reportes/ventas", token),
-      api("/api/reportes/inventario", token),
-    ]);
-    return { production, sales, inventory };
+    return {};
   }
   return null;
 }
@@ -254,17 +332,23 @@ function StatusBadge({ status }) {
   return <span className={`status ${style}`}>{String(status || "").replace("_", " ")}</span>;
 }
 
-function OrderRow({ order, canManage, onChangeStatus }) {
+function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
+  const product = safeProductName(order.producto) || "Producto no válido";
   return (
     <div className="order-row">
       <div>
-        <strong>#{order.id} · {order.producto}</strong>
-        <span>{order.responsable_nombre || "Sin asignar"} · {number(produced)}/{number(goal)} ({progress}%)</span>
+        <strong>#{order.id} · {product}</strong>
+        <span>
+          {order.responsable_nombre || "Sin asignar"}
+          {order.supervisor_nombre ? ` · Supervisor: ${sanitizeText(order.supervisor_nombre)}` : ""}
+          {" · "}{number(produced)}/{number(goal)} ({progress}%)
+        </span>
       </div>
       <StatusBadge status={order.estado} />
+      {canEdit && <button className="text-action" type="button" onClick={() => onEdit(order)}>Editar</button>}
       {canManage && (
         <select
           className="state-select"
@@ -295,10 +379,19 @@ export default function DashboardApp() {
   const [token] = useState(() => localStorage.getItem("meviplastToken"));
   const role = session && roleViews[session.role] ? session.role : null;
   const config = role ? roleViews[role] : null;
+  const reportParams = new URLSearchParams(window.location.search);
+  const requestedReport = reportParams.get("reporte");
+  const requestedPeriod = reportParams.get("periodo");
+  const isReportDetail =
+    ["produccion", "ventas"].includes(requestedReport) &&
+    ["diario", "semanal", "mensual", "anual"].includes(requestedPeriod) &&
+    ["Administrador", "Supervisor"].includes(role);
   const requestedView = window.location.hash.slice(1) || "inicio";
-  const activeView = config?.views.some(([view]) => view === requestedView)
+  const activeView = isReportDetail
+    ? "reporte-detalle"
+    : config?.views.some(([view]) => view === requestedView)
     ? requestedView
-    : "inicio";
+    : config?.views[0]?.[0] || "inicio";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadedVersion, setLoadedVersion] = useState("");
@@ -371,11 +464,38 @@ export default function DashboardApp() {
       if (activeView === "usuarios") {
         await api("/api/usuarios", token, { method: "POST", body: JSON.stringify(payload) });
       } else if (activeView === "materia") {
-        await api("/api/materia-prima", token, { method: "POST", body: JSON.stringify(payload) });
+        if (payload.materia_prima_id) {
+          await api("/api/materia-prima/movimientos", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          await api("/api/materia-prima", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        }
       } else if (activeView === "inventario") {
-        await api("/api/inventario", token, { method: "POST", body: JSON.stringify(payload) });
+        if (payload.inventario_id) {
+          const { inventario_id, ...salida } = payload;
+          await api(`/api/inventario/${inventario_id}/salida`, token, {
+            method: "POST",
+            body: JSON.stringify(salida),
+          });
+        } else {
+          await api("/api/inventario", token, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        }
       } else if (activeView === "asignar") {
         await api("/api/produccion", token, { method: "POST", body: JSON.stringify(payload) });
+      } else if (activeView === "produccion") {
+        const { plantilla_id, ...order } = payload;
+        await api("/api/produccion", token, {
+          method: "POST",
+          body: JSON.stringify(order),
+        });
       } else if (activeView === "registrar") {
         const { id, ...advance } = payload;
         await api(`/api/produccion/${id}/avance`, token, {
@@ -408,6 +528,57 @@ export default function DashboardApp() {
     }
   }
 
+  async function updateOrder(id, payload) {
+    try {
+      await api(`/api/produccion/${id}`, token, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      setToast("Orden actualizada.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
+  async function assignOrder(id, responsableId) {
+    try {
+      await api(`/api/produccion/${id}/asignar`, token, {
+        method: "PUT",
+        body: JSON.stringify({ responsable_id: responsableId }),
+      });
+      setToast("Operario asignado a la orden.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
+  async function saveProductionTemplate(payload) {
+    try {
+      await api("/api/produccion/plantillas", token, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setToast("Plantilla guardada.");
+      setReloadKey((value) => value + 1);
+      return true;
+    } catch (cause) {
+      setToast(cause.message);
+      return false;
+    }
+  }
+
+  async function deleteProductionTemplate(id) {
+    try {
+      await api(`/api/produccion/plantillas/${id}`, token, { method: "DELETE" });
+      setToast("Plantilla eliminada.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
   async function toggleUser(user) {
     try {
       await api(`/api/usuarios/${user.id}`, token, {
@@ -418,6 +589,21 @@ export default function DashboardApp() {
       setReloadKey((value) => value + 1);
     } catch (cause) {
       setToast(cause.message);
+    }
+  }
+
+  async function updateUserEmail(userId, correo) {
+    try {
+      await api(`/api/usuarios/${userId}`, token, {
+        method: "PUT",
+        body: JSON.stringify({ correo }),
+      });
+      setToast("Correo actualizado.");
+      setReloadKey((value) => value + 1);
+      return true;
+    } catch (cause) {
+      setToast(cause.message);
+      return false;
     }
   }
 
@@ -460,6 +646,7 @@ export default function DashboardApp() {
     submitForm,
     saving,
     toggleUser,
+    updateUserEmail,
     requestDelete: (user) => {
       if (user.usuario === session.username) {
         setToast("No puedes eliminar tu propio usuario.");
@@ -468,6 +655,10 @@ export default function DashboardApp() {
       setDeleteTarget(user);
     },
     updateOrderStatus,
+    updateOrder,
+    assignOrder,
+    saveProductionTemplate,
+    deleteProductionTemplate,
   });
 
   return (
@@ -558,19 +749,25 @@ function renderView({
   submitForm,
   saving,
   toggleUser,
+  updateUserEmail,
   requestDelete,
   updateOrderStatus,
+  updateOrder,
+  assignOrder,
+  saveProductionTemplate,
+  deleteProductionTemplate,
 }) {
+  if (view === "reporte-detalle") return <ReportDetail data={data} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
-  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onDelete={requestDelete} role={role} />;
-  if (view === "materia") return <Materials data={data} onSubmit={submitForm} saving={saving} />;
+  if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
+  if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
-  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onChangeStatus={updateOrderStatus} />;
+  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
   if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} />;
-  if (view === "reportes") return <Reports data={data} navigate={navigate} />;
+  if (view === "reportes") return <Reports />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }
 
@@ -609,7 +806,11 @@ function Home({ data, role, navigate }) {
         <Panel title="Estado">
           <ul className="activity-list">
             <li><strong>{active.length} órdenes activas</strong><span>Revisa el seguimiento para actualizar.</span></li>
-            <li><strong>{data.inventory.filter((item) => Number(item.cantidad) === 0).length} productos agotados</strong><span>Inventario actual.</span></li>
+            {role === "operario" ? (
+              <li><strong>{data.orders.filter((order) => order.estado === "finalizado").length} órdenes completadas</strong><span>Tu historial de producción.</span></li>
+            ) : (
+              <li><strong>{data.inventory.filter((item) => Number(item.cantidad) === 0).length} productos agotados</strong><span>Inventario actual.</span></li>
+            )}
           </ul>
         </Panel>
       </div>
@@ -617,42 +818,84 @@ function Home({ data, role, navigate }) {
   );
 }
 
-function Users({ data, username, onSubmit, saving, onToggle, onDelete, role }) {
+function Users({
+  data,
+  username,
+  onSubmit,
+  saving,
+  onToggle,
+  onUpdateEmail,
+  onDelete,
+  role,
+}) {
+  const [emailUser, setEmailUser] = useState(null);
   return (
     <>
       <Intro title="Gestión de usuarios" description="Crea cuentas, activa o desactiva accesos y administra los usuarios del sistema." />
       <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving}>
         <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
         <Field label="Usuario"><input name="usuario" maxLength="50" required /></Field>
+        <Field label="Correo electrónico"><input name="correo" type="email" maxLength="254" autoComplete="email" required /></Field>
         <Field label="Contraseña"><input name="password" type="password" minLength="6" required /></Field>
-        <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
+        <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
       </FormPanel>
       <Panel title="Usuarios registrados">
-        <DataTable columns={["Nombre", "Usuario", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
+        <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
           key: user.id,
-          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
+          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
         }))} />
       </Panel>
     </>
   );
 }
 
-function Materials({ data, onSubmit, saving }) {
+function Materials({ data, role, onSubmit, saving }) {
+  const canCreate = role === "admin";
+  const polymerMaterials = [
+    ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)"],
+    ["PEAD", "Bobina o rollo de polietileno de alta densidad (PEAD)"],
+    ["PP", "Bobina o rollo de polipropileno (PP)"],
+  ];
   return (
     <>
-      <Intro title="Materias primas" description="Registra y consulta el abastecimiento." />
-      <FormPanel title="Registrar materia prima" onSubmit={onSubmit} saving={saving}>
-        <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
-        <Field label="Tipo"><input name="tipo" maxLength="80" required /></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0" step="0.01" required /></Field>
-        <Field label="Unidad"><input name="unidad" defaultValue="kg" maxLength="30" /></Field>
-        <Field label="Proveedor"><input name="proveedor" maxLength="120" /></Field>
-        <Field label="Stock mínimo"><input name="stock_minimo" type="number" min="0" step="0.01" defaultValue="0" /></Field>
-      </FormPanel>
-      <Panel title="Existencias"><DataTable columns={["Material", "Tipo", "Cantidad", "Mínimo", "Proveedor"]} rows={data.map((item) => ({
+      <Intro title="Materias primas" description="Registra bobinas y consulta existencias por material, medida, calibre y color." />
+      {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving}>
+        <Field label="Material">
+          <select name="tipo" defaultValue="" required>
+            <option value="" disabled>Selecciona un material</option>
+            {polymerMaterials.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </Field>
+        <Field label="Medida (ancho x largo)">
+          <input name="medida" list="materia-medidas" maxLength="80" placeholder="Ej. 6 x 12" required />
+          <datalist id="materia-medidas">
+            {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Calibre">
+          <input name="calibre" list="materia-calibres" maxLength="40" placeholder="Selecciona o escribe el calibre" required />
+          <datalist id="materia-calibres">
+            {["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Color">
+          <input name="color" list="materia-colores" maxLength="80" placeholder="Selecciona o escribe el color" required />
+          <datalist id="materia-colores">
+            {["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"].map((value) => <option key={value} value={value} />)}
+          </datalist>
+        </Field>
+        <Field label="Peso del rollo (kg)">
+          <input name="peso_rollo" type="number" min="0.01" step="0.01" placeholder="Ej. 25" required />
+        </Field>
+      </FormPanel>}
+      <Panel title="Materiales registrados"><DataTable columns={["Material", "Medida", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
         key: item.id,
-        cells: <><td>{item.nombre}</td><td>{item.tipo}</td><td>{number(item.cantidad)} {item.unidad}</td><td>{number(item.stock_minimo)}</td><td>{item.proveedor || "—"}</td></>,
+        cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{item.peso_rollo === null || item.peso_rollo === undefined ? "—" : `${number(item.peso_rollo)} kg`}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad)}</td></>,
       }))} /></Panel>
+      {data.movements.length > 0 && <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
+        key: movement.id,
+        cells: <><td>{movement.fecha}</td><td>{sanitizeText(movement.materia_prima)}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.registrado_por || "Sistema")}</td></>,
+      }))} /></Panel>}
     </>
   );
 }
@@ -660,27 +903,262 @@ function Materials({ data, onSubmit, saving }) {
 function Inventory({ data, onSubmit, saving }) {
   return (
     <>
-      <Intro title="Inventario terminado" description="Ingresa productos fabricados y consulta existencias." />
+      <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
       <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Línea de producto"><select name="familia" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+        <Field label="Medida"><input name="medida" maxLength="40" placeholder="Ej. 6*12" required /></Field>
+        <Field label="Calibre"><input name="calibre" maxLength="40" required /></Field>
+        <Field label="Color"><input name="color" maxLength="80" required /></Field>
+        <Field label="Unidades"><input name="cantidad" type="number" min="1" step="1" required /></Field>
         <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" maxLength="80" /></Field>
       </FormPanel>
-      <Panel title="Productos disponibles"><DataTable columns={["Producto", "Cantidad", "Ubicación"]} rows={data.map((item) => ({ key: item.id, cells: <><td>{item.producto}</td><td>{number(item.cantidad)}</td><td>{item.ubicacion || "—"}</td></> }))} /></Panel>
+      <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
+        <Field label="Producto"><select name="inventario_id" required>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+      </FormPanel>
+      <Panel title="Productos disponibles"><DataTable columns={["Línea", "Medida", "Calibre", "Color", "Unidades", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{sanitizeText(item.familia)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
+      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden"]} rows={data.movements.map((movement) => ({
+        key: movement.id,
+        cells: <><td>{movement.fecha}</td><td>{safeProductName(movement.producto) || "Producto no válido"}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—"))}</td></>,
+      }))} /></Panel>
     </>
   );
 }
 
-function Production({ data, role, view, onChangeStatus }) {
+function Production({
+  data,
+  role,
+  view,
+  onSubmit,
+  saving,
+  onChangeStatus,
+  onEditOrder,
+  onAssignOrder,
+  onSaveTemplate,
+  onDeleteTemplate,
+}) {
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
+  const isAdmin = role === "admin";
+  const isSupervisor = role === "supervisor";
+  const templates = (data.templates || []).filter((template) =>
+    safeProductName(template.producto),
+  );
+  const selectedTemplate = templates.find(
+    (template) => String(template.id) === selectedTemplateId,
+  );
   const title = view === "tareas" ? "Mis tareas" : view === "historial" ? "Mi historial" : "Seguimiento de producción";
   return (
     <>
-      <Intro title={title} description={canManage ? "Actualiza el estado de las órdenes asignadas." : "Solo se muestran tus tareas asignadas."} />
+      <Intro
+        title={isAdmin && view === "produccion" ? "Gestión de producción" : title}
+        description={
+          isAdmin && view === "produccion"
+            ? "Crea órdenes, asígnalas a un supervisor o reutiliza una plantilla frecuente."
+            : isSupervisor
+              ? "Revisa las órdenes que te asignaron y elige al operario que las ejecutará."
+              : canManage
+                ? "Actualiza el estado de las órdenes asignadas."
+                : "Solo se muestran tus tareas asignadas."
+        }
+      />
+      {isAdmin && view === "produccion" && (
+        <>
+          <Panel title="Órdenes frecuentes">
+            {templates.length ? (
+              <div className="order-list">
+                {templates.map((template) => (
+                  <div className="order-row" key={template.id}>
+                    <div>
+                      <strong>{safeProductName(template.producto) || "Producto no válido"}</strong>
+                      <span>
+                        Meta habitual: {number(template.cantidad)}
+                        {template.materia_prima_nombre
+                          ? ` · ${sanitizeText(template.materia_prima_nombre)}`
+                          : ""}
+                      </span>
+                    </div>
+                    <button
+                      className="text-action"
+                      type="button"
+                      onClick={() => setSelectedTemplateId(String(template.id))}
+                    >
+                      Usar plantilla
+                    </button>
+                    <button
+                      className="text-action danger"
+                      type="button"
+                      onClick={() => onDeleteTemplate(template.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="empty">Aún no hay plantillas. Puedes crear una abajo.</p>
+            )}
+          </Panel>
+          <FormPanel
+            title="Nueva orden de producción"
+            onSubmit={(event) => {
+              setSelectedTemplateId("");
+              onSubmit(event);
+            }}
+            saving={saving}
+          >
+            {selectedTemplate && (
+              <p className="form-hint">
+                Plantilla seleccionada: {safeProductName(selectedTemplate.producto) || "Producto no válido"}. Puedes ajustar sus datos antes de crear la orden.
+              </p>
+            )}
+            <Field label="Producto">
+              <select
+                key={`producto-${selectedTemplateId}`}
+                name="producto"
+                defaultValue={safeProductName(selectedTemplate?.producto) || ""}
+                required
+              >
+                <option value="" disabled>Selecciona una línea</option>
+                {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
+              </select>
+            </Field>
+            <Field label="Meta de producción">
+              <input
+                key={`cantidad-${selectedTemplateId}`}
+                name="cantidad"
+                type="number"
+                min="0.01"
+                step="0.01"
+                defaultValue={selectedTemplate?.cantidad || ""}
+                required
+              />
+            </Field>
+            <Field label="Supervisor responsable">
+              <select name="supervisor_id" required defaultValue="">
+                <option value="" disabled>Selecciona un supervisor</option>
+                {data.supervisors.map((supervisor) => (
+                  <option key={supervisor.id} value={supervisor.id}>
+                    {sanitizeText(supervisor.nombre)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Materia prima">
+              <select
+                key={`materia-${selectedTemplateId}`}
+                name="materia_prima_id"
+                defaultValue={selectedTemplate?.materia_prima_id || ""}
+              >
+                <option value="">Sin asociar</option>
+                {data.materials.map((material) => (
+                  <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Prioridad">
+              <select
+                key={`prioridad-${selectedTemplateId}`}
+                name="prioridad"
+                defaultValue={selectedTemplate?.prioridad || "media"}
+              >
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </Field>
+            {!data.supervisors.length && (
+              <p className="empty">No hay supervisores activos. Crea o activa uno antes de registrar una orden.</p>
+            )}
+          </FormPanel>
+          <FormPanel
+            title="Guardar plantilla frecuente"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const payload = sanitizePayload(
+                Object.fromEntries(new FormData(event.currentTarget)),
+              );
+              const form = event.currentTarget;
+              if (await onSaveTemplate(payload)) form.reset();
+            }}
+            saving={false}
+          >
+            <Field label="Producto">
+              <select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
+            </Field>
+            <Field label="Meta habitual">
+              <input name="cantidad" type="number" min="0.01" step="0.01" required />
+            </Field>
+            <Field label="Materia prima">
+              <select name="materia_prima_id" defaultValue="">
+                <option value="">Sin asociar</option>
+                {data.materials.map((material) => (
+                  <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Prioridad habitual">
+              <select name="prioridad" defaultValue="media">
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </Field>
+          </FormPanel>
+        </>
+      )}
       <Panel title="Órdenes">
-        {data.map((order) => <OrderRow key={order.id} order={order} canManage={canManage} onChangeStatus={onChangeStatus} />)}
-        {!data.length && <p className="empty">No hay órdenes asignadas.</p>}
+        {orders.map((order) => (
+          <React.Fragment key={order.id}>
+            <OrderRow
+              order={order}
+              canManage={canManage && !(isSupervisor && !order.responsable_id)}
+              onChangeStatus={onChangeStatus}
+              canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
+              onEdit={setEditingOrder}
+            />
+            {isSupervisor && !order.responsable_id && order.estado === "pendiente" && (
+              <form
+                className="data-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const responsableId = new FormData(event.currentTarget).get("responsable_id");
+                  onAssignOrder(order.id, responsableId);
+                }}
+              >
+                <Field label={`Asignar operario a la orden #${order.id}`}>
+                  <select name="responsable_id" required defaultValue="">
+                    <option value="" disabled>Selecciona un operario</option>
+                    {data.operators.map((operator) => (
+                      <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>
+                    ))}
+                  </select>
+                </Field>
+                <button className="primary-action" type="submit" disabled={!data.operators.length}>
+                  Asignar operario
+                </button>
+              </form>
+            )}
+          </React.Fragment>
+        ))}
+        {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>
+      {editingOrder && (
+        <FormPanel title={`Editar orden #${editingOrder.id}`} onSubmit={(event) => {
+          event.preventDefault();
+          const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
+          onEditOrder(editingOrder.id, payload);
+          setEditingOrder(null);
+        }} saving={false}>
+          <Field label="Producto"><select name="producto" defaultValue={editingOrder.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+          <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
+          <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
+          <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
+          <button className="text-action" type="button" onClick={() => setEditingOrder(null)}>Cancelar</button>
+        </FormPanel>
+      )}
     </>
   );
 }
@@ -690,10 +1168,10 @@ function Assign({ data, onSubmit, saving }) {
     <>
       <Intro title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
       <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><input name="producto" maxLength="120" required /></Field>
+        <Field label="Producto"><select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
         <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{operator.nombre}</option>)}</select></Field>
-        <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
+        <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
+        <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
         <Field label="Prioridad"><select name="prioridad" defaultValue="media"><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
       </FormPanel>
     </>
@@ -706,7 +1184,7 @@ function Advance({ data, onSubmit, saving }) {
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
-        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {order.producto} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Lote"><input name="lote" maxLength="80" placeholder="Ej. L-2406" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
@@ -717,16 +1195,76 @@ function Advance({ data, onSubmit, saving }) {
 }
 
 function Sales({ data, onSubmit, saving }) {
+  const [selectedInventoryId, setSelectedInventoryId] = useState("");
+  const [selectedFamily, setSelectedFamily] = useState(finishedProductFamilies[0]);
+  const products = data.inventory.filter((item) => finishedProductFamilies.includes(item.familia));
+  const selectedProduct =
+    products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily) ||
+    products.find((item) => item.familia === selectedFamily && Number(item.cantidad) > 0);
+  const availableProducts = products.filter((item) => Number(item.cantidad) > 0);
+
   return (
     <>
-      <Intro title="Ventas" description="Registra ventas; el stock se descuenta automáticamente." />
+      <Intro title="Ventas" description="Elige una línea y una variante disponible; las existencias se descuentan al registrar la venta." />
+      <div className="product-family-grid">
+        {finishedProductFamilies.map((family) => {
+          const variants = products.filter((item) => item.familia === family);
+          const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
+          return (
+            <button
+              className={`product-family-card${selectedFamily === family ? " selected" : ""}`}
+              key={family}
+              type="button"
+              onClick={() => {
+                setSelectedFamily(family);
+                const firstAvailable = variants.find((item) => Number(item.cantidad) > 0);
+                if (firstAvailable) setSelectedInventoryId(String(firstAvailable.id));
+              }}
+            >
+              <span className="product-family-initial">{family.slice(0, 1)}</span>
+              <strong>{family}</strong>
+              <span>{variants.length} {variants.length === 1 ? "referencia disponible" : "referencias disponibles"}</span>
+              <b>{number(stock)} unidades en stock</b>
+              <span className="product-family-link">Ver existencias</span>
+            </button>
+          );
+        })}
+      </div>
       <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving}>
         <Field label="Cliente"><input name="cliente" maxLength="120" required /></Field>
-        <Field label="Producto"><select name="producto" required>{data.inventory.map((item) => <option key={item.id} value={item.producto}>{item.producto} ({number(item.cantidad)})</option>)}</select></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Precio unitario"><input name="precio_unitario" type="number" min="1" required /></Field>
+        <Field label="Línea de producto">
+          <select value={selectedFamily} onChange={(event) => {
+            const family = event.target.value;
+            setSelectedFamily(family);
+            const firstAvailable = products.find((item) => item.familia === family && Number(item.cantidad) > 0);
+            setSelectedInventoryId(firstAvailable ? String(firstAvailable.id) : "");
+          }}>
+            {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
+          </select>
+        </Field>
+        <Field label="Variante (medida / calibre / color)">
+          <select name="inventario_id" value={selectedProduct?.id || ""} onChange={(event) => {
+            const item = products.find((product) => String(product.id) === event.target.value);
+            if (item) setSelectedFamily(item.familia);
+            setSelectedInventoryId(event.target.value);
+          }} required>
+            {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
+              <option key={item.id} value={item.id}>{item.medida || "Sin medida"} · calibre {item.calibre || "Sin especificar"} · {item.color || "Sin especificar"} · {number(item.cantidad)} unidades</option>
+            ))}
+            {!availableProducts.some((item) => item.familia === selectedFamily) && <option value="" disabled>No hay variantes con existencias</option>}
+          </select>
+        </Field>
+        {selectedProduct && <div className="product-variant-summary">
+          <div><small>MEDIDA</small><span>{sanitizeText(selectedProduct.medida || "Sin especificar")}</span></div>
+          <div><small>CALIBRE</small><span>{sanitizeText(selectedProduct.calibre || "Sin especificar")}</span></div>
+          <div><small>COLOR</small><span>{sanitizeText(selectedProduct.color || "Sin especificar")}</span></div>
+          <div><small>DISPONIBLE</small><span>{number(selectedProduct.cantidad)} unidades</span></div>
+        </div>}
+        <Field label="Unidades por paquete (máximo 500)"><input name="unidades_paquete" type="number" min="1" max="500" step="1" defaultValue="50" required /></Field>
+        <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" min="1" step="1" required /></Field>
+        <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Cantidad", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sale.cliente}</td><td>{sale.producto}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
     </>
   );
 }
@@ -743,18 +1281,101 @@ function Operators({ data }) {
   );
 }
 
-function Reports({ data, navigate }) {
+function Reports({ data }) {
+  const periodos = [
+    ["diario", "Diario"],
+    ["semanal", "Semanal"],
+    ["mensual", "Mensual"],
+    ["anual", "Anual"],
+  ];
+  function abrirReporte(tipo, periodo) {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("reporte", tipo);
+    url.searchParams.set("periodo", periodo);
+    window.open(url.toString(), "_blank", "noopener");
+  }
   return (
     <>
-      <Intro title="Reportes" description="Consolidado actual de la operación." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
-      <section className="stats-grid">
-        <article className="stat-card"><div className="stat-head"><span>Ventas acumuladas</span></div><strong>{money(data.sales.resumen.total_vendido)}</strong><small>{data.sales.resumen.numero_ventas} ventas</small></article>
-        <article className="stat-card"><div className="stat-head"><span>Productos en inventario</span></div><strong>{data.inventory.length}</strong><small>Referencias disponibles</small></article>
+      <Intro title="Reportes" description="Consulta el seguimiento de producción y las ventas por periodo." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
+      <section className="report-categories">
+        {[
+          ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
+          ["ventas", "Ventas", "Consulta ventas, unidades, clientes y valores registrados."],
+        ].map(([tipo, titulo, descripcion]) => (
+          <Panel key={tipo} title={`Reporte de ${titulo.toLowerCase()}`} className="report-category">
+            <p>{descripcion}</p>
+            <div className="report-periods">
+              {periodos.map(([periodo, etiqueta]) => (
+                <button
+                  key={periodo}
+                  className="report-period-button"
+                  type="button"
+                  onClick={() => abrirReporte(tipo, periodo)}
+                >
+                  {etiqueta}
+                </button>
+              ))}
+            </div>
+          </Panel>
+        ))}
       </section>
-      <Panel title="Producción por estado" className="report-panel">
-        <DataTable columns={["Estado", "Órdenes", "Meta"]} rows={data.production.map((item) => ({ key: item.estado, cells: <><td><StatusBadge status={item.estado} /></td><td>{number(item.total)}</td><td>{number(item.cantidad_total)}</td></> }))} />
+    </>
+  );
+}
+
+function ReportDetail({ data }) {
+  const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
+  const titulo = reporteTipo === "produccion" ? "Producción" : "Ventas";
+  const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
+  const fechas = `${data.desde} - ${data.hastaInclusivo}`;
+  return (
+    <>
+      <Intro
+        title={`Reporte de ${titulo.toLowerCase()} ${data.periodo}`}
+        description={`${periodoNombre} · ${fechas}`}
+        action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>}
+      />
+      <section className="stats-grid">
+        {reporteTipo === "produccion" ? (
+          <>
+            <article className="stat-card"><div className="stat-head"><span>Unidades producidas</span></div><strong>{number(data.resumen.unidades)}</strong><small>{number(data.resumen.movimientos)} registros</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Productos fabricados</span></div><strong>{data.porProducto.length}</strong><small>Referencias producidas en el periodo</small></article>
+          </>
+        ) : (
+          <>
+            <article className="stat-card"><div className="stat-head"><span>Total vendido</span></div><strong>{money(data.resumen.total_vendido)}</strong><small>{number(data.resumen.numero_ventas)} ventas</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Unidades vendidas</span></div><strong>{number(data.resumen.unidades)}</strong><small>Unidades del periodo</small></article>
+          </>
+        )}
+      </section>
+      <Panel title="Resumen por producto">
+        <DataTable
+          columns={reporteTipo === "produccion" ? ["Producto", "Unidades producidas"] : ["Producto", "Unidades", "Total vendido"]}
+          rows={data.porProducto.map((item) => ({
+            key: item.producto,
+            cells: reporteTipo === "produccion"
+              ? <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.unidades)}</td></>
+              : <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.unidades)}</td><td>{money(item.total)}</td></>,
+          }))}
+        />
       </Panel>
-      <button className="report-shortcut" type="button" onClick={() => navigate("ventas")}>Consultar ventas</button>
+      <Panel title={reporteTipo === "produccion" ? "Registros de producción" : "Detalle de ventas"}>
+        {reporteTipo === "produccion" ? (
+          <DataTable columns={["Fecha", "Producto", "Orden", "Operario", "Cantidad"]} rows={data.detalle.map((item) => ({
+            key: item.id,
+            cells: <><td>{item.fecha}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{sanitizeText(item.operario || "No registrado")}</td><td>{number(item.cantidad)}</td></>,
+          }))} />
+        ) : (
+          <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]} rows={data.detalle.map((item) => ({
+            key: item.id,
+            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td></>,
+          }))} />
+        )}
+        {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
+      </Panel>
+      <a className="report-shortcut" href="/dashboard.html#reportes">Volver a reportes</a>
     </>
   );
 }
