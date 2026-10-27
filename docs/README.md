@@ -10,6 +10,7 @@
 - [Estrategia de pruebas](testing/strategy.md)
 - [Índice de evidencias](evidence/README.md)
 - [ADR-001: panel React](adr/ADR-001-panel-react.md)
+- [ADR-002: backend en Node.js en lugar de Django](adr/ADR-002-backend-node.md)
 - [Respaldo y restauración](operations/backup-restore.md)
 - [Decisión de licencia](legal/licensing.md)
 - [Declaración de uso de IA, borrador](legal/ai-use.md)
