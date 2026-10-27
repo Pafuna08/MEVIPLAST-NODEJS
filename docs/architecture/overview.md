@@ -28,4 +28,4 @@ En desarrollo, Vite sirve el panel y proxifica `/api` al puerto `PORT` de `backe
 
 ## Decisiones relacionadas
 
-La unificación del panel y la conservación temporal del login/sitio público está registrada en [`../adr/ADR-001-panel-react.md`](../adr/ADR-001-panel-react.md). Este diagrama describe el código del repositorio, no un despliegue productivo verificado.
+La elección de Node.js y Express en lugar de Django está registrada en [`../adr/ADR-002-backend-node.md`](../adr/ADR-002-backend-node.md). La unificación del panel y la conservación temporal del login/sitio público está registrada en [`../adr/ADR-001-panel-react.md`](../adr/ADR-001-panel-react.md). Este diagrama describe el código del repositorio, no un despliegue productivo verificado.
