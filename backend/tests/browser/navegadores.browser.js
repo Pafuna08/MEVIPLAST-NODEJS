@@ -22,7 +22,7 @@ const URL_BASE = `http://127.0.0.1:${PUERTO}`;
 const CLAVE = "Browser-clave-123";
 const ROLES = ["admin", "supervisor", "operario", "vendedor", "almacenista"];
 const VISTAS = {
-  admin: ["inicio", "usuarios", "materia", "inventario", "produccion", "ventas", "reportes"],
+  admin: ["inicio", "usuarios", "materia", "inventario", "produccion", "ventas", "reportes", "auditoria"],
   supervisor: ["inicio", "asignar", "operarios", "produccion", "materia", "reportes"],
   operario: ["inicio", "tareas", "registrar", "historial"],
   vendedor: ["ventas"],

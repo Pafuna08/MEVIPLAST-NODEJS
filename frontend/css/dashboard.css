@@ -303,6 +303,21 @@ textarea {
   cursor: pointer;
   font-size: 0.82rem;
 }
+.panel-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--steel);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.panel-search input {
+  width: min(260px, 50vw);
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
 .table-wrap {
   width: 100%;
   max-width: 100%;

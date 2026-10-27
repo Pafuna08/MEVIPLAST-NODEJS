@@ -124,13 +124,15 @@ async function resumenInventario() {
   return filas;
 }
 
+// Entre 1 y 1 000 registros, del más reciente al más antiguo (el id desempata eventos del mismo segundo)
 async function bitacoraAuditoria(limite = 100) {
+  const cantidad = Math.min(Math.max(Math.trunc(Number(limite)) || 100, 1), 1000);
   const [filas] = await pool.query(
     `SELECT a.*, u.usuario AS realizado_por
      FROM auditoria a
      LEFT JOIN usuarios u ON u.id = a.usuario_id
-     ORDER BY a.fecha DESC LIMIT ?`,
-    [limite]
+     ORDER BY a.fecha DESC, a.id DESC LIMIT ?`,
+    [cantidad]
   );
   return filas;
 }

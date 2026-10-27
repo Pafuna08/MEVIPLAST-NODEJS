@@ -134,7 +134,7 @@ async function crear(datos, actor) {
     usuarioId: actor.id,
     accion: "CREAR_ORDEN_PRODUCCION",
     tabla: "produccion",
-    detalle: `Orden de produccion creada para '${producto}' (${cantidad})`,
+    detalle: `Orden de producción creada para '${producto}' (${cantidad})`,
   });
 
   return obtenerPorId(resultado.insertId);
@@ -180,7 +180,7 @@ async function asignarOperario(id, responsableId, actor) {
     usuarioId: actor.id,
     accion: "ASIGNAR_ORDEN_OPERARIO",
     tabla: "produccion",
-    detalle: `Orden de produccion ${id} asignada al operario ${responsableId}`,
+    detalle: `Orden de producción ${id} asignada al operario ${responsableId}`,
   });
   return obtenerPorId(id);
 }
@@ -294,7 +294,7 @@ async function actualizarOrden(id, datos, actor) {
     usuarioId: actorId,
     accion: "ACTUALIZAR_ORDEN_PRODUCCION",
     tabla: "produccion",
-    detalle: `Orden de produccion ${id} actualizada antes de iniciar`,
+    detalle: `Orden de producción ${id} actualizada antes de iniciar`,
   });
   return obtenerPorId(id);
 }
@@ -452,7 +452,7 @@ async function eliminar(id, actorId) {
     usuarioId: actorId,
     accion: "ELIMINAR_ORDEN_PRODUCCION",
     tabla: "produccion",
-    detalle: `Orden de produccion ${id} eliminada`,
+    detalle: `Orden de producción ${id} eliminada`,
   });
 }
 
