@@ -459,6 +459,34 @@ export default function DashboardApp() {
     setSidebarOpen(false);
   }
 
+  // Descarga el reporte detallado del periodo en Excel (RF-028)
+  async function downloadReportExcel() {
+    try {
+      const response = await fetch(`/api/reportes/${requestedReport}/detalle/excel?periodo=${requestedPeriod}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 401) {
+        localStorage.removeItem("meviplastToken");
+        localStorage.removeItem("meviplastSession");
+        window.location.replace("/login.html");
+        return;
+      }
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.mensaje || "No fue posible descargar el Excel.");
+      }
+      const fileName = /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") || "")?.[1] || "reporte.xlsx";
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
   async function openReceipt(id) {
     try {
       const venta = await api(`/api/ventas/${id}/comprobante`, token);
@@ -687,6 +715,7 @@ export default function DashboardApp() {
     saveProductionTemplate,
     deleteProductionTemplate,
     openReceipt,
+    downloadReportExcel,
   });
 
   return (
@@ -834,8 +863,9 @@ function renderView({
   saveProductionTemplate,
   deleteProductionTemplate,
   openReceipt,
+  downloadReportExcel,
 }) {
-  if (view === "reporte-detalle") return <ReportDetail data={data} />;
+  if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
@@ -1408,7 +1438,7 @@ function Reports() {
   );
 }
 
-function ReportDetail({ data }) {
+function ReportDetail({ data, onExportExcel }) {
   const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
   const titulo = reporteTipo === "produccion" ? "Producción" : "Ventas";
   const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
@@ -1418,7 +1448,12 @@ function ReportDetail({ data }) {
       <Intro
         title={`Reporte de ${titulo.toLowerCase()} ${data.periodo}`}
         description={`${periodoNombre} · ${fechas}`}
-        action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>}
+        action={
+          <div className="report-actions">
+            <button className="primary-action secondary" type="button" onClick={onExportExcel}>Descargar Excel</button>
+            <button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>
+          </div>
+        }
       />
       <section className="stats-grid">
         {reporteTipo === "produccion" ? (

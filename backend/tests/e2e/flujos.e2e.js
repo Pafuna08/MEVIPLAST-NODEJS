@@ -8,6 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { once } = require("node:events");
 const bcrypt = require("bcryptjs");
+const ExcelJS = require("exceljs");
 const mysql = require("mysql2/promise");
 const { leerEsquema } = require("../../src/config/schema");
 
@@ -143,6 +144,21 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
     assert.equal((await llamar("GET", "/ventas/999999/comprobante", tokens.admin)).status, 404);
+
+    // RF-028: el detalle del periodo se descarga en Excel con los mismos datos
+    const descargar = (ruta, token) => fetch(`${base}${ruta}`, { headers: { Authorization: `Bearer ${token}` } });
+    const excel = await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.supervisor);
+    assert.equal(excel.status, 200);
+    assert.match(excel.headers.get("content-type"), /spreadsheetml/);
+    assert.match(excel.headers.get("content-disposition"), /reporte-ventas-semanal-\d{4}-\d{2}-\d{2}\.xlsx/);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(Buffer.from(await excel.arrayBuffer()));
+    const filas = [];
+    libro.getWorksheet("Detalle").eachRow((fila) => filas.push(fila.values));
+    assert.ok(filas.some((valores) => valores.includes("Cliente E2E")), "el Excel incluye la venta del periodo");
+    assert.equal((await descargar("/reportes/produccion/detalle/excel?periodo=semanal", tokens.admin)).status, 200);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.vendedor)).status, 403);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=quincenal", tokens.admin)).status, 400);
   });
 
   await t.test("CP-029: acceso directo a endpoints con el token de cada rol", async () => {

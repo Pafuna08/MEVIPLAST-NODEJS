@@ -19,7 +19,7 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 - Reportes de producción y ventas por periodo diario, semanal, mensual o anual.
 - API REST con autenticación y controles de acceso por rol.
 
-La presencia en código no equivale a aceptación del requisito. Faltan pruebas de integración con MySQL para todos los flujos, pruebas E2E y la aprobación de las reglas de acceso por el cliente. Los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Cerrar sesión elimina el token del navegador, pero no lo revoca en el servidor (expira a las 8 horas). Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+La presencia en código no equivale a aceptación del requisito. La suite E2E con MySQL cubre los flujos principales, pero falta la aceptación del cliente por rol. Los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y el PDF de los reportes usan la impresión del navegador; los reportes detallados también se descargan en Excel. Cerrar sesión elimina el token del navegador; el servidor lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
