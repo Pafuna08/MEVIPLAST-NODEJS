@@ -17,7 +17,7 @@ Las licencias de las dependencias son permisivas y compatibles con el uso propie
 | bcryptjs | 2.4.3 | MIT |
 | jsonwebtoken | 9.0.3 | MIT |
 | mysql2 | 3.23.2 | MIT |
-| nodemailer | 7.0.13 | MIT-0 |
+| nodemailer | 10.2.1 | MIT-0 |
 | cors | 2.8.6 | MIT |
 | dotenv | 16.6.1 | BSD-2-Clause |
 | exceljs | 4.4.0 | MIT |
