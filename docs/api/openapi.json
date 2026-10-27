@@ -1065,6 +1065,16 @@
                     "type": "string",
                     "description": "Línea del catálogo (RN-012)"
                   },
+                  "medida": {
+                    "type": "string"
+                  },
+                  "calibre": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance"
+                  },
                   "cantidad": {
                     "type": "number",
                     "exclusiveMinimum": true,
@@ -1092,6 +1102,9 @@
                 },
                 "required": [
                   "producto",
+                  "medida",
+                  "calibre",
+                  "color",
                   "cantidad"
                 ]
               }
@@ -1354,6 +1367,16 @@
                 "type": "object",
                 "properties": {
                   "producto": {
+                    "type": "string"
+                  },
+                  "medida": {
+                    "type": "string",
+                    "description": "Medida, calibre y color van juntos"
+                  },
+                  "calibre": {
+                    "type": "string"
+                  },
+                  "color": {
                     "type": "string"
                   },
                   "cantidad": {

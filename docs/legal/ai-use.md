@@ -54,6 +54,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #40 | Entrada del CHANGELOG del PR #39 |
 | #41 | Motivo obligatorio en la salida manual de inventario (observación del equipo en pruebas) |
 | #42 | Vista de auditoría en el panel (observación del equipo en pruebas) |
+| #43 | Medida, calibre y color en las órdenes de producción, para que el avance entre a la variante correcta del inventario (observación del equipo en pruebas) |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

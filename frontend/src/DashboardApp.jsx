@@ -361,11 +361,33 @@ function StatusBadge({ status }) {
   return <span className={`status ${style}`}>{String(status || "").replace("_", " ")}</span>;
 }
 
+// Medida, calibre y color de la orden; las órdenes anteriores a la variante no la tienen
+function orderVariant(order) {
+  if (!order.medida || !order.calibre || !order.color) return "";
+  return ` · ${sanitizeText(order.medida)} · calibre ${sanitizeText(order.calibre)} · ${sanitizeText(order.color)}`;
+}
+
+function VariantFields({ idPrefix, order }) {
+  const suggestions = [
+    ["medida", "Medida", 40, ["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"]],
+    ["calibre", "Calibre", 40, ["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"]],
+    ["color", "Color", 80, ["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"]],
+  ];
+  return suggestions.map(([name, label, maxLength, values]) => (
+    <Field key={name} label={label}>
+      <input name={name} list={`${idPrefix}-${name}`} maxLength={maxLength} defaultValue={order?.[name] || ""} required />
+      <datalist id={`${idPrefix}-${name}`}>
+        {values.map((value) => <option key={value} value={value} />)}
+      </datalist>
+    </Field>
+  ));
+}
+
 function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
-  const product = safeProductName(order.producto) || "Producto no válido";
+  const product = (safeProductName(order.producto) || "Producto no válido") + orderVariant(order);
   return (
     <div className="order-row">
       <div>
@@ -1029,7 +1051,7 @@ function Materials({ data, role, onSubmit, saving }) {
         </Field>
         {movementType === "consumo_produccion" && <Field label="Orden que usa esta bobina">
           <select name="produccion_id" required>
-            {consumableOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} ({order.estado === "en_proceso" ? "en proceso" : order.estado})</option>)}
+            {consumableOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} ({order.estado === "en_proceso" ? "en proceso" : order.estado})</option>)}
             {!consumableOrders.length && <option value="">No hay órdenes activas que usen esta bobina</option>}
           </select>
         </Field>}
@@ -1210,6 +1232,7 @@ function Production({
                 {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
               </select>
             </Field>
+            <VariantFields idPrefix="orden-nueva" />
             <Field label="Meta de producción">
               <input
                 key={`cantidad-${selectedTemplateId}`}
@@ -1338,6 +1361,7 @@ function Production({
           setEditingOrder(null);
         }} saving={false}>
           <Field label="Producto"><select name="producto" defaultValue={editingOrder.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+          <VariantFields idPrefix={`orden-${editingOrder.id}`} order={editingOrder} />
           <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={editingOrder.cantidad} required /></Field>
           <Field label="Materia prima"><select name="materia_prima_id" defaultValue={editingOrder.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{material.nombre}</option>)}</select></Field>
           <Field label="Prioridad"><select name="prioridad" defaultValue={editingOrder.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
@@ -1354,6 +1378,7 @@ function Assign({ data, onSubmit, saving }) {
       <Intro title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
       <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving}>
         <Field label="Producto"><select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+        <VariantFields idPrefix="tarea-nueva" />
         <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
         <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
@@ -1369,7 +1394,7 @@ function Advance({ data, onSubmit, saving }) {
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
-        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Lote"><input name="lote" maxLength="80" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>

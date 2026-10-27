@@ -214,4 +214,5 @@ module.exports = {
   ingresar,
   registrarSalida,
   listarMovimientos,
+  validarVariante,
 };

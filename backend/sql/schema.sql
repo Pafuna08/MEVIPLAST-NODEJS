@@ -73,6 +73,9 @@ CREATE TABLE IF NOT EXISTS materia_prima (
 CREATE TABLE IF NOT EXISTS produccion (
   id INT AUTO_INCREMENT PRIMARY KEY,
   producto VARCHAR(120) NOT NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL,
   materia_prima_id INT NULL,
   supervisor_id INT NULL,

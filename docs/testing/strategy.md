@@ -48,7 +48,7 @@ npm run test:browser
 
 ## Cobertura automatizada
 
-63 pruebas unitarias y de rutas con `node:test` (63 aprobadas el 2026-10-27):
+67 pruebas unitarias y de rutas con `node:test` (67 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -60,7 +60,7 @@ npm run test:browser
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 47 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
-- `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance.
+- `production.service.test.js` (14): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
 - `reportes.service.test.js` (4): límites de periodo calendario, filtro de ventas por rango y límite de la bitácora (1 a 1 000, del más reciente al más antiguo).
 - `reportesExcel.service.test.js` (2): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula y periodo inválido.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
@@ -81,8 +81,8 @@ Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuev
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 61,9 % | 68,4 % | 48,9 % |
-| Unitarias + E2E | 78,5 % | 70,2 % | 78,4 % |
+| Unitarias | 63,7 % | 70,4 % | 51,4 % |
+| Unitarias + E2E | 79,7 % | 72,6 % | 79,6 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

@@ -24,11 +24,11 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | GET         | `/produccion/plantillas`                                             | Admin, supervisor                      | Consultar plantillas de órdenes        |
 | POST        | `/produccion/plantillas`                                             | Admin                                  | Crear plantilla de orden               |
 | DELETE      | `/produccion/plantillas/{id}`                                        | Admin                                  | Eliminar plantilla                     |
-| POST        | `/produccion`                                                        | Admin (a un supervisor), supervisor (a un operario) | Crear orden               |
+| POST        | `/produccion`                                                        | Admin (a un supervisor), supervisor (a un operario) | Crear orden con línea, medida, calibre y color |
 | PUT         | `/produccion/{id}/asignar`                                           | Supervisor de la orden                 | Asignar operario a orden pendiente sin avance |
 | PUT         | `/produccion/{id}/estado`                                            | Admin, supervisor, operario asignado   | Cambiar estado                         |
-| PUT         | `/produccion/{id}`                                                   | Admin, supervisor                      | Editar orden pendiente sin avance      |
-| POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance                       |
+| PUT         | `/produccion/{id}`                                                   | Admin, supervisor                      | Editar orden pendiente sin avance (medida, calibre y color van juntos) |
+| POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance; suma a la variante de la orden y la crea «Por ubicar» si no existe |
 | DELETE      | `/produccion/{id}`                                                   | Admin                                  | Eliminar orden                         |
 | GET         | `/inventario`                                                        | Admin, supervisor, almacenista, vendedor | Consultar existencias                  |
 | GET         | `/inventario/movimientos`, `/inventario/{id}/movimientos`            | Admin, supervisor, almacenista         | Consultar ledger de inventario         |
