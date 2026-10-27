@@ -79,11 +79,12 @@ npm test --prefix backend
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 npm run test:e2e --prefix backend      # requiere MySQL/MariaDB activo; base desechable meviplast_e2e
+npm run test:coverage --prefix backend # cobertura de las unitarias (también test:coverage:total con E2E)
 npm run test:perf --prefix backend     # prueba de carga; base desechable meviplast_perf
 npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
 ```
 
-Hay 52 pruebas unitarias y de rutas (52 aprobadas el 2026-10-27). Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
+Hay 52 pruebas unitarias y de rutas (52 aprobadas el 2026-10-27). Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
 
 ## Estructura
 

@@ -6,6 +6,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Added
 
+- Cobertura de pruebas medida con Node.js (`test:coverage` y `test:coverage:total`): 61 % de líneas con unitarias y 78 % con E2E; el CI exige un mínimo de 58 % y 75 %.
 - Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable) y desbloqueo por el administrador.
 - Endpoint `GET /api/health` para verificar la API y la base de datos.
 - Licencia propietaria y lint con ESLint en backend, frontend y CI.

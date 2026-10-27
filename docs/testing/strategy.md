@@ -66,6 +66,22 @@ npm run test:browser
 
 CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
 
+## Cobertura
+
+```powershell
+npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de líneas
+npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
+```
+
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-10-27:
+
+| Alcance | Líneas | Ramas | Funciones |
+| --- | --- | --- | --- |
+| Unitarias | 60,9 % | 66,9 % | 45,7 % |
+| Unitarias + E2E | 77,9 % | 69,0 % | 77,5 % |
+
+Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
+
 ## Cobertura pendiente
 
 - Flujo E2E de edición de órdenes.
