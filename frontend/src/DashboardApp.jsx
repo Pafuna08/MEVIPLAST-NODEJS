@@ -1010,7 +1010,7 @@ function Materials({ data, role, onSubmit, saving }) {
           </select>
         </Field>}
         <Field label="Cantidad (kg)"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Observaciones"><input name="observaciones" maxLength="255" placeholder={movementType === "compra" ? "Ej. proveedor o número de remisión" : "Motivo del movimiento"} /></Field>
+        <Field label="Observaciones"><input name="observaciones" maxLength="255" /></Field>
       </FormPanel>}
       {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving}>
         <Field label="Material">
@@ -1020,25 +1020,25 @@ function Materials({ data, role, onSubmit, saving }) {
           </select>
         </Field>
         <Field label="Medida (ancho x largo)">
-          <input name="medida" list="materia-medidas" maxLength="80" placeholder="Ej. 6 x 12" required />
+          <input name="medida" list="materia-medidas" maxLength="80" required />
           <datalist id="materia-medidas">
             {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Calibre">
-          <input name="calibre" list="materia-calibres" maxLength="40" placeholder="Selecciona o escribe el calibre" required />
+          <input name="calibre" list="materia-calibres" maxLength="40" required />
           <datalist id="materia-calibres">
             {["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Color">
-          <input name="color" list="materia-colores" maxLength="80" placeholder="Selecciona o escribe el color" required />
+          <input name="color" list="materia-colores" maxLength="80" required />
           <datalist id="materia-colores">
             {["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Peso del rollo (kg)">
-          <input name="peso_rollo" type="number" min="0.01" step="0.01" placeholder="Ej. 25" required />
+          <input name="peso_rollo" type="number" min="0.01" step="0.01" required />
         </Field>
       </FormPanel>}
       <Panel title="Materiales registrados"><DataTable columns={["Material", "Medida", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
@@ -1059,7 +1059,7 @@ function Inventory({ data, onSubmit, saving }) {
       <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
       <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving}>
         <Field label="Línea de producto"><select name="familia" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
-        <Field label="Medida"><input name="medida" maxLength="40" placeholder="Ej. 6*12" required /></Field>
+        <Field label="Medida"><input name="medida" maxLength="40" required /></Field>
         <Field label="Calibre"><input name="calibre" maxLength="40" required /></Field>
         <Field label="Color"><input name="color" maxLength="80" required /></Field>
         <Field label="Unidades"><input name="cantidad" type="number" min="1" step="1" required /></Field>
@@ -1339,7 +1339,7 @@ function Advance({ data, onSubmit, saving }) {
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
         <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Lote"><input name="lote" maxLength="80" placeholder="Ej. L-2406" /></Field>
+        <Field label="Lote"><input name="lote" maxLength="80" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}
       </FormPanel>
