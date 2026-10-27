@@ -27,6 +27,8 @@ Abre el PR hacia `develop` e incluye objetivo, requisito relacionado (RF/HU), ti
 ## Antes de solicitar revisión
 
 ```powershell
+npm run lint --prefix backend
+npm run lint --prefix frontend
 npm test --prefix backend
 npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend

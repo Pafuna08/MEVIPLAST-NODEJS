@@ -90,6 +90,7 @@ const sanitizeText = (value, maxLength = 255) =>
       " ",
     )
     .replace(/\b(?:alert|confirm|prompt|eval|document\.cookie)\s*\([^)]*\)/gi, " ")
+    // eslint-disable-next-line no-control-regex -- se eliminan caracteres de control a propósito
     .replace(/[\u0000-\u001F\u007F]+/g, " ")
     .replace(/\\["']/g, "")
     .replace(/\s+/g, " ")
@@ -1281,7 +1282,7 @@ function Operators({ data }) {
   );
 }
 
-function Reports({ data }) {
+function Reports() {
   const periodos = [
     ["diario", "Diario"],
     ["semanal", "Semanal"],
