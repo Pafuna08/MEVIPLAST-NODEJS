@@ -92,4 +92,4 @@ Se usa Git Flow: `main` para entregas estables, `develop` para integración, `fe
 
 ## Licencia y terceros
 
-La licencia del producto debe ser aprobada por sus autores antes de redistribuirlo. La decisión sigue pendiente; revisa [`docs/legal/licensing.md`](docs/legal/licensing.md). Las licencias de dependencias se consultan en sus respectivos manifiestos y lockfiles.
+Software propietario: todos los derechos reservados a Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja. Consulta [`LICENSE`](LICENSE) para los términos y [`docs/legal/licensing.md`](docs/legal/licensing.md) para las licencias de las dependencias de terceros.

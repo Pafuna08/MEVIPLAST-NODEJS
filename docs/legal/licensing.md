@@ -1,11 +1,27 @@
-# Decisión pendiente: licencia del producto
+# Licencia del producto
 
-La guía ADSO solicita una licencia en la raíz del repositorio. No se añadió una licencia por defecto porque elegir MIT, GPL, propietaria u otra opción concede derechos distintos y debe ser aprobada por los titulares del proyecto.
+- Decisión: licencia propietaria, todos los derechos reservados.
+- Titulares: Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja.
+- Fecha de la decisión: 2026-10-27.
+- Texto vigente: [`../../LICENSE`](../../LICENSE).
 
-Antes de publicar una versión, los autores/titulares deben acordar por escrito:
+El repositorio no es software de código abierto. El SENA puede ejecutarlo y revisarlo para evaluar el proyecto; cualquier otro uso, incluido el de MEVIPLAST, requiere un acuerdo escrito con los autores. Los `package.json` declaran `"license": "UNLICENSED"`, la convención de npm para software no publicado bajo una licencia abierta.
 
-- Si permiten redistribución, modificación y uso comercial.
-- La licencia del producto y avisos de terceros.
-- Los nombres legales que deban aparecer en el archivo de licencia.
+## Dependencias de terceros
 
-Hasta esa decisión, el repositorio no debe presentarse como software de código abierto. Completar este archivo con la decisión y agregar el `LICENSE` aprobado.
+Las licencias de las dependencias son permisivas y compatibles con el uso propietario. Sus textos se conservan en cada paquete dentro de `node_modules`.
+
+| Dependencia | Versión | Licencia |
+| --- | --- | --- |
+| express | 4.22.3 | MIT |
+| bcryptjs | 2.4.3 | MIT |
+| jsonwebtoken | 9.0.3 | MIT |
+| mysql2 | 3.23.2 | MIT |
+| nodemailer | 7.0.13 | MIT-0 |
+| cors | 2.8.6 | MIT |
+| dotenv | 16.6.1 | BSD-2-Clause |
+| react, react-dom | 19.3.1 | MIT |
+| vite (desarrollo) | 6.4.4 | MIT |
+| nodemon (desarrollo) | 3.1.14 | MIT |
+
+Al agregar o actualizar una dependencia, verifica su licencia y actualiza esta tabla.
