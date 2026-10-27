@@ -7,14 +7,18 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 ## Funcionalidad presente en la rama en revisión
 
 - Autenticación con JWT y contraseñas almacenadas con bcryptjs.
+- Recuperación de contraseña y recordatorio de usuario por correo, con enlace de un solo uso vigente 30 minutos.
 - Panel React/Vite con vistas para Administrador, Supervisor, Operario, Vendedor y Almacenista.
-- Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes básicos.
+- Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes.
+- Órdenes de producción dirigidas por el administrador a un supervisor, quien las asigna a un operario; plantillas de órdenes frecuentes.
+- Catálogo de materias primas (bobinas PEBD, PEAD y PP con medida, calibre, color y peso de rollo) y de seis líneas de producto terminado con variantes.
 - Movimientos de materias primas e inventario terminado registrados junto con sus saldos en transacciones.
 - Edición de órdenes de producción restringida a órdenes pendientes sin avances registrados.
-- Ventas del vendedor filtradas por usuario; el registro de venta descuenta existencias en la transacción.
+- Ventas por paquetes (hasta 500 unidades por paquete); el vendedor solo consulta sus ventas y el registro descuenta existencias en la transacción.
+- Reportes de producción y ventas por periodo diario, semanal, mensual o anual.
 - API REST con autenticación y controles de acceso por rol.
 
-La presencia en código no equivale a aceptación del requisito. Los cambios de roles y ledger siguen pendientes de pruebas de integración con MySQL y aprobación de las reglas de acceso. La recuperación de contraseña, el bloqueo de intentos fallidos y los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+La presencia en código no equivale a aceptación del requisito. Faltan pruebas de integración con MySQL para todos los flujos, pruebas E2E y la aprobación de las reglas de acceso por el cliente. El bloqueo de intentos fallidos y los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Cerrar sesión elimina el token del navegador, pero no lo revoca en el servidor (expira a las 8 horas). Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
@@ -68,7 +72,7 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
-Las pruebas automatizadas incluyen casos de servicios para movimientos de inventario y materias primas, edición de órdenes, ventas y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+La suite tiene 26 pruebas automatizadas (26 aprobadas el 2026-10-26): recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 
