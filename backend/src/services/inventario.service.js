@@ -1,6 +1,28 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
+const { motivosSalida } = require("../constants/motivosSalida");
+
+// Motivo obligatorio de la salida manual; «Otro» exige detalle. Devuelve el texto que se guarda
+function validarMotivo(motivo, detalle) {
+  if (!motivosSalida.includes(motivo)) {
+    const error = new Error("Selecciona el motivo de la salida");
+    error.statusCode = 400;
+    throw error;
+  }
+  const texto = typeof detalle === "string" ? detalle.trim() : "";
+  if (motivo === "Otro" && !texto) {
+    const error = new Error("Describe el motivo de la salida");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (texto.length > 200) {
+    const error = new Error("El detalle del motivo no puede superar 200 caracteres");
+    error.statusCode = 400;
+    throw error;
+  }
+  return texto ? `${motivo}: ${texto}` : motivo;
+}
 
 function validarVariante({ familia, medida, calibre, color }) {
   if (!productosTerminados.includes(familia)) {
@@ -118,14 +140,14 @@ async function registrarSalida(
   id,
   cantidad,
   actorId,
-  { tipo = "salida_manual" } = {},
+  { motivo, detalle } = {},
 ) {
   const cantidadNumerica = Number(cantidad);
   if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
     throw new Error("La cantidad debe ser mayor que cero");
   }
+  const observacion = validarMotivo(motivo, detalle);
 
-  if (tipo !== "salida_manual") throw new Error("Tipo de salida no válido");
   const connection = await pool.getConnection();
   let transactionStarted = false;
   let item;
@@ -146,8 +168,8 @@ async function registrarSalida(
       [cantidadNumerica, id],
     );
     await connection.query(
-      "INSERT INTO movimientos_inventario (inventario_id, usuario_id, tipo, cantidad) VALUES (?, ?, 'salida_manual', ?)",
-      [id, actorId, cantidadNumerica],
+      "INSERT INTO movimientos_inventario (inventario_id, usuario_id, tipo, cantidad, observaciones) VALUES (?, ?, 'salida_manual', ?, ?)",
+      [id, actorId, cantidadNumerica, observacion],
     );
     await connection.commit();
     transactionStarted = false;
@@ -162,7 +184,7 @@ async function registrarSalida(
     usuarioId: actorId,
     accion: "SALIDA_INVENTARIO",
     tabla: "inventario",
-    detalle: `Salida de ${cantidadNumerica} unidades de '${item.producto}'`,
+    detalle: `Salida de ${cantidadNumerica} unidades de '${item.producto}' (${observacion})`,
   });
 
   return obtenerPorId(id);

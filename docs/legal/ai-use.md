@@ -51,6 +51,8 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #37 | Diagrama entidad-relación y prueba de correspondencia con el esquema |
 | #38 | Registros estructurados del servidor |
 | #39 | Sin textos de ejemplo en los formularios del panel (pedido por el equipo) y lockfile del frontend al día |
+| #40 | Entrada del CHANGELOG del PR #39 |
+| #41 | Motivo obligatorio en la salida manual de inventario (observación del equipo en pruebas) |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

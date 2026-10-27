@@ -33,13 +33,14 @@ async function ingresar(req, res) {
 
 async function salida(req, res) {
   try {
-    const { cantidad } = req.body;
-    if (!cantidad)
-      return res.status(400).json({ mensaje: "cantidad es obligatoria" });
+    const { cantidad, motivo, detalle } = req.body;
+    if (!cantidad || !motivo)
+      return res.status(400).json({ mensaje: "cantidad y motivo son obligatorios" });
     const actualizado = await inventarioService.registrarSalida(
       req.params.id,
       cantidad,
       req.usuario.id,
+      { motivo, detalle },
     );
     res.json(actualizado);
   } catch (error) {

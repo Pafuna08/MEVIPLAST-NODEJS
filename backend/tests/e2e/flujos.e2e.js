@@ -278,6 +278,26 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(Number(consumo.n), 1);
   });
 
+  await t.test("salida manual de inventario: el motivo es obligatorio y queda en el movimiento", async () => {
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, {
+      familia: "Sencilla PP", medida: "8 x 12", calibre: "1", color: "Natural", cantidad: 100,
+    });
+    assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
+    const variante = ingreso.body.id;
+    const sinMotivo = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5 });
+    assert.equal(sinMotivo.status, 400);
+    const otroSinDetalle = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5, motivo: "Otro" });
+    assert.equal(otroSinDetalle.status, 400);
+    const valida = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5, motivo: "Muestra para cliente", detalle: "Feria E2E" });
+    assert.equal(valida.status, 200, JSON.stringify(valida.body));
+    const [[mov]] = await db.query(
+      "SELECT observaciones FROM movimientos_inventario WHERE inventario_id = ? AND tipo = 'salida_manual' ORDER BY id DESC LIMIT 1", [variante],
+    );
+    assert.equal(mov.observaciones, "Muestra para cliente: Feria E2E");
+    const [[saldo]] = await db.query("SELECT cantidad FROM inventario WHERE id = ?", [variante]);
+    assert.equal(Number(saldo.cantidad), 95, "los intentos rechazados no descontaron stock");
+  });
+
   await t.test("la migración de bloqueo se aplica sobre una base anterior y es idempotente", async () => {
     await db.query("ALTER TABLE usuarios DROP COLUMN bloqueado_hasta, DROP COLUMN intentos_fallidos");
     const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_login_lockout.sql"), "utf8");

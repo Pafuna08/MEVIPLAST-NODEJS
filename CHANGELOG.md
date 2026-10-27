@@ -34,6 +34,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- La salida manual de inventario exige un motivo de una lista (y un detalle si es «Otro»); el motivo queda en el movimiento, en la auditoría y en la nueva columna «Motivo / observación». Los tipos de movimiento se muestran con nombre legible («Salida manual» en lugar de `salida_manual`).
 - Los formularios del panel ya no muestran textos de ejemplo dentro de los campos (como «Ej. 25»); se conservan las listas de sugerencias de medida, calibre y color.
 - Documentación revisada contra el código de `55dce18`: `traceability.md` se genera desde la misma fuente que la matriz de trazabilidad; `project-status.md`, `SECURITY.md` y la guía de usuario reflejan el estado actual, incluido DEF-013.
 - Las migraciones del 2026-10-26 retiran materias primas, productos, ventas y movimientos ajenos al catálogo confirmado.
