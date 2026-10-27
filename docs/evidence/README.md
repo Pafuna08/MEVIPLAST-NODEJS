@@ -9,3 +9,8 @@ Usa identificadores `EV-AAAA-MM-DD-NN`. Cada registro debe indicar requisito o c
 | EV-2026-10-19-03 | Build frontend                | Compilación Vite            | Aprobado                               | [`EV-2026-10-19.md`](EV-2026-10-19.md) |
 | EV-2026-10-20-01 | Install, tests, audit y build | Ejecución local en Windows  | Aprobado con alertas altas no críticas | [`EV-2026-10-20.md`](EV-2026-10-20.md) |
 | EV-2026-10-21-01 | Tests, build y migración aislada | Windows, MariaDB temporal | 11 pruebas, build y migración aislada aprobados; integración de aplicación pendiente | [`EV-2026-10-21.md`](EV-2026-10-21.md) |
+| EV-2026-10-27-01 | Unitarias, lint, build y E2E | Windows + MariaDB 10.4; CI | 41 unitarias y 7 E2E aprobadas | [`EV-2026-10-27.md`](EV-2026-10-27.md) |
+| EV-2026-10-27-02 | Respaldo de `meviplast_db` | mysqldump | Completo, con hash SHA-256 | [`EV-2026-10-27.md`](EV-2026-10-27.md) |
+| EV-2026-10-27-03 | Restauración de prueba (CP-034) | Base desechable | 11 tablas, 0 diferencias | [`EV-2026-10-27.md`](EV-2026-10-27.md) |
+| EV-2026-10-27-04 | Migración de bloqueo (HU-019) | `meviplast_db` local | Aplicada y verificada con smoke test | [`EV-2026-10-27.md`](EV-2026-10-27.md) |
+| EV-2026-10-27-05 | `db:init` con `DB_NAME` (DEF-009) | MariaDB local | `meviplast_db` sin cambios | [`EV-2026-10-27.md`](EV-2026-10-27.md) |

@@ -23,4 +23,14 @@ Guarda el archivo y su hash en una ubicación autorizada fuera del repositorio, 
 
 Restaura solo en una instancia desechable o tras aprobación explícita: la importación reemplaza o mezcla datos según el contenido del SQL. Verifica tablas, conteos no sensibles, login y una operación funcional; registra los resultados y elimina de forma segura copias temporales conforme a la política local.
 
-Los comandos exactos de restauración dependen de la instalación XAMPP/MySQL, credenciales y destino. No existe todavía una evidencia de restauración exitosa ni un RPO/RTO acordado.
+En XAMPP, restaurar en una base desechable y comparar los conteos con la original:
+
+```powershell
+$mysql = "C:\xampp\mysql\bin\mysql.exe"
+& $mysql -u root -e "CREATE DATABASE meviplast_restore_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+Get-Content $file -Raw -Encoding utf8 | & $mysql -u root --default-character-set=utf8mb4 meviplast_restore_test
+& $mysql -u root -e "SELECT COUNT(*) FROM meviplast_restore_test.usuarios; SELECT COUNT(*) FROM meviplast_db.usuarios"
+& $mysql -u root -e "DROP DATABASE meviplast_restore_test"
+```
+
+El 2026-10-27 se ensayó el respaldo y la restauración completos: 11 tablas sin diferencias de conteo (evidencia en [`../evidence/EV-2026-10-27.md`](../evidence/EV-2026-10-27.md)). Falta acordar el RPO y el RTO con el cliente.
