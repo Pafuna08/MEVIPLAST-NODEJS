@@ -61,7 +61,7 @@ erDiagram
         ENUM estado "pendiente, en_proceso, finalizado, cancelado"
         ENUM prioridad "baja, media, alta"
         DECIMAL cantidad_producida
-        VARCHAR lote
+        VARCHAR lote "sin uso; se conserva por historial"
         VARCHAR observaciones
         DATETIME fecha_inicio
         DATETIME fecha_fin

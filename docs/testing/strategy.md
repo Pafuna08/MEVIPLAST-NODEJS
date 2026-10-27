@@ -60,7 +60,7 @@ npm run test:browser
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 47 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
-- `production.service.test.js` (14): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
+- `production.service.test.js` (14): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y orden por prioridad, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
 - `reportes.service.test.js` (4): límites de periodo calendario, filtro de ventas por rango y límite de la bitácora (1 a 1 000, del más reciente al más antiguo).
 - `reportesExcel.service.test.js` (2): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula y periodo inválido.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).

@@ -32,7 +32,10 @@ async function listar(usuario) {
      LEFT JOIN materia_prima mp ON mp.id = p.materia_prima_id
      LEFT JOIN usuarios u ON u.id = p.responsable_id
      LEFT JOIN usuarios s ON s.id = p.supervisor_id
-     WHERE ${condiciones.join(" AND ")} ORDER BY p.fecha_inicio DESC`,
+     WHERE ${condiciones.join(" AND ")}
+     ORDER BY p.estado IN ('finalizado', 'cancelado'),
+              CASE WHEN p.estado IN ('finalizado', 'cancelado') THEN 0 ELSE FIELD(p.prioridad, 'alta', 'media', 'baja') END,
+              p.fecha_inicio DESC, p.id DESC`,
     valores,
   );
   return filas;
@@ -395,7 +398,7 @@ async function cambiarEstado(id, estado, actor) {
   return obtenerPorId(id);
 }
 
-async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
+async function registrarAvance(id, { cantidad, observaciones }, actor) {
   const cantidadNumerica = Number(cantidad);
   if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
     throw new Error("La cantidad debe ser mayor que cero");
@@ -428,8 +431,8 @@ async function registrarAvance(id, { cantidad, lote, observaciones }, actor) {
       nuevoTotal >= Number(orden.cantidad) ? "finalizado" : "en_proceso";
     producto = orden.producto;
     await connection.query(
-      "UPDATE produccion SET cantidad_producida = ?, estado = ?, lote = COALESCE(?, lote), observaciones = COALESCE(?, observaciones), fecha_fin = CASE WHEN ? = 'finalizado' THEN NOW() ELSE fecha_fin END WHERE id = ?",
-      [nuevoTotal, estado, lote || null, observaciones || null, estado, id],
+      "UPDATE produccion SET cantidad_producida = ?, estado = ?, observaciones = COALESCE(?, observaciones), fecha_fin = CASE WHEN ? = 'finalizado' THEN NOW() ELSE fecha_fin END WHERE id = ?",
+      [nuevoTotal, estado, observaciones || null, estado, id],
     );
     // Las órdenes con variante suman a esa variante (y la crean si aún no existe);
     // las anteriores a la migración siguen usando el registro genérico de la línea

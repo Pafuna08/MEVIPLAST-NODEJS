@@ -1022,7 +1022,7 @@
         "tags": [
           "Producción"
         ],
-        "summary": "Listar órdenes (el supervisor ve las suyas; el operario, las asignadas)",
+        "summary": "Listar órdenes: abiertas primero por prioridad (alta, media, baja); el supervisor ve las suyas y el operario, las asignadas",
         "x-requisitos": "RF-009",
         "responses": {
           "200": {
@@ -1632,10 +1632,6 @@
                     "type": "number",
                     "exclusiveMinimum": true,
                     "minimum": 0
-                  },
-                  "lote": {
-                    "type": "string",
-                    "maxLength": 80
                   },
                   "observaciones": {
                     "type": "string",
