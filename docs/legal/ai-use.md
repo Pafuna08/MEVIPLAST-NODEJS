@@ -35,6 +35,8 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #21 | Evidencia de la ejecución E2E, el respaldo, la prueba de restauración y la migración del bloqueo |
 | #22 | ADR-002: backend en Node.js; el motivo (recomendación del instructor y dominio de JavaScript) lo dio el equipo |
 | #23 | Tildes, lista de roles y plurales en la interfaz |
+| #24 | Este borrador de declaración de uso de IA |
+| #25 | ADR-003 (ledger de movimientos) y ADR-004 (JWT), redactados a partir del código |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

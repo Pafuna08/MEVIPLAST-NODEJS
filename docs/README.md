@@ -11,6 +11,8 @@
 - [Índice de evidencias](evidence/README.md)
 - [ADR-001: panel React](adr/ADR-001-panel-react.md)
 - [ADR-002: backend en Node.js en lugar de Django](adr/ADR-002-backend-node.md)
+- [ADR-003: movimientos de stock en transacción (ledger)](adr/ADR-003-ledger-movimientos.md)
+- [ADR-004: autenticación con JWT y permisos por rol](adr/ADR-004-autenticacion-jwt.md)
 - [Respaldo y restauración](operations/backup-restore.md)
 - [Decisión de licencia](legal/licensing.md)
 - [Declaración de uso de IA, borrador](legal/ai-use.md)
