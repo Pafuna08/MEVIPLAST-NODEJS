@@ -4,7 +4,7 @@
 - [Trazabilidad y estado por historia](requirements/traceability.md)
 - [Manual de usuario](user-guide.md)
 - [Arquitectura](architecture/overview.md)
-- [Catálogo API](api/endpoints.md)
+- [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json)
 - [Esquema de datos](data/schema.md)
 - [Estrategia de pruebas](testing/strategy.md)
 - [Índice de evidencias](evidence/README.md)

@@ -84,7 +84,7 @@ npm run test:perf --prefix backend     # prueba de carga; base desechable mevipl
 npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
 ```
 
-Hay 52 pruebas unitarias y de rutas (52 aprobadas el 2026-10-27). Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
+Hay 54 pruebas unitarias y de rutas (54 aprobadas el 2026-10-27), incluida una que verifica que el contrato OpenAPI coincide con las rutas de Express. Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
 
 ## Estructura
 
@@ -95,7 +95,7 @@ docs/          arquitectura, API, datos, pruebas y evidencias
 .github/       CI, plantillas de issues y pull request
 ```
 
-La estructura documental y los pendientes funcionales se detallan en [`docs/project-status.md`](docs/project-status.md). El contrato actual de endpoints está resumido en [`docs/api/endpoints.md`](docs/api/endpoints.md).
+La estructura documental y los pendientes funcionales se detallan en [`docs/project-status.md`](docs/project-status.md). El contrato actual de endpoints está resumido en [`docs/api/endpoints.md`](docs/api/endpoints.md), y su versión formal en [`docs/api/openapi.json`](docs/api/openapi.json) (OpenAPI 3.0.3).
 El índice de manuales, diagramas, procedimientos y evidencias está en [`docs/README.md`](docs/README.md).
 
 ## Git y contribuciones
