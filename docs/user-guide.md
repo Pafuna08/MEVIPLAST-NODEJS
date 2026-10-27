@@ -45,6 +45,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 ## Vendedor
 
 - **Ventas:** registrar ventas y consultar únicamente las ventas registradas con su cuenta.
+- **Comprobante de venta:** se abre al registrar una venta y desde el botón **Ver** de cada venta. **Imprimir / guardar PDF** imprime solo el comprobante; para obtener el PDF, elija "Guardar como PDF" como impresora. Es un documento de control interno, no una factura electrónica.
 - La vista de productos consulta existencias para seleccionar el artículo; no permite modificar inventario.
 
 ## Almacenista

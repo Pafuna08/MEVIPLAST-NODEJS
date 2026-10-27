@@ -151,6 +151,7 @@ const currencyFormat = new Intl.NumberFormat("es-CO", {
 });
 const number = (value) => numberFormat.format(Number(value || 0));
 const money = (value) => currencyFormat.format(Number(value || 0));
+const dateTimeFormat = new Intl.DateTimeFormat("es-CO", { dateStyle: "long", timeStyle: "short" });
 const roleName = (value) =>
   ({
     admin: "Administrador",
@@ -404,6 +405,7 @@ export default function DashboardApp() {
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [receipt, setReceipt] = useState(null);
   const requestVersion = `${activeView}:${reloadKey}`;
 
   useEffect(() => {
@@ -457,11 +459,21 @@ export default function DashboardApp() {
     setSidebarOpen(false);
   }
 
+  async function openReceipt(id) {
+    try {
+      const venta = await api(`/api/ventas/${id}/comprobante`, token);
+      if (venta) setReceipt(venta);
+    } catch (cause) {
+      setToast(cause.message);
+    }
+  }
+
   async function submitForm(event) {
     event.preventDefault();
     setSaving(true);
     const form = event.currentTarget;
     const payload = sanitizePayload(Object.fromEntries(new FormData(form)));
+    let newSaleId = null;
     try {
       if (activeView === "usuarios") {
         await api("/api/usuarios", token, { method: "POST", body: JSON.stringify(payload) });
@@ -505,7 +517,8 @@ export default function DashboardApp() {
           body: JSON.stringify(advance),
         });
       } else if (activeView === "ventas") {
-        await api("/api/ventas", token, { method: "POST", body: JSON.stringify(payload) });
+        const venta = await api("/api/ventas", token, { method: "POST", body: JSON.stringify(payload) });
+        newSaleId = venta?.id;
       }
       form.reset();
       setToast("Registro guardado correctamente.");
@@ -515,6 +528,7 @@ export default function DashboardApp() {
     } finally {
       setSaving(false);
     }
+    if (newSaleId) await openReceipt(newSaleId);
   }
 
   async function updateOrderStatus(id, status) {
@@ -672,6 +686,7 @@ export default function DashboardApp() {
     assignOrder,
     saveProductionTemplate,
     deleteProductionTemplate,
+    openReceipt,
   });
 
   return (
@@ -749,7 +764,55 @@ export default function DashboardApp() {
           </section>
         </div>
       )}
+      {receipt && <SaleReceipt sale={receipt} onClose={() => setReceipt(null)} />}
     </>
+  );
+}
+
+// Comprobante imprimible de una venta (RF-023)
+function SaleReceipt({ sale, onClose }) {
+  const variante = [sale.medida, sale.calibre && `calibre ${sale.calibre}`, sale.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
+  return (
+    <div className="confirm-overlay receipt-overlay" role="presentation" onClick={(event) => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+      <section className="confirm-modal receipt" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+        <header className="receipt-header">
+          <img src="/assets/logo-meviplast.png" alt="" />
+          <div>
+            <strong>MEVIPLAST</strong>
+            <span>Empaques adhesivos y bolsas plásticas</span>
+          </div>
+          <div className="receipt-number">
+            <h3 id="receipt-title">Comprobante de venta</h3>
+            <span>N.º {sale.numero}</span>
+          </div>
+        </header>
+        <dl className="receipt-data">
+          <div><dt>Fecha</dt><dd>{sale.fecha ? dateTimeFormat.format(new Date(sale.fecha)) : "—"}</dd></div>
+          <div><dt>Cliente</dt><dd>{sanitizeText(sale.cliente)}</dd></div>
+          <div><dt>Atendido por</dt><dd>{sanitizeText(sale.vendedor || "—")}</dd></div>
+        </dl>
+        <table className="receipt-table">
+          <thead><tr><th>Producto</th><th>Presentación</th><th>Unidades</th><th>Precio por paquete</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>{sanitizeText(sale.familia || sale.producto)}</strong>{variante && <small>{variante}</small>}</td>
+              <td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td>
+              <td>{number(sale.cantidad)}</td>
+              <td>{money(sale.precio_paquete)}</td>
+              <td>{money(sale.total)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="receipt-total"><span>Total</span><strong>{money(sale.total)}</strong></p>
+        <p className="receipt-note">Documento de control interno. No es una factura electrónica.</p>
+        <div className="confirm-actions receipt-actions">
+          <button className="confirm-cancel" type="button" onClick={onClose}>Cerrar</button>
+          <button className="confirm-delete" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -770,6 +833,7 @@ function renderView({
   assignOrder,
   saveProductionTemplate,
   deleteProductionTemplate,
+  openReceipt,
 }) {
   if (view === "reporte-detalle") return <ReportDetail data={data} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
@@ -780,7 +844,7 @@ function renderView({
   if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
-  if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} />;
+  if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }
@@ -1213,7 +1277,7 @@ function Advance({ data, onSubmit, saving }) {
   );
 }
 
-function Sales({ data, onSubmit, saving }) {
+function Sales({ data, onSubmit, saving, onReceipt }) {
   const [selectedInventoryId, setSelectedInventoryId] = useState("");
   const [selectedFamily, setSelectedFamily] = useState(finishedProductFamilies[0]);
   const products = data.inventory.filter((item) => finishedProductFamilies.includes(item.familia));
@@ -1283,7 +1347,7 @@ function Sales({ data, onSubmit, saving }) {
         <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" min="1" step="1" required /></Field>
         <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
     </>
   );
 }

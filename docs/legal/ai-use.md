@@ -38,6 +38,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #24 | Este borrador de declaración de uso de IA |
 | #25 | ADR-003 (ledger de movimientos) y ADR-004 (JWT), redactados a partir del código |
 | #26 | Corrección DEF-011: el token de un usuario desactivado o con el rol cambiado deja de servir; token vencido responde 401 |
+| #27 | Comprobante de venta imprimible (RF-023) |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

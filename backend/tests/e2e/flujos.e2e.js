@@ -132,6 +132,17 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
     const ventasVendedor = await llamar("GET", "/ventas", tokens.vendedor);
     assert.ok(ventasVendedor.body.every((v) => v.usuario_id === ids.vendedor));
+
+    // RF-023: comprobante imprimible de la venta
+    const comprobante = await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.vendedor);
+    assert.equal(comprobante.status, 200, JSON.stringify(comprobante.body));
+    assert.equal(comprobante.body.numero, `V-${String(venta.body.id).padStart(6, "0")}`);
+    assert.equal(comprobante.body.cliente, "Cliente E2E");
+    assert.equal(comprobante.body.familia, "Cargadera");
+    assert.equal(Number(comprobante.body.total), 60000);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
+    assert.equal((await llamar("GET", "/ventas/999999/comprobante", tokens.admin)).status, 404);
   });
 
   await t.test("CP-029: acceso directo a endpoints con el token de cada rol", async () => {
