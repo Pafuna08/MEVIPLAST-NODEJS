@@ -2,9 +2,13 @@
 
 Los cambios relevantes se registran aquí. El proyecto todavía no tiene una versión estable etiquetada.
 
-## Unreleased - 2026-10-26
+## Unreleased - 2026-10-27
 
 ### Added
+
+- Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable) y desbloqueo por el administrador.
+- Endpoint `GET /api/health` para verificar la API y la base de datos.
+- Licencia propietaria y lint con ESLint en backend, frontend y CI.
 
 - Recuperación de contraseña y recordatorio de usuario por correo, con tokens de un solo uso vigentes 30 minutos.
 - Ruta de órdenes de producción: el administrador asigna un supervisor y este asigna el operario; plantillas de órdenes frecuentes.
@@ -12,6 +16,10 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - Catálogo de materias primas PEBD, PEAD y PP con medida, calibre, color y peso de rollo.
 - Catálogo de seis líneas de producto terminado con variantes y ventas por paquetes de hasta 500 unidades.
 - Existencias DEMO de ejemplo para materias primas y producto terminado.
+
+### Security
+
+- La API solo acepta llamadas de otros dominios listados en `CORS_ORIGINS`.
 
 ### Changed
 

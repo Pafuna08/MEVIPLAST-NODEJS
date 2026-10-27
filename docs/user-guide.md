@@ -18,7 +18,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 ## Administrador
 
 - **Inicio:** resumen operativo, órdenes, inventario y ventas.
-- **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista.
+- **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista. Si una cuenta muestra «Bloqueado hasta las…», usa **Desbloquear** para habilitarla antes de que termine el bloqueo.
 - **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock; registrar compras, ajustes y consumos asociados a una orden.
 - **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
@@ -53,6 +53,8 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Inventario:** registrar ingresos y salidas manuales, y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
 
 ## Problemas frecuentes
+
+- Tras 5 intentos fallidos seguidos la cuenta se bloquea 15 minutos, aunque después escribas la contraseña correcta. Espera ese tiempo, pide al administrador que la desbloquee o recupera la contraseña por correo (el restablecimiento también la desbloquea).
 
 - Si una vista no carga, comprueba conexión y usa **Reintentar**; si persiste, reporta perfil, sección y hora.
 - Si aparece stock insuficiente, solicita revisar la existencia al responsable autorizado.

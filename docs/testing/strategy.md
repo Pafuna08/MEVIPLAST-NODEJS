@@ -10,8 +10,9 @@ npm run build --prefix frontend
 
 ## Cobertura automatizada
 
-33 pruebas con `node:test` (33 aprobadas el 2026-10-27):
+38 pruebas con `node:test` (38 aprobadas el 2026-10-27):
 
+- `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (3): variantes del catálogo, rechazo de líneas ajenas y salida manual con ledger.

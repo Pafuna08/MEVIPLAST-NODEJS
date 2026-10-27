@@ -8,6 +8,7 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 
 - Autenticación con JWT y contraseñas almacenadas con bcryptjs.
 - Recuperación de contraseña y recordatorio de usuario por correo, con enlace de un solo uso vigente 30 minutos.
+- Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable); el administrador puede desbloquearla.
 - Panel React/Vite con vistas para Administrador, Supervisor, Operario, Vendedor y Almacenista.
 - Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes.
 - Órdenes de producción dirigidas por el administrador a un supervisor, quien las asigna a un operario; plantillas de órdenes frecuentes.
@@ -18,7 +19,7 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 - Reportes de producción y ventas por periodo diario, semanal, mensual o anual.
 - API REST con autenticación y controles de acceso por rol.
 
-La presencia en código no equivale a aceptación del requisito. Faltan pruebas de integración con MySQL para todos los flujos, pruebas E2E y la aprobación de las reglas de acceso por el cliente. El bloqueo de intentos fallidos y los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Cerrar sesión elimina el token del navegador, pero no lo revoca en el servidor (expira a las 8 horas). Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+La presencia en código no equivale a aceptación del requisito. Faltan pruebas de integración con MySQL para todos los flujos, pruebas E2E y la aprobación de las reglas de acceso por el cliente. Los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. No se genera comprobante de venta ni exportación Excel; la impresión del reporte depende del navegador. Cerrar sesión elimina el token del navegador, pero no lo revoca en el servidor (expira a las 8 horas). Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
@@ -76,7 +77,7 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
-La suite tiene 33 pruebas automatizadas (33 aprobadas el 2026-10-27): health check y CORS, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
+La suite tiene 38 pruebas automatizadas (38 aprobadas el 2026-10-27): health check y CORS, bloqueo por intentos fallidos, recuperación de contraseña, movimientos de inventario y materias primas, edición y asignación de órdenes, registro de avance de producción, reportes por periodo, ventas por paquetes, permisos por rol y sanitización. La suite no sustituye las pruebas de integración con MySQL ni la aceptación por rol. La auditoría de dependencias conserva avisos altos en dependencias de desarrollo; no se aplicó el downgrade mayor propuesto por npm.
 
 ## Estructura
 
