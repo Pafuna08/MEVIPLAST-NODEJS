@@ -8,9 +8,24 @@ npm audit --prefix backend --audit-level=critical
 npm run build --prefix frontend
 ```
 
+## Pruebas extremo a extremo (MySQL/MariaDB real)
+
+```powershell
+npm run test:e2e --prefix backend
+```
+
+`backend/tests/e2e/flujos.e2e.js` crea una base desechable (`E2E_DB_NAME`, por defecto `meviplast_e2e`), levanta la API, ejecuta los flujos y elimina la base al terminar (`E2E_KEEP_DB=true` la conserva). Se niega a ejecutarse si el nombre no empieza por `meviplast_e2e`, para no tocar `meviplast_db`. En CI corre en un job aparte con un contenedor MariaDB 10.4.
+
+- Health check con base real.
+- CP-028: orden del administrador → asignación del supervisor → avance del operario (rechazo por exceso y finalización) → inventario y movimiento → venta del vendedor → reportes semanales de producción y ventas.
+- CP-029: acceso directo a 13 endpoints con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
+- CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
+- HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
+- Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
+
 ## Cobertura automatizada
 
-38 pruebas con `node:test` (38 aprobadas el 2026-10-27):
+39 pruebas unitarias y de rutas con `node:test` (39 aprobadas el 2026-10-27):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
@@ -20,7 +35,7 @@ npm run build --prefix frontend
 - `production.service.test.js` (10): edición parcial, plantillas del catálogo, finalización con meta pendiente, alcance del supervisor y registro de avance (finaliza al completar la meta, crea o incrementa la existencia con su movimiento, rechaza superar la meta y el avance de otro operario).
 - `reportes.service.test.js` (3): límites de periodo calendario y filtro de ventas por rango.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
-- `sanitize.test.js` (3): sanitización de texto, números y objetos.
+- `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» (prioridad, medida) no se convierten en número.
 - `ventas.service.test.js` (3): límite de 500 unidades por paquete, descuento por paquetes y aislamiento del vendedor.
 
 Sin prueba automatizada todavía: crear orden, consumo de materia prima asociado a una orden y login.
@@ -29,8 +44,7 @@ Sin prueba automatizada todavía: crear orden, consumo de materia prima asociado
 
 ## Cobertura pendiente
 
-- Completar pruebas de integración de endpoints con MySQL para todos los flujos y permisos por rol; el smoke test local cubre solo rutas seleccionadas con datos ficticios, incluidos vendedor y almacenista.
-- Pruebas E2E para altas, cambios y errores de formularios.
+- Flujos E2E pendientes: materias primas (compra y consumo por orden), edición de órdenes, recuperación de contraseña con SMTP real y pruebas del panel en el navegador.
 - Validación de rendimiento (<3 s) bajo carga acordada.
 - Matriz de compatibilidad y usabilidad en Chrome, Edge y Firefox.
 - Respaldo y restauración de base de datos comprobados.
