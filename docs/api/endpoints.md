@@ -33,7 +33,7 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | GET         | `/inventario`                                                        | Admin, supervisor, almacenista, vendedor | Consultar existencias                  |
 | GET         | `/inventario/movimientos`, `/inventario/{id}/movimientos`            | Admin, supervisor, almacenista         | Consultar ledger de inventario         |
 | POST        | `/inventario`                                                        | Admin, supervisor, almacenista         | Registrar ingreso manual              |
-| POST        | `/inventario/{id}/salida`                                            | Admin, supervisor, almacenista         | Registrar salida manual                |
+| POST        | `/inventario/{id}/salida`                                            | Admin, supervisor, almacenista         | Registrar salida manual con `cantidad`, `motivo` (de la lista) y `detalle` (obligatorio si el motivo es «Otro») |
 | GET         | `/ventas`                                                            | Admin, supervisor; vendedor (solo propias) | Consultar ventas                  |
 | POST        | `/ventas`                                                            | Admin, supervisor, vendedor             | Registrar venta y descontar inventario |
 | GET         | `/ventas/:id/comprobante`                                            | Admin, supervisor; vendedor (solo propias, 404 si no) | Datos del comprobante imprimible con número `V-000123` (RF-023) |

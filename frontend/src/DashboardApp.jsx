@@ -9,6 +9,24 @@ const finishedProductFamilies = [
   "Troquel riñón",
 ];
 
+// Mismos motivos que backend/src/constants/motivosSalida.js
+const exitReasons = [
+  "Producto dañado o defectuoso",
+  "Muestra para cliente",
+  "Merma",
+  "Devolución a producción",
+  "Ajuste por conteo físico",
+  "Otro",
+];
+
+const inventoryMovementLabels = {
+  saldo_inicial: "Saldo inicial",
+  ingreso_manual: "Ingreso manual",
+  produccion: "Producción",
+  salida_manual: "Salida manual",
+  venta: "Venta",
+};
+
 const roleViews = {
   Administrador: {
     apiRole: "admin",
@@ -120,7 +138,7 @@ function sanitizePayload(value) {
       if (typeof item !== "string") return [key, sanitizePayload(item)];
       const clean = sanitizeText(
         item,
-        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|lote)/i.test(
+        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|lote|motivo|detalle)/i.test(
           lowerKey,
         )
           ? 255
@@ -1054,6 +1072,7 @@ function Materials({ data, role, onSubmit, saving }) {
 }
 
 function Inventory({ data, onSubmit, saving }) {
+  const [exitReason, setExitReason] = useState("");
   return (
     <>
       <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
@@ -1068,11 +1087,18 @@ function Inventory({ data, onSubmit, saving }) {
       <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
         <Field label="Producto"><select name="inventario_id" required>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
         <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Motivo">
+          <select name="motivo" value={exitReason} onChange={(event) => setExitReason(event.target.value)} required>
+            <option value="" disabled>Selecciona el motivo</option>
+            {exitReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+          </select>
+        </Field>
+        <Field label={exitReason === "Otro" ? "Detalle (obligatorio)" : "Detalle (opcional)"}><input name="detalle" maxLength="200" required={exitReason === "Otro"} /></Field>
       </FormPanel>
       <Panel title="Productos disponibles"><DataTable columns={["Línea", "Medida", "Calibre", "Color", "Unidades", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{sanitizeText(item.familia)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
-      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden"]} rows={data.movements.map((movement) => ({
+      <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden", "Motivo / observación"]} rows={data.movements.map((movement) => ({
         key: movement.id,
-        cells: <><td>{movement.fecha}</td><td>{safeProductName(movement.producto) || "Producto no válido"}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—"))}</td></>,
+        cells: <><td>{movement.fecha}</td><td>{safeProductName(movement.producto) || "Producto no válido"}</td><td>{inventoryMovementLabels[movement.tipo] || sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.cliente_venta || (movement.orden_id ? `Orden #${movement.orden_id}` : "—"))}</td><td>{sanitizeText(movement.observaciones || "—")}</td></>,
       }))} /></Panel>
     </>
   );

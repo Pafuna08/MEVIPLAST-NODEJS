@@ -20,7 +20,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Inicio:** resumen operativo, órdenes, inventario y ventas.
 - **Usuarios:** crear cuenta (nombre, usuario, contraseña y rol), activar/desactivar; eliminar otros usuarios requiere confirmación. No puedes eliminar tu propia cuenta desde esta vista. Si una cuenta muestra «Bloqueado hasta las…», usa **Desbloquear** para habilitarla antes de que termine el bloqueo.
 - **Materias primas:** crear el catálogo y consultar existencias, movimientos y bajo stock. En **Registrar movimiento** se eligen la bobina, el tipo (compra, ajuste de entrada, ajuste de salida o consumo en una orden), la cantidad en kg y una observación. El consumo solo ofrece las órdenes activas que usan esa bobina.
-- **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
+- **Inventario:** registrar ingresos o salidas manuales y consultar el ledger. Cada salida manual exige un motivo (dañado, muestra, merma, devolución a producción, ajuste por conteo u otro, con detalle) que queda en «Movimientos recientes». Los avances de producción y las ventas actualizan el saldo y dejan su movimiento automáticamente.
 - **Producción:** consultar, asignar y editar órdenes pendientes sin avance; cambiar estados respetando las transiciones disponibles.
 - **Ventas:** registrar cliente, línea, variante, paquetes, unidades por paquete y precio por paquete. El total se calcula, el stock disminuye si hay existencias y se abre el comprobante.
 - **Reportes:** consultar resúmenes; “Imprimir/guardar PDF” usa la impresión del navegador y **Descargar Excel** baja el detalle del periodo en un archivo `.xlsx` con las hojas Resumen, Por producto y Detalle.
@@ -51,7 +51,7 @@ El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el me
 ## Almacenista
 
 - **Materias primas:** registrar compras y ajustes de entrada o salida (**Registrar movimiento**), y consultar existencias e historial. Una salida mayor al saldo se rechaza sin cambios.
-- **Inventario:** registrar ingresos y salidas manuales, y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
+- **Inventario:** registrar ingresos y salidas manuales (con su motivo), y consultar el historial. La producción y las ventas mantienen sus movimientos desde sus respectivos procesos.
 
 ## Problemas frecuentes
 

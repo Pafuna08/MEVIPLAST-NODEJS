@@ -1861,10 +1861,27 @@
                     "type": "number",
                     "exclusiveMinimum": true,
                     "minimum": 0
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "enum": [
+                      "Producto dañado o defectuoso",
+                      "Muestra para cliente",
+                      "Merma",
+                      "Devolución a producción",
+                      "Ajuste por conteo físico",
+                      "Otro"
+                    ]
+                  },
+                  "detalle": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Obligatorio si el motivo es «Otro»; se guarda como «motivo: detalle» en observaciones"
                   }
                 },
                 "required": [
-                  "cantidad"
+                  "cantidad",
+                  "motivo"
                 ]
               }
             }

@@ -110,7 +110,7 @@ test("una salida manual descuenta stock y registra el ledger antes de confirmar"
     pool.query = originalQuery;
   });
 
-  const item = await inventoryService.registrarSalida(5, 3, 8);
+  const item = await inventoryService.registrarSalida(5, 3, 8, { motivo: "Merma" });
   assert.equal(item.cantidad, 7);
   assert.equal(committed, true);
   assert.ok(
@@ -122,5 +122,50 @@ test("una salida manual descuenta stock y registra el ledger antes de confirmar"
   const ledger = statements.find(({ sql }) =>
     sql.startsWith("INSERT INTO movimientos_inventario"),
   );
-  assert.deepEqual(ledger.params, [5, 8, 3]);
+  assert.deepEqual(ledger.params, [5, 8, 3, "Merma"]);
+});
+
+test("la salida manual exige un motivo válido y detalle cuando es «Otro», sin tocar la base", async (t) => {
+  const originalGetConnection = pool.getConnection;
+  pool.getConnection = async () => assert.fail("No debe abrir una transacción con un motivo inválido");
+  t.after(() => {
+    pool.getConnection = originalGetConnection;
+  });
+
+  await assert.rejects(inventoryService.registrarSalida(5, 3, 8), /Selecciona el motivo/);
+  await assert.rejects(inventoryService.registrarSalida(5, 3, 8, { motivo: "Regalo" }), /Selecciona el motivo/);
+  await assert.rejects(inventoryService.registrarSalida(5, 3, 8, { motivo: "Otro", detalle: "  " }), /Describe el motivo/);
+  await assert.rejects(inventoryService.registrarSalida(5, 3, 8, { motivo: "Merma", detalle: "x".repeat(201) }), /200 caracteres/);
+});
+
+test("el motivo y su detalle quedan en el movimiento y en la auditoría", async (t) => {
+  const originalGetConnection = pool.getConnection;
+  const originalQuery = pool.query;
+  const statements = [];
+  const auditoria = [];
+  pool.getConnection = async () => ({
+    beginTransaction: async () => {},
+    commit: async () => {},
+    rollback: async () => {},
+    release: () => {},
+    query: async (sql, params = []) => {
+      statements.push({ sql, params });
+      if (sql.startsWith("SELECT id, producto")) return [[{ id: 5, producto: "Cargadera", cantidad: 100 }]];
+      return [[], []];
+    },
+  });
+  pool.query = async (sql, params = []) => {
+    if (sql.startsWith("INSERT INTO auditoria")) auditoria.push(params);
+    if (sql.startsWith("SELECT * FROM inventario")) return [[{ id: 5, cantidad: 90 }]];
+    return [[], []];
+  };
+  t.after(() => {
+    pool.getConnection = originalGetConnection;
+    pool.query = originalQuery;
+  });
+
+  await inventoryService.registrarSalida(5, 10, 8, { motivo: "Otro", detalle: "Donación a la feria" });
+  const ledger = statements.find(({ sql }) => sql.startsWith("INSERT INTO movimientos_inventario"));
+  assert.equal(ledger.params[3], "Otro: Donación a la feria");
+  assert.match(auditoria[0][3], /Salida de 10 unidades de 'Cargadera' \(Otro: Donación a la feria\)/);
 });
