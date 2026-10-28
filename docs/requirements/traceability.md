@@ -1,6 +1,6 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop`, commit `55dce18` (27/10/2026). Se genera desde la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop`, commit `3a141c3` (27/10/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas, no la aceptación: ninguna historia está aceptada por el cliente todavía.
 
@@ -14,7 +14,7 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | HU-017 | Administrador | Gestionar roles y permisos | RF-002 | Parcial | Cinco roles fijos; el administrador asigna el rol. Los permisos por rol están en el código, no son configurables. |
 | HU-009 | Administrador | Consultar disponibilidad de insumos | RF-017 | Implementado | Listado y alerta de bajo stock (cantidad ≤ stock mínimo). El stock mínimo inicia en 0 y debe configurarse. |
 | HU-010 | Administrador | Registrar compras de materiales | RF-015 | Parcial | Movimiento tipo compra con fecha y usuario; no registra costo ni número de factura. |
-| HU-011 | Administrador | Registrar productos terminados | RF-018 | Implementado | Catálogo de 6 líneas con variantes (medida, calibre, color); ingresos y salidas manuales con ledger. |
+| HU-011 | Administrador | Registrar productos terminados | RF-018 | Implementado | Catálogo de 6 líneas con variantes (medida, calibre, color); ingresos y salidas manuales con ledger; la salida exige motivo. |
 | HU-022 | Administrador | Consultar rendimiento de operarios | RF-027 | Pendiente | No implementado. Acordar indicador y fórmula con el cliente. |
 | HU-023 | Administrador | Generar reporte de inventario | RF-026 | Parcial | Lista existencias de producto terminado; no incluye materias primas en el mismo reporte. |
 | HU-015 | Administrador | Generar reportes de ventas | RF-025 | Implementado | Resumen y detalle por periodo diario, semanal, mensual y anual. |
@@ -25,7 +25,7 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | HU-005 | Supervisor | Modificar órdenes de producción | RF-012 | Implementado | Solo órdenes pendientes sin avance; campos editables restringidos. |
 | HU-021 | Supervisor | Generar reporte de producción | RF-024 | Implementado | Resumen por estado y detalle de unidades producidas por periodo. |
 | HU-002 | Operario | Consultar tareas asignadas | RF-009 | Implementado | El operario solo recibe las órdenes cuyo responsable es su cuenta. |
-| HU-003 | Operario | Registrar producción realizada | RF-010, RF-011 | Implementado | Avance > 0 y ≤ meta pendiente; incrementa inventario y finaliza la orden al completar la meta. |
+| HU-003 | Operario | Registrar producción realizada | RF-010, RF-011 | Implementado | Avance > 0 y ≤ meta pendiente; incrementa la variante de la orden (medida, calibre y color) en el inventario y finaliza la orden al completar la meta. |
 | HU-007 | Almacenista | Actualizar cantidades disponibles | RF-015 | Implementado | Solo mediante movimientos (compra, ajuste de entrada/salida) desde «Registrar movimiento»; la cantidad no se edita directamente. Formulario restaurado en DEF-013 (PR #33). |
 | HU-013 | Vendedor | Registrar ventas | RF-020, RF-023 | Implementado | Venta por paquetes (1–500 unidades por paquete) con comprobante imprimible (RF-023, PR #27). |
 | HU-014 | Vendedor | Actualizar stock automáticamente | RF-021 | Implementado | Venta, descuento y movimiento se confirman en una sola transacción con bloqueo de fila. |
@@ -46,18 +46,18 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051 |
 | RF-005 | Cerrar sesión | Parcial | MVP | — | — |
 | RF-006 | Registrar auditoría | Implementado | MVP | — | — |
-| RF-007 | Crear orden de producción | Implementado | MVP | API-06 | CP-028, CP-048 |
+| RF-007 | Crear orden de producción | Implementado | MVP | API-06 | CP-028, CP-048, CP-069 |
 | RF-008 | Asignar orden a operario | Implementado | MVP | API-07 | CP-016, CP-028 |
-| RF-009 | Consultar órdenes asignadas | Implementado | MVP | API-06 | CP-015, CP-020 |
-| RF-010 | Registrar avance de producción | Implementado | MVP | API-07 | CP-028, CP-036, CP-037, CP-038, CP-039 |
+| RF-009 | Consultar órdenes asignadas | Implementado | MVP | API-06 | CP-015, CP-020, CP-070 |
+| RF-010 | Registrar avance de producción | Implementado | MVP | API-07 | CP-028, CP-036, CP-037, CP-038, CP-039, CP-069 |
 | RF-011 | Cambiar estado de la orden | Implementado | MVP | API-07 | CP-014 |
-| RF-012 | Editar orden pendiente | Implementado | MVP | API-06 | CP-011, CP-012 |
-| RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013 |
+| RF-012 | Editar orden pendiente | Implementado | MVP | API-06 | CP-011, CP-012, CP-071 |
+| RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013, CP-072 |
 | RF-014 | Registrar materia prima | Implementado | MVP | API-04 | CP-007, CP-008, CP-048 |
 | RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062 |
 | RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062 |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
-| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048 |
+| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067 |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | — |
 | RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028 |
 | RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031 |
@@ -68,7 +68,7 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | RF-026 | Reporte de inventario | Parcial | MVP | API-10 | — |
 | RF-027 | Rendimiento por operario | Pendiente | V1.1 | — | — |
 | RF-028 | Exportar reportes | Implementado | MVP | API-10 | CP-058, CP-059, CP-060 |
-| RF-029 | Consultar bitácora de auditoría | Implementado | MVP | API-11 | — |
+| RF-029 | Consultar bitácora de auditoría | Implementado | MVP | API-11 | CP-068 |
 
 ## Brechas abiertas
 
