@@ -35,6 +35,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Las migraciones de variante (`20261027_production_variant.sql` y `20261027_template_variant.sql`) se aplicaron en el `meviplast_db` local tras un respaldo verificado (EV-2026-10-27-06). El README y `docs/data/schema.md` ya no afirman que esa base tiene migraciones sin registrar: están registradas las 11.
 - `CONTRIBUTING.md` documenta los prefijos de rama que ya se usaban (`docs/`, `test/`, `chore/`), exige el identificador `MEVI-##` y el prefijo completo `feature/`, y pide escribir la descripción del PR sobre la plantilla. Las descripciones de los PR #43 a #47 se reescribieron con esa plantilla.
 - Las plantillas de órdenes frecuentes guardan medida, calibre y color, y «Usar plantilla» los llena en la orden (migración `20261027_template_variant.sql`). La clave única pasa de la línea a la variante, así que una línea puede tener varias plantillas. Las órdenes DEMO de `db:init` traen la variante de las existencias DEMO.
 - La prioridad de las órdenes ahora tiene efecto: las órdenes abiertas se listan de alta a baja prioridad (las cerradas al final) y muestran la etiqueta «Prioridad alta/media/baja». Antes solo se guardaba.
