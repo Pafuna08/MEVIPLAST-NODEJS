@@ -173,6 +173,16 @@ async function registrarAvance(req, res) {
   }
 }
 
+async function misRegistros(req, res) {
+  try {
+    res.json(await produccionService.misRegistros(req.usuario.id, req.query.periodo || "mensual"));
+  } catch (error) {
+    if (/periodo/.test(error.message)) return res.status(400).json({ mensaje: error.message });
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al consultar tus registros de producción" });
+  }
+}
+
 async function eliminar(req, res) {
   try {
     await produccionService.eliminar(req.params.id, req.usuario.id);
@@ -195,5 +205,6 @@ module.exports = {
   actualizar,
   cambiarEstado,
   registrarAvance,
+  misRegistros,
   eliminar,
 };

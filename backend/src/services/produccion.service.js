@@ -2,6 +2,7 @@ const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
 const { validarVariante } = require("./inventario.service");
+const { limitesPeriodo } = require("./reportes.service");
 
 function validarProducto(producto) {
   if (!productosTerminados.includes(producto)) {
@@ -110,7 +111,6 @@ async function crear(datos, actor) {
     cantidad,
     materia_prima_id,
     responsable_id,
-    supervisor_id,
     prioridad,
   } = datos;
   validarProducto(producto);
@@ -118,13 +118,9 @@ async function crear(datos, actor) {
   let supervisorId = null;
   let responsableId = Number(responsable_id) || null;
   if (actor.rol === "admin") {
-    supervisorId = Number(supervisor_id) || null;
-    if (!supervisorId) throw new Error("Debes asignar un supervisor");
-    const [supervisores] = await pool.query(
-      "SELECT id FROM usuarios WHERE id = ? AND activo = 1 AND rol = 'supervisor'",
-      [supervisorId],
-    );
-    if (!supervisores.length) throw new Error("El supervisor debe estar activo");
+    // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor ni operario fijos;
+    // la toma el supervisor que le asigne el operario
+    supervisorId = null;
     responsableId = null;
   } else {
     supervisorId = actor.id;
@@ -172,7 +168,11 @@ async function asignarOperario(id, responsableId, actor) {
     );
     const orden = ordenes[0];
     if (!orden) throw new Error("Orden de produccion no encontrada");
-    if (orden.supervisor_id && Number(orden.supervisor_id) !== Number(actor.id)) {
+    if (
+      actor.rol === "supervisor" &&
+      orden.supervisor_id &&
+      Number(orden.supervisor_id) !== Number(actor.id)
+    ) {
       throw new Error("Solo puedes asignar órdenes que te fueron entregadas");
     }
     if (orden.estado !== "pendiente" || Number(orden.cantidad_producida) > 0) {
@@ -183,9 +183,10 @@ async function asignarOperario(id, responsableId, actor) {
       [responsableId],
     );
     if (!operarios.length) throw new Error("El responsable debe ser un operario activo");
+    // El supervisor que asigna toma la orden; si asigna el administrador (falta el supervisor), no cambia de supervisor
     await connection.query(
       "UPDATE produccion SET supervisor_id = ?, responsable_id = ? WHERE id = ?",
-      [actor.id, responsableId, id],
+      [actor.rol === "supervisor" ? actor.id : orden.supervisor_id, responsableId, id],
     );
     await connection.commit();
     transactionStarted = false;
@@ -336,7 +337,7 @@ async function actualizarOrden(id, datos, actor) {
 async function cambiarEstado(id, estado, actor) {
   const transiciones = {
     pendiente: ["en_proceso", "cancelado"],
-    en_proceso: ["finalizado", "cancelado"],
+    en_proceso: ["cancelado"],
   };
   const connection = await pool.getConnection();
   let transactionStarted = false;
@@ -362,24 +363,16 @@ async function cambiarEstado(id, estado, actor) {
     ) {
       throw new Error("No puedes modificar una orden asignada a otro supervisor");
     }
+    // CR-013: el operario inicia su orden; el administrador y el supervisor solo cancelan.
+    // Nadie finaliza a mano: la orden se finaliza sola al registrar el avance que completa la meta.
     if (actor.rol === "operario" && estado !== "en_proceso") {
       throw new Error("El operario solo puede iniciar una orden asignada");
     }
-    if (
-      actor.rol === "supervisor" &&
-      estado === "en_proceso" &&
-      !orden.responsable_id
-    ) {
-      throw new Error("Asigna un operario antes de iniciar la orden");
+    if (["admin", "supervisor"].includes(actor.rol) && estado !== "cancelado") {
+      throw new Error("Solo el operario inicia la orden y se finaliza sola al completar la meta; aquí solo puedes cancelarla");
     }
     if (!(transiciones[orden.estado] || []).includes(estado)) {
       throw new Error("La transición de estado solicitada no es válida");
-    }
-    if (
-      estado === "finalizado" &&
-      Number(orden.cantidad_producida) < Number(orden.cantidad)
-    ) {
-      throw new Error("No se puede finalizar una orden con meta pendiente");
     }
     await connection.query(
       "UPDATE produccion SET estado = ?, fecha_fin = CASE WHEN ? = 'cancelado' THEN NOW() ELSE fecha_fin END WHERE id = ?",
@@ -406,6 +399,10 @@ async function cambiarEstado(id, estado, actor) {
 
 async function registrarAvance(id, { cantidad, observaciones }, actor) {
   const cantidadNumerica = Number(cantidad);
+  const nota = typeof observaciones === "string" && observaciones.trim() ? observaciones.trim() : null;
+  if (nota && nota.length > 255) {
+    throw new Error("Las observaciones no pueden superar 255 caracteres");
+  }
   if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
     throw new Error("La cantidad debe ser mayor que cero");
   }
@@ -438,7 +435,7 @@ async function registrarAvance(id, { cantidad, observaciones }, actor) {
     producto = orden.producto;
     await connection.query(
       "UPDATE produccion SET cantidad_producida = ?, estado = ?, observaciones = COALESCE(?, observaciones), fecha_fin = CASE WHEN ? = 'finalizado' THEN NOW() ELSE fecha_fin END WHERE id = ?",
-      [nuevoTotal, estado, observaciones || null, estado, id],
+      [nuevoTotal, estado, nota, estado, id],
     );
     // Las órdenes con variante suman a esa variante (y la crean si aún no existe);
     // las anteriores a la migración siguen usando el registro genérico de la línea
@@ -474,8 +471,9 @@ async function registrarAvance(id, { cantidad, observaciones }, actor) {
       inventarioId = creado.insertId;
     }
     await connection.query(
-      "INSERT INTO movimientos_inventario (inventario_id, usuario_id, produccion_id, tipo, cantidad) VALUES (?, ?, ?, 'produccion', ?)",
-      [inventarioId, actor.id, id, cantidadNumerica],
+      // La observación queda también en el movimiento, para el historial del operario
+      "INSERT INTO movimientos_inventario (inventario_id, usuario_id, produccion_id, tipo, cantidad, observaciones) VALUES (?, ?, ?, 'produccion', ?, ?)",
+      [inventarioId, actor.id, id, cantidadNumerica, nota],
     );
     await connection.commit();
     transactionStarted = false;
@@ -492,6 +490,25 @@ async function registrarAvance(id, { cantidad, observaciones }, actor) {
     detalle: `Orden ${id}: ${cantidadNumerica} unidades registradas`,
   });
   return obtenerPorId(id);
+}
+
+// Avances que registró el operario en el periodo calendario (diario, semanal, mensual o anual)
+async function misRegistros(usuarioId, periodo) {
+  const rango = limitesPeriodo(periodo);
+  const [detalle] = await pool.query(
+    `SELECT mi.id, mi.fecha, mi.cantidad, mi.produccion_id AS orden_id, mi.observaciones, i.producto
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE mi.tipo = 'produccion' AND mi.usuario_id = ? AND mi.fecha >= ? AND mi.fecha < ?
+     ORDER BY mi.fecha DESC, mi.id DESC`,
+    [usuarioId, rango.desde, rango.hasta],
+  );
+  const resumen = {
+    registros: detalle.length,
+    unidades: detalle.reduce((suma, fila) => suma + Number(fila.cantidad), 0),
+    ordenes: new Set(detalle.map((fila) => fila.orden_id).filter(Boolean)).size,
+  };
+  return { periodo, ...rango, resumen, detalle };
 }
 
 async function eliminar(id, actorId) {
@@ -518,5 +535,6 @@ module.exports = {
   actualizarOrden,
   cambiarEstado,
   registrarAvance,
+  misRegistros,
   eliminar,
 };

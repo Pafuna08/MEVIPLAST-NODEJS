@@ -1052,7 +1052,7 @@
         "tags": [
           "Producción"
         ],
-        "summary": "Crear orden (admin → supervisor; supervisor → operario)",
+        "summary": "Crear orden (admin: queda pendiente para los supervisores; supervisor: la asigna a un operario)",
         "x-requisitos": "RF-007",
         "requestBody": {
           "required": true,
@@ -1088,13 +1088,9 @@
                       "alta"
                     ]
                   },
-                  "supervisor_id": {
-                    "type": "integer",
-                    "description": "Obligatorio si crea el administrador"
-                  },
                   "responsable_id": {
                     "type": "integer",
-                    "description": "Obligatorio si crea el supervisor"
+                    "description": "Obligatorio si crea el supervisor; se ignora si crea el administrador"
                   },
                   "materia_prima_id": {
                     "type": "integer"
@@ -1353,6 +1349,56 @@
         ]
       }
     },
+    "/produccion/mis-registros": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Avances registrados por el operario autenticado en el periodo calendario actual (Mi historial)",
+        "x-requisitos": "RF-010",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": false,
+            "description": "Por defecto, mensual",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "operario"
+        ]
+      }
+    },
     "/produccion/{id}": {
       "put": {
         "tags": [
@@ -1488,7 +1534,7 @@
         "tags": [
           "Producción"
         ],
-        "summary": "Asignar operario a una orden pendiente sin avance",
+        "summary": "Asignar operario a una orden pendiente sin avance (el supervisor que asigna toma la orden; el administrador puede asignar si falta el supervisor)",
         "x-requisitos": "RF-008",
         "parameters": [
           {
@@ -1541,6 +1587,7 @@
           }
         },
         "x-roles": [
+          "admin",
           "supervisor"
         ]
       }
@@ -1550,7 +1597,7 @@
         "tags": [
           "Producción"
         ],
-        "summary": "Cambiar estado según RN-008 (el operario solo inicia)",
+        "summary": "Cambiar estado: el operario solo inicia su orden; administrador y supervisor solo cancelan; se finaliza sola al completar la meta",
         "x-requisitos": "RF-011",
         "parameters": [
           {
@@ -1647,7 +1694,7 @@
                   },
                   "observaciones": {
                     "type": "string",
-                    "maxLength": 500
+                    "maxLength": 255
                   }
                 },
                 "required": [
