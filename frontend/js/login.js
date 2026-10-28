@@ -102,6 +102,7 @@ form.addEventListener("submit", async (event) => {
       "meviplastSession",
       JSON.stringify({
         username: datos.usuario.usuario,
+        name: datos.usuario.nombre,
         role: info ? info.nombre : datos.usuario.rol,
         loginAt: new Date().toISOString(),
       }),
