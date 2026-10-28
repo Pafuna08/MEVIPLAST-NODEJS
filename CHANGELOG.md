@@ -35,6 +35,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- `CONTRIBUTING.md` documenta los prefijos de rama que ya se usaban (`docs/`, `test/`, `chore/`), exige el identificador `MEVI-##` y el prefijo completo `feature/`, y pide escribir la descripción del PR sobre la plantilla. Las descripciones de los PR #43 a #47 se reescribieron con esa plantilla.
 - Las plantillas de órdenes frecuentes guardan medida, calibre y color, y «Usar plantilla» los llena en la orden (migración `20261027_template_variant.sql`). La clave única pasa de la línea a la variante, así que una línea puede tener varias plantillas. Las órdenes DEMO de `db:init` traen la variante de las existencias DEMO.
 - La prioridad de las órdenes ahora tiene efecto: las órdenes abiertas se listan de alta a baja prioridad (las cerradas al final) y muestran la etiqueta «Prioridad alta/media/baja». Antes solo se guardaba.
 - «Editar orden» se abre debajo de la orden elegida, no al final de la página, y se cierra al guardar con éxito.
