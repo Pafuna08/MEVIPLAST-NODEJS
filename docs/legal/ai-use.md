@@ -57,6 +57,9 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #43 | Medida, calibre y color en las órdenes de producción, para que el avance entre a la variante correcta del inventario (observación del equipo en pruebas) |
 | #44 | Prioridad que ordena las órdenes, edición de la orden en su misma fila y retiro del campo «Lote» (observaciones del equipo en pruebas; el equipo pidió a la IA proponer el uso de la prioridad) |
 | #45 | Medida, calibre y color en las plantillas de órdenes frecuentes (mejora pendiente que el equipo pidió aplicar) |
+| #46 | Evidencia de la prueba de navegadores repetida (RNF-007) |
+| #47 | Trazabilidad del repositorio al día con los PR #39 a #46 |
+| #48 | Prefijos de rama y uso de la plantilla de PR en `CONTRIBUTING.md`; el equipo detectó que seis ramas usaban `feat/` y que los PR #43 a #47 no seguían la plantilla, y pidió seguir la guía al pie de la letra |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de la migración `20261027_login_lockout.sql`.
 

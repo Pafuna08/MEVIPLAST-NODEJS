@@ -102,7 +102,7 @@ El índice de manuales, diagramas, procedimientos y evidencias está en [`docs/R
 
 ## Git y contribuciones
 
-Se usa Git Flow: `main` para entregas estables, `develop` para integración, `feature/*` para funcionalidades y `fix/*` para correcciones. Las ramas de trabajo se integran mediante pull request a `develop`. Los commits siguen Conventional Commits. Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) y la plantilla del pull request.
+Se usa Git Flow: `main` para entregas estables, `develop` para integración, `feature/*` para funcionalidades, `fix/*` para correcciones y `docs/*`, `test/*` y `chore/*` para documentación, pruebas y mantenimiento. Las ramas de trabajo se integran mediante pull request a `develop`. Los commits siguen Conventional Commits. Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) y la plantilla del pull request.
 
 ## Licencia y terceros
 
