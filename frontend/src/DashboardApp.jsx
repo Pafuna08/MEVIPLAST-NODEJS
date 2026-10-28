@@ -31,6 +31,7 @@ const roleViews = {
   Administrador: {
     apiRole: "admin",
     title: "Panel administrativo",
+    welcome: "gestiona usuarios, inventario, producción, ventas y reportes",
     initials: "AD",
     views: [
       ["inicio", "IN", "Inicio"],
@@ -46,6 +47,7 @@ const roleViews = {
   Supervisor: {
     apiRole: "supervisor",
     title: "Control de producción",
+    welcome: "asigna y sigue las órdenes de producción",
     initials: "SU",
     views: [
       ["inicio", "IN", "Inicio"],
@@ -59,6 +61,7 @@ const roleViews = {
   Operario: {
     apiRole: "operario",
     title: "Mi jornada de producción",
+    welcome: "consulta tus tareas y registra tu producción",
     initials: "OP",
     views: [
       ["inicio", "IN", "Inicio"],
@@ -70,12 +73,14 @@ const roleViews = {
   Vendedor: {
     apiRole: "vendedor",
     title: "Gestión de ventas",
+    welcome: "registra tus ventas e imprime sus comprobantes",
     initials: "VE",
     views: [["ventas", "VT", "Ventas"]],
   },
   Almacenista: {
     apiRole: "almacenista",
     title: "Control de almacén",
+    welcome: "controla las materias primas y el inventario terminado",
     initials: "AL",
     views: [
       ["materia", "MP", "Materias primas"],
@@ -247,12 +252,13 @@ async function loadView(view, role, token) {
   if (["produccion", "tareas", "historial", "registrar"].includes(view)) {
     const orders = await api("/api/produccion", token);
     if (role.apiRole === "admin") {
-      const [materials, supervisors, templates] = await Promise.all([
+      // Los operarios son para asignar cuando falta el supervisor (CR-014)
+      const [materials, operators, templates] = await Promise.all([
         api("/api/materia-prima", token),
-        api("/api/produccion/supervisores", token),
+        api("/api/produccion/operarios", token),
         api("/api/produccion/plantillas", token),
       ]);
-      return { orders, materials, supervisors, templates };
+      return { orders, materials, operators, templates };
     }
     if (role.apiRole === "supervisor") {
       const [operators, materials, templates] = await Promise.all([
@@ -389,39 +395,123 @@ function VariantFields({ idPrefix, order }) {
   ));
 }
 
-function OrderRow({ order, canManage, onChangeStatus, canEdit, onEdit, editing = false }) {
+function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing = false, aligned = false }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
   const product = (safeProductName(order.producto) || "Producto no válido") + orderVariant(order);
-  return (
-    <div className="order-row">
-      <div>
-        <strong>#{order.id} · {product}</strong>
-        <span>
-          {order.responsable_nombre || "Sin asignar"}
-          {order.supervisor_nombre ? ` · Supervisor: ${sanitizeText(order.supervisor_nombre)}` : ""}
-          {" · "}{number(produced)}/{number(goal)} ({progress}%)
-        </span>
-      </div>
-      <PriorityBadge order={order} />
-      <StatusBadge status={order.estado} />
-      {canEdit && <button className="text-action" type="button" aria-expanded={editing} onClick={() => onEdit(editing ? null : order)}>{editing ? "Cerrar" : "Editar"}</button>}
-      {canManage && (
-        <select
-          className="state-select"
-          aria-label={`Estado de orden ${order.id}`}
-          value={order.estado}
-          onChange={(event) => onChangeStatus(order.id, event.target.value)}
-        >
-          <option value="pendiente">Pendiente</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="finalizado">Finalizado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      )}
+  const info = (
+    <div>
+      <strong>#{order.id} · {product}</strong>
+      <span>
+        {order.responsable_nombre || "Sin asignar"}
+        {order.supervisor_nombre ? ` · Supervisor: ${sanitizeText(order.supervisor_nombre)}` : ""}
+        {" · "}{number(produced)}/{number(goal)} ({progress}%)
+      </span>
     </div>
   );
+  const editButton = canEdit && (
+    <button className="primary-action secondary compact-action" type="button" aria-expanded={editing} onClick={() => onEdit(editing ? null : order)}>{editing ? "Cerrar" : "Editar"}</button>
+  );
+  // CR-013: administrador y supervisor solo cancelan órdenes abiertas; el estado lo mueven el operario y el avance
+  const cancelButton = canManage && ["pendiente", "en_proceso"].includes(order.estado) && (
+    <button className="primary-action compact-action" type="button" onClick={() => onCancel(order)}>Cancelar</button>
+  );
+  // En la lista de gestión cada elemento ocupa su columna aunque falte, para que las filas queden alineadas
+  if (aligned) {
+    return (
+      <div className="order-row aligned">
+        {info}
+        <div className="order-cell"><PriorityBadge order={order} /></div>
+        <div className="order-cell"><StatusBadge status={order.estado} /></div>
+        <div className="order-cell">{editButton}</div>
+        <div className="order-cell">{cancelButton}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="order-row">
+      {info}
+      <PriorityBadge order={order} />
+      <StatusBadge status={order.estado} />
+      {editButton}
+      {cancelButton}
+    </div>
+  );
+}
+
+const movementTypeNames = {
+  compra: "Compra",
+  ajuste_entrada: "Ajuste de entrada",
+  ajuste_salida: "Ajuste de salida",
+  consumo_produccion: "Consumo en una orden",
+};
+
+// Resumen para confirmar los registros que mueven inventario o dinero: quedan en el ledger y no se deshacen.
+// Devuelve null para los formularios que guardan directo (órdenes, plantillas, usuarios, bobinas nuevas).
+function irreversibleSummary(view, payload, data) {
+  const units = (value) => number(Number(value) || 0);
+  if (view === "materia" && payload.materia_prima_id) {
+    const material = data.materials.find((item) => Number(item.id) === Number(payload.materia_prima_id));
+    return {
+      title: "Confirmar movimiento de materia prima",
+      lines: [
+        ["Bobina", sanitizeText(material?.nombre || `#${payload.materia_prima_id}`)],
+        ["Movimiento", movementTypeNames[payload.tipo] + (payload.produccion_id ? ` (orden #${payload.produccion_id})` : "")],
+        ["Cantidad", `${units(payload.cantidad)} kg`],
+        ...(payload.observaciones ? [["Observaciones", sanitizeText(payload.observaciones)]] : []),
+      ],
+    };
+  }
+  if (view === "inventario" && payload.inventario_id) {
+    const item = data.items.find((row) => Number(row.id) === Number(payload.inventario_id));
+    return {
+      title: "Confirmar salida manual",
+      lines: [
+        ["Producto", safeProductName(item?.producto) || `#${payload.inventario_id}`],
+        ["Cantidad", `${units(payload.cantidad)} unidades (quedan ${units(Number(item?.cantidad || 0) - Number(payload.cantidad || 0))})`],
+        ["Motivo", sanitizeText(payload.detalle ? `${payload.motivo}: ${payload.detalle}` : payload.motivo)],
+      ],
+    };
+  }
+  if (view === "inventario") {
+    return {
+      title: "Confirmar ingreso de inventario",
+      lines: [
+        ["Producto", sanitizeText(`${payload.familia} · ${payload.medida} · calibre ${payload.calibre} · ${payload.color}`)],
+        ["Cantidad", `${units(payload.cantidad)} unidades`],
+        ["Ubicación", sanitizeText(payload.ubicacion || "Sin ubicación")],
+      ],
+    };
+  }
+  if (view === "registrar") {
+    const order = data.find((row) => Number(row.id) === Number(payload.id));
+    const pending = order ? Number(order.cantidad) - Number(order.cantidad_producida || 0) : 0;
+    return {
+      title: "Confirmar registro de producción",
+      lines: [
+        ["Orden", order ? `#${order.id} · ${(safeProductName(order.producto) || "Producto no válido") + orderVariant(order)}` : `#${payload.id}`],
+        ["Cantidad", `${units(payload.cantidad)} unidades (pendiente después: ${units(pending - Number(payload.cantidad || 0))})`],
+        ...(payload.observaciones ? [["Observaciones", sanitizeText(payload.observaciones)]] : []),
+      ],
+    };
+  }
+  if (view === "ventas") {
+    const item = data.inventory.find((row) => Number(row.id) === Number(payload.inventario_id));
+    const packages = Number(payload.cantidad_paquetes) || 0;
+    const perPackage = Number(payload.unidades_paquete) || 0;
+    return {
+      title: "Confirmar venta",
+      lines: [
+        ["Cliente", sanitizeText(payload.cliente)],
+        ["Producto", safeProductName(item?.producto) || `#${payload.inventario_id}`],
+        ["Presentación", `${packagesLabel({ cantidad_paquetes: packages, unidades_paquete: perPackage })} = ${number(packages * perPackage)} unidades`],
+        ["Precio por paquete", money(payload.precio_paquete)],
+        ["Total", money(packages * (Number(payload.precio_paquete) || 0))],
+      ],
+    };
+  }
+  return null;
 }
 
 function readSession() {
@@ -461,6 +551,8 @@ export default function DashboardApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [receipt, setReceipt] = useState(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [pendingSave, setPendingSave] = useState(null);
   const requestVersion = `${activeView}:${reloadKey}`;
 
   useEffect(() => {
@@ -510,8 +602,16 @@ export default function DashboardApp() {
   }, []);
 
   function navigate(view) {
-    window.location.hash = view;
+    // Desde un reporte detallado hay que quitar ?reporte=…, que tiene prioridad sobre la vista
+    if (window.location.search) window.location.assign(`/dashboard.html#${view}`);
+    else window.location.hash = view;
     setSidebarOpen(false);
+  }
+
+  function logout() {
+    localStorage.removeItem("meviplastToken");
+    localStorage.removeItem("meviplastSession");
+    window.location.replace("/login.html");
   }
 
   // Descarga el reporte detallado del periodo en Excel (RF-028)
@@ -553,9 +653,18 @@ export default function DashboardApp() {
 
   async function submitForm(event) {
     event.preventDefault();
-    setSaving(true);
     const form = event.currentTarget;
     const payload = sanitizePayload(Object.fromEntries(new FormData(form)));
+    const summary = irreversibleSummary(activeView, payload, data);
+    if (summary) {
+      setPendingSave({ form, payload, ...summary });
+      return;
+    }
+    await save(form, payload);
+  }
+
+  async function save(form, payload) {
+    setSaving(true);
     let newSaleId = null;
     try {
       if (activeView === "usuarios") {
@@ -753,6 +862,7 @@ export default function DashboardApp() {
     data,
     role: appRole,
     username: session.username,
+    token,
     navigate,
     submitForm,
     saving,
@@ -788,7 +898,7 @@ export default function DashboardApp() {
             {config.views.map(([view, icon, label]) => (
               <a
                 className={activeView === view ? "active" : ""}
-                href={`#${view}`}
+                href={`/dashboard.html#${view}`}
                 key={view}
                 onClick={() => setSidebarOpen(false)}
               >
@@ -797,14 +907,7 @@ export default function DashboardApp() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.removeItem("meviplastToken");
-                localStorage.removeItem("meviplastSession");
-                window.location.replace("/login.html");
-              }}
-            >
+            <button type="button" onClick={() => setConfirmLogout(true)}>
               Cerrar sesión
             </button>
           </div>
@@ -821,6 +924,10 @@ export default function DashboardApp() {
                 ☰
               </button>
               <div><h1>{config.title}</h1><p>{today}</p></div>
+            </div>
+            <div className="topbar-welcome">
+              <strong>Te damos la bienvenida, {sanitizeText(session.name || session.username, 80)}</strong>
+              <span>{role}: {config.welcome}</span>
             </div>
             <div className="user-menu">
               <span className="user-avatar">{config.initials}</span>
@@ -846,6 +953,59 @@ export default function DashboardApp() {
             <div className="confirm-actions">
               <button className="confirm-cancel" type="button" onClick={() => setDeleteTarget(null)}>Cancelar</button>
               <button className="confirm-delete" type="button" onClick={deleteUser}>Eliminar</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {pendingSave && (
+        <div className="confirm-overlay" role="presentation" onClick={(event) => {
+          if (event.target === event.currentTarget) setPendingSave(null);
+        }}>
+          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="save-title">
+            <div className="confirm-header">
+              <div className="confirm-icon">?</div>
+              <div>
+                <h3 id="save-title">{pendingSave.title}</h3>
+                <p>Revisa los datos antes de guardar. Este registro mueve el inventario y no se puede deshacer desde el panel.</p>
+              </div>
+            </div>
+            <dl className="confirm-summary">
+              {pendingSave.lines.map(([label, value]) => (
+                <React.Fragment key={label}><dt>{label}</dt><dd>{value}</dd></React.Fragment>
+              ))}
+            </dl>
+            <div className="confirm-actions">
+              <button className="confirm-cancel" type="button" autoFocus onClick={() => setPendingSave(null)}>Revisar</button>
+              <button
+                className="confirm-delete"
+                type="button"
+                onClick={async () => {
+                  const { form, payload } = pendingSave;
+                  setPendingSave(null);
+                  await save(form, payload);
+                }}
+              >
+                Sí, guardar
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {confirmLogout && (
+        <div className="confirm-overlay" role="presentation" onClick={(event) => {
+          if (event.target === event.currentTarget) setConfirmLogout(false);
+        }}>
+          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+            <div className="confirm-header">
+              <div className="confirm-icon">?</div>
+              <div>
+                <h3 id="logout-title">Cerrar sesión</h3>
+                <p>¿Deseas cerrar tu sesión?<br />Lo que no hayas guardado se perderá.</p>
+              </div>
+            </div>
+            <div className="confirm-actions">
+              <button className="confirm-cancel" type="button" autoFocus onClick={() => setConfirmLogout(false)}>Cancelar</button>
+              <button className="confirm-delete" type="button" onClick={logout}>Cerrar sesión</button>
             </div>
           </section>
         </div>
@@ -884,7 +1044,7 @@ function SaleReceipt({ sale, onClose }) {
           <tbody>
             <tr>
               <td><strong>{sanitizeText(sale.familia || sale.producto)}</strong>{variante && <small>{variante}</small>}</td>
-              <td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td>
+              <td>{packagesLabel(sale)}</td>
               <td>{number(sale.cantidad)}</td>
               <td>{money(sale.precio_paquete)}</td>
               <td>{money(sale.total)}</td>
@@ -907,6 +1067,7 @@ function renderView({
   data,
   role,
   username,
+  token,
   navigate,
   submitForm,
   saving,
@@ -927,7 +1088,9 @@ function renderView({
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
   if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
-  if (["produccion", "tareas", "historial"].includes(view)) return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
+  if (view === "tareas") return <Tasks orders={data} onChangeStatus={updateOrderStatus} navigate={navigate} />;
+  if (view === "historial") return <History orders={data} token={token} />;
+  if (view === "produccion") return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
   if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
@@ -940,18 +1103,42 @@ function renderView({
 function Home({ data, role, navigate }) {
   const active = data.orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
   const produced = data.orders.reduce((sum, order) => sum + Number(order.cantidad_producida || 0), 0);
+  // Unidades producidas por línea, de mayor a menor, para que la tarjeta diga qué se produjo
+  const producedByLine = Object.entries(
+    data.orders.reduce((lines, order) => {
+      const line = safeProductName(order.producto);
+      const units = Number(order.cantidad_producida || 0);
+      if (line && units > 0) lines[line] = (lines[line] || 0) + units;
+      return lines;
+    }, {}),
+  ).sort(([, a], [, b]) => b - a);
+  // Tabla corta: línea a la izquierda y unidades alineadas a la derecha
+  const producedDetail = producedByLine.length ? (
+    <span className="stat-lines">
+      {producedByLine.slice(0, 3).map(([line, units]) => (
+        <React.Fragment key={line}><span>{line}</span><span className="stat-units">{number(units)}</span></React.Fragment>
+      ))}
+      {producedByLine.length > 3 && (
+        <span className="stat-more">y {producedByLine.length - 3} {producedByLine.length === 4 ? "línea" : "líneas"} más</span>
+      )}
+    </span>
+  ) : "Todavía no hay producción registrada";
+  const salesCount = Number(data.sales?.resumen?.numero_ventas || 0);
+  const pending = active.filter((order) => order.estado === "pendiente").length;
+  const activeDetail = `${pending} ${pending === 1 ? "pendiente" : "pendientes"} · ${active.length - pending} en proceso`;
   const stats = role === "operario"
     ? [
-        ["Mis tareas activas", active.length, "TA"],
-        ["Producción registrada", number(produced), "UN"],
-        ["Completadas", data.orders.filter((order) => order.estado === "finalizado").length, "OK"],
-        ["Meta pendiente", number(active.reduce((sum, order) => sum + Number(order.cantidad) - Number(order.cantidad_producida || 0), 0)), "PE"],
+        ["Mis tareas activas", active.length, "TA", activeDetail],
+        ["Unidades producidas", number(produced), "UN", producedDetail],
+        ["Completadas", data.orders.filter((order) => order.estado === "finalizado").length, "OK", "Órdenes finalizadas"],
+        ["Meta pendiente", number(active.reduce((sum, order) => sum + Number(order.cantidad) - Number(order.cantidad_producida || 0), 0)), "PE", "Unidades por producir en tus tareas activas"],
       ]
     : [
-        ["Órdenes activas", active.length, "OP"],
-        ["Producción registrada", number(produced), "UN"],
-        ["Inventario terminado", number(data.inventory.reduce((sum, item) => sum + Number(item.cantidad), 0)), "INV"],
-        ["Ventas", money(data.sales.resumen.total_vendido), "$"],
+        ["Órdenes activas", active.length, "OP", activeDetail],
+        ["Unidades producidas", number(produced), "UN", producedDetail],
+        ["Inventario terminado", number(data.inventory.reduce((sum, item) => sum + Number(item.cantidad), 0)), "INV",
+          `Unidades en ${data.inventory.filter((item) => Number(item.cantidad) > 0).length} variantes con existencias`],
+        ["Ventas", money(data.sales.resumen.total_vendido), "$", `${number(salesCount)} ${salesCount === 1 ? "venta registrada" : "ventas registradas"}`],
       ];
   const completed = data.orders.filter((order) => order.estado === "finalizado").length;
   const soldOut = data.inventory.filter((item) => Number(item.cantidad) === 0).length;
@@ -964,10 +1151,10 @@ function Home({ data, role, navigate }) {
         action={<button className="primary-action" type="button" onClick={() => navigate(destination)}>{role === "operario" ? "Registrar producción" : role === "supervisor" ? "Asignar tarea" : "Ver reportes"}</button>}
       />
       <section className="stats-grid">
-        {stats.map(([label, value, code]) => <article className="stat-card" key={label}><div className="stat-head"><span>{label}</span><i className="stat-icon" aria-hidden="true">{code}</i></div><strong>{value}</strong><small>Datos reales</small></article>)}
+        {stats.map(([label, value, code, detail]) => <article className="stat-card" key={label}><div className="stat-head"><span>{label}</span><i className="stat-icon" aria-hidden="true">{code}</i></div><strong>{value}</strong><small>{detail}</small></article>)}
       </section>
       <div className="dashboard-grid">
-        <Panel title="Órdenes recientes" action={<button type="button" onClick={() => navigate(role === "operario" ? "historial" : "produccion")}>Ver todas</button>}>
+        <Panel title="Órdenes recientes" action={<button className="text-action" type="button" onClick={() => navigate(role === "operario" ? "historial" : "produccion")}>Ver todas</button>}>
           {data.orders.slice(0, 5).map((order) => <OrderRow key={order.id} order={order} canManage={false} />)}
           {!data.orders.length && <p className="empty">Sin órdenes.</p>}
         </Panel>
@@ -1013,7 +1200,7 @@ function Users({
       <Panel title="Usuarios registrados">
         <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
           key: user.id,
-          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}{Number(user.bloqueado) ? ` · Bloqueado hasta las ${lockedUntil(user)}` : ""}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{Number(user.bloqueado) ? <button className="text-action" type="button" onClick={() => onUnlock(user)}>Desbloquear</button> : null}{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
+          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action primary" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action after-text" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}{Number(user.bloqueado) ? ` · Bloqueado hasta las ${lockedUntil(user)}` : ""}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{Number(user.bloqueado) ? <button className="text-action" type="button" onClick={() => onUnlock(user)}>Desbloquear</button> : null}{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
         }))} />
       </Panel>
     </>
@@ -1154,6 +1341,7 @@ function Production({
   onDeleteTemplate,
 }) {
   const [editingOrder, setEditingOrder] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
@@ -1225,8 +1413,9 @@ function Production({
             }}
             saving={saving}
           >
+            <p className="form-hint form-hint-wide">La orden queda pendiente para los supervisores: el que la tome elige el operario. Si falta el supervisor, puedes asignar el operario desde la lista de órdenes.</p>
             {selectedTemplate && (
-              <p className="form-hint">
+              <p className="form-hint form-hint-wide">
                 Plantilla seleccionada: {safeProductName(selectedTemplate.producto) || "Producto no válido"}{orderVariant(selectedTemplate)}. Puedes ajustar sus datos antes de crear la orden.
               </p>
             )}
@@ -1253,16 +1442,6 @@ function Production({
                 required
               />
             </Field>
-            <Field label="Supervisor responsable">
-              <select name="supervisor_id" required defaultValue="">
-                <option value="" disabled>Selecciona un supervisor</option>
-                {data.supervisors.map((supervisor) => (
-                  <option key={supervisor.id} value={supervisor.id}>
-                    {sanitizeText(supervisor.nombre)}
-                  </option>
-                ))}
-              </select>
-            </Field>
             <Field label="Materia prima">
               <select
                 key={`materia-${selectedTemplateId}`}
@@ -1286,9 +1465,6 @@ function Production({
                 <option value="baja">Baja</option>
               </select>
             </Field>
-            {!data.supervisors.length && (
-              <p className="empty">No hay supervisores activos. Crea o activa uno antes de registrar una orden.</p>
-            )}
           </FormPanel>
           <FormPanel
             title="Guardar plantilla frecuente"
@@ -1332,11 +1508,12 @@ function Production({
           <React.Fragment key={order.id}>
             <OrderRow
               order={order}
-              canManage={canManage && !(isSupervisor && !order.responsable_id)}
-              onChangeStatus={onChangeStatus}
+              canManage={canManage}
+              onCancel={setCancelTarget}
               canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
               onEdit={setEditingOrder}
               editing={editingOrder?.id === order.id}
+              aligned
             />
             {editingOrder?.id === order.id && (
               <form
@@ -1354,11 +1531,11 @@ function Production({
                 <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={order.cantidad} required /></Field>
                 <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
                 <Field label="Prioridad"><select name="prioridad" defaultValue={order.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
-                <button className="text-action" type="button" onClick={() => setEditingOrder(null)}>Cancelar</button>
+                <button className="primary-action secondary" type="button" onClick={() => setEditingOrder(null)}>Descartar cambios</button>
                 <button className="primary-action" type="submit">Guardar cambios</button>
               </form>
             )}
-            {isSupervisor && !order.responsable_id && order.estado === "pendiente" && (
+            {(isSupervisor || isAdmin) && !order.responsable_id && order.estado === "pendiente" && (
               <form
                 className="data-form"
                 onSubmit={(event) => {
@@ -1367,7 +1544,7 @@ function Production({
                   onAssignOrder(order.id, responsableId);
                 }}
               >
-                <Field label={`Asignar operario a la orden #${order.id}`}>
+                <Field label={isAdmin ? `Asignar operario a la orden #${order.id} (si falta el supervisor)` : `Asignar operario a la orden #${order.id}`}>
                   <select name="responsable_id" required defaultValue="">
                     <option value="" disabled>Selecciona un operario</option>
                     {data.operators.map((operator) => (
@@ -1383,6 +1560,162 @@ function Production({
           </React.Fragment>
         ))}
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
+      </Panel>
+      {cancelTarget && (
+        <div className="confirm-overlay" role="presentation" onClick={(event) => {
+          if (event.target === event.currentTarget) setCancelTarget(null);
+        }}>
+          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title">
+            <div className="confirm-header">
+              <div className="confirm-icon">!</div>
+              <div>
+                <h3 id="cancel-order-title">Cancelar orden #{cancelTarget.id}</h3>
+                <p>
+                  ¿Deseas cancelar la orden de <strong>{safeProductName(cancelTarget.producto) || "Producto no válido"}{orderVariant(cancelTarget)}</strong>?
+                  <br />La orden se cierra y ya no admite avances. Lo producido hasta ahora queda en el inventario.
+                </p>
+              </div>
+            </div>
+            <div className="confirm-actions">
+              <button className="confirm-cancel" type="button" autoFocus onClick={() => setCancelTarget(null)}>No, volver</button>
+              <button
+                className="confirm-delete"
+                type="button"
+                onClick={() => {
+                  onChangeStatus(cancelTarget.id, "cancelado");
+                  setCancelTarget(null);
+                }}
+              >
+                Sí, cancelar la orden
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Orden elegida en «Mis tareas» para abrir «Registrar producción» con ella seleccionada
+const ADVANCE_ORDER_KEY = "meviplastOrdenAvance";
+
+// Mis tareas (operario): solo lo pendiente, con su avance y las acciones del día
+function Tasks({ orders, onChangeStatus, navigate }) {
+  const open = orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
+  return (
+    <>
+      <Intro title="Mis tareas" description="Tus órdenes abiertas, primero las de mayor prioridad." />
+      <Panel title={`Tareas abiertas (${open.length})`}>
+        {open.map((order) => {
+          const goal = Number(order.cantidad) || 0;
+          const produced = Number(order.cantidad_producida) || 0;
+          const progress = goal ? Math.min(100, Math.round((produced * 100) / goal)) : 0;
+          return (
+            <div className="task-row" key={order.id}>
+              <div className="task-info">
+                <strong>#{order.id} · {(safeProductName(order.producto) || "Producto no válido") + orderVariant(order)}</strong>
+                <span className="task-badges"><PriorityBadge order={order} /><StatusBadge status={order.estado} /></span>
+              </div>
+              <div className="task-progress">
+                <div className="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress} aria-label={`Avance de la orden ${order.id}`}>
+                  <span style={{ width: `${progress}%` }} />
+                </div>
+                <small>{number(produced)} de {number(goal)} ({progress}%) · faltan {number(Math.max(goal - produced, 0))}</small>
+              </div>
+              <div className="task-actions">
+                {order.estado === "pendiente" && (
+                  <button className="primary-action secondary" type="button" onClick={() => onChangeStatus(order.id, "en_proceso")}>Iniciar</button>
+                )}
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem(ADVANCE_ORDER_KEY, String(order.id));
+                    } catch {
+                      // sin almacenamiento, el formulario abre con la primera orden
+                    }
+                    navigate("registrar");
+                  }}
+                >
+                  Registrar avance
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {!open.length && <p className="empty">No tienes tareas abiertas. Lo que ya terminaste está en «Mi historial».</p>}
+      </Panel>
+    </>
+  );
+}
+
+// «1 paquete de 500» / «3 paquetes de 100»
+function packagesLabel(sale) {
+  const count = Number(sale.cantidad_paquetes);
+  return `${number(count)} ${count === 1 ? "paquete" : "paquetes"} de ${number(sale.unidades_paquete)}`;
+}
+
+// «2026-10-31» → «31/10» (o «31/10/2026» con el año)
+function shortDate(isoDate, withYear = false) {
+  const [year, month, day] = String(isoDate).split("-");
+  return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
+}
+
+const historyPeriods = [["diario", "Hoy"], ["semanal", "Esta semana"], ["mensual", "Este mes"], ["anual", "Este año"]];
+
+// Mi historial (operario): avances registrados por periodo y órdenes cerradas
+function History({ orders, token }) {
+  const [period, setPeriod] = useState("mensual");
+  const [records, setRecords] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let current = true;
+    setRecords(null);
+    setError("");
+    api(`/api/produccion/mis-registros?periodo=${period}`, token)
+      .then((result) => current && setRecords(result))
+      .catch((cause) => current && setError(cause.message || "No se pudieron cargar tus registros."));
+    return () => { current = false; };
+  }, [period, token]);
+  const closed = orders.filter((order) => ["finalizado", "cancelado"].includes(order.estado));
+  const finished = closed.filter((order) => order.estado === "finalizado").length;
+  const periodName = historyPeriods.find(([value]) => value === period)[1];
+  const periodLabel = periodName.toLowerCase();
+  return (
+    <>
+      <Intro title="Mi historial" description="Lo que has producido, por periodo, y tus órdenes cerradas." />
+      <div className="report-periods history-periods" role="group" aria-label="Periodo">
+        {historyPeriods.map(([value, label]) => (
+          <button key={value} type="button" className={`report-period-button ${period === value ? "active" : ""}`} aria-pressed={period === value} onClick={() => setPeriod(value)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {error && <p className="empty" role="alert">{error}</p>}
+      {!records && !error && <p className="empty" role="status">Cargando información...</p>}
+      {records && (
+        <>
+          <section className="stats-grid">
+            <article className="stat-card"><div className="stat-head"><span>Unidades producidas</span></div><strong>{number(records.resumen.unidades)}</strong><small>{periodName} · {records.desde === records.hastaInclusivo ? shortDate(records.desde, true) : `${shortDate(records.desde)} al ${shortDate(records.hastaInclusivo)}`}</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Registros de avance</span></div><strong>{number(records.resumen.registros)}</strong><small>En {records.resumen.ordenes} {records.resumen.ordenes === 1 ? "orden" : "órdenes"}</small></article>
+            <article className="stat-card"><div className="stat-head"><span>Órdenes finalizadas</span></div><strong>{finished}</strong><small>Desde que tienes tareas asignadas</small></article>
+          </section>
+          <Panel title="Mis registros de producción">
+            <DataTable
+              columns={["Fecha", "Orden", "Producto", "Cantidad", "Observación"]}
+              empty={`No registraste producción ${periodLabel}.`}
+              rows={records.detalle.map((item) => ({
+                key: item.id,
+                cells: <><td>{item.fecha}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.observaciones || "—")}</td></>,
+              }))}
+            />
+          </Panel>
+        </>
+      )}
+      <Panel title={`Órdenes cerradas (${closed.length})`}>
+        {closed.map((order) => <OrderRow key={order.id} order={order} canManage={false} />)}
+        {!closed.length && <p className="empty">Todavía no tienes órdenes finalizadas o canceladas.</p>}
       </Panel>
     </>
   );
@@ -1406,11 +1739,21 @@ function Assign({ data, onSubmit, saving }) {
 
 function Advance({ data, onSubmit, saving }) {
   const activeOrders = data.filter((order) => !["finalizado", "cancelado"].includes(order.estado));
+  // Si se llegó desde «Registrar avance» en Mis tareas, esa orden queda elegida (una sola vez)
+  const [chosenOrder] = useState(() => {
+    try {
+      const id = sessionStorage.getItem(ADVANCE_ORDER_KEY);
+      sessionStorage.removeItem(ADVANCE_ORDER_KEY);
+      return activeOrders.some((order) => String(order.id) === id) ? id : undefined;
+    } catch {
+      return undefined;
+    }
+  });
   return (
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
-        <Field label="Orden"><select name="id" required>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Orden"><select name="id" required defaultValue={chosenOrder}>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}
@@ -1489,7 +1832,7 @@ function Sales({ data, onSubmit, saving, onReceipt }) {
         <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" min="1" step="1" required /></Field>
         <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
       </FormPanel>
-      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{number(sale.cantidad_paquetes)} paquetes de {number(sale.unidades_paquete)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{packagesLabel(sale)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
     </>
   );
 }
@@ -1548,7 +1891,7 @@ function Reports() {
     url.hash = "";
     url.searchParams.set("reporte", tipo);
     url.searchParams.set("periodo", periodo);
-    window.open(url.toString(), "_blank", "noopener");
+    window.location.assign(url.toString());
   }
   return (
     <>
@@ -1586,6 +1929,7 @@ function ReportDetail({ data, onExportExcel }) {
   const fechas = `${data.desde} - ${data.hastaInclusivo}`;
   return (
     <>
+      <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
       <Intro
         title={`Reporte de ${titulo.toLowerCase()} ${data.periodo}`}
         description={`${periodoNombre} · ${fechas}`}
@@ -1634,7 +1978,6 @@ function ReportDetail({ data, onExportExcel }) {
         )}
         {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
       </Panel>
-      <a className="report-shortcut" href="/dashboard.html#reportes">Volver a reportes</a>
     </>
   );
 }

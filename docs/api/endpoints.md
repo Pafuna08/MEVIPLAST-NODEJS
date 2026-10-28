@@ -24,11 +24,12 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | GET         | `/produccion/plantillas`                                             | Admin, supervisor                      | Consultar plantillas de órdenes        |
 | POST        | `/produccion/plantillas`                                             | Admin                                  | Crear plantilla de orden con su variante (409 si ya existe) |
 | DELETE      | `/produccion/plantillas/{id}`                                        | Admin                                  | Eliminar plantilla                     |
-| POST        | `/produccion`                                                        | Admin (a un supervisor), supervisor (a un operario) | Crear orden con línea, medida, calibre y color |
-| PUT         | `/produccion/{id}/asignar`                                           | Supervisor de la orden                 | Asignar operario a orden pendiente sin avance |
-| PUT         | `/produccion/{id}/estado`                                            | Admin, supervisor, operario asignado   | Cambiar estado                         |
+| GET         | `/produccion/mis-registros?periodo={diario\|semanal\|mensual\|anual}` | Operario (solo los suyos)        | Avances registrados en el periodo calendario actual (Mi historial); por defecto, mensual |
+| POST        | `/produccion`                                                        | Admin (queda pendiente para los supervisores), supervisor (a un operario) | Crear orden con línea, medida, calibre y color |
+| PUT         | `/produccion/{id}/asignar`                                           | Supervisor (toma la orden), admin (si falta el supervisor; no cambia el supervisor) | Asignar operario a orden pendiente sin avance |
+| PUT         | `/produccion/{id}/estado`                                            | Operario asignado (solo inicia), admin y supervisor (solo cancelan) | Cambiar estado; la orden se finaliza sola al completar la meta (CR-013) |
 | PUT         | `/produccion/{id}`                                                   | Admin, supervisor                      | Editar orden pendiente sin avance (medida, calibre y color van juntos) |
-| POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance; suma a la variante de la orden y la crea «Por ubicar» si no existe |
+| POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance; suma a la variante de la orden y la crea «Por ubicar» si no existe; la observación (máx. 255) queda en el movimiento |
 | DELETE      | `/produccion/{id}`                                                   | Admin                                  | Eliminar orden                         |
 | GET         | `/inventario`                                                        | Admin, supervisor, almacenista, vendedor | Consultar existencias                  |
 | GET         | `/inventario/movimientos`, `/inventario/{id}/movimientos`            | Admin, supervisor, almacenista         | Consultar ledger de inventario         |

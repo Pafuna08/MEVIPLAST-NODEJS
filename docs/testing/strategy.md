@@ -18,7 +18,7 @@ npm run test:e2e --prefix backend
 `backend/tests/e2e/flujos.e2e.js` crea una base desechable (`E2E_DB_NAME`, por defecto `meviplast_e2e`), levanta la API, ejecuta los flujos y elimina la base al terminar (`E2E_KEEP_DB=true` la conserva). Se niega a ejecutarse si el nombre no empieza por `meviplast_e2e`, para no tocar `meviplast_db`. En CI corre en un job aparte con un contenedor MariaDB 10.4.
 
 - Health check con base real.
-- CP-028: orden del administrador (rechazada sin medida, calibre y color) → asignación del supervisor → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea «Por ubicar») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
+- CP-028: orden del administrador (rechazada sin medida, calibre y color; queda sin supervisor fijo, CR-014) → asignación del supervisor, que toma la orden → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea «Por ubicar») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
 - CP-029: acceso directo a 13 endpoints con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
@@ -26,7 +26,9 @@ npm run test:e2e --prefix backend
 - DEF-013 (CP-062): compra, ajuste mayor al saldo (rechazo sin cambios), permisos por tipo de movimiento, consumo en una orden que no usa la bobina (rechazo) y consumo válido ligado a la orden.
 - Salida manual de inventario: sin motivo o con «Otro» sin detalle se rechaza sin descontar; con motivo queda en el movimiento.
 - Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
-- Edición de órdenes: la variante incompleta se rechaza, el supervisor edita variante, meta y prioridad de una orden pendiente, y una orden con avance no se puede editar.
+- Edición de órdenes: la variante incompleta se rechaza, el supervisor edita variante, meta y prioridad de una orden pendiente, y una orden con avance no se puede editar. El administrador y el supervisor no inician ni finalizan (400) y sí cancelan (CR-013).
+- Mi historial: el operario ve su avance del día con la observación (`/produccion/mis-registros`); otro rol recibe 403 y un periodo inválido, 400.
+- CR-014: los supervisores ven la orden pendiente del administrador, el administrador puede asignar el operario sin cambiar el supervisor y el operario no puede asignar (403).
 - Plantillas: sin variante se rechaza (400), la misma variante repetida da 409 y otra variante de la misma línea se acepta.
 - Migración `20261027_template_variant.sql` aplicada sobre la tabla anterior (clave única por línea) y ejecutada dos veces; conserva la plantilla existente.
 
@@ -49,11 +51,11 @@ npm run test:browser
 
 Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usuario (disco C:). Para guardarlos en otro disco, defina la misma ruta al instalar y al ejecutar, por ejemplo `$env:PLAYWRIGHT_BROWSERS_PATH = "J:\playwright-navegadores"`.
 
-`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
+`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima; cerrar sesión con confirmación; el menú desde un reporte; «Mis tareas» → «Registrar avance» → «Mi historial»; y la confirmación con resumen de los registros irreversibles, donde «Revisar» no guarda) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
 
-68 pruebas unitarias y de rutas con `node:test` (68 aprobadas el 2026-10-27):
+70 pruebas unitarias y de rutas con `node:test` (70 aprobadas el 2026-10-28):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -64,8 +66,8 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
-- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 47 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
-- `production.service.test.js` (15): edición parcial, plantillas del catálogo y con variante, finalización con meta pendiente, alcance del supervisor y orden por prioridad, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
+- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 48 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
+- `production.service.test.js` (17): edición parcial, plantillas del catálogo y con variante, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
 - `reportes.service.test.js` (4): límites de periodo calendario, filtro de ventas por rango y límite de la bitácora (1 a 1 000, del más reciente al más antiguo).
 - `reportesExcel.service.test.js` (2): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula y periodo inválido.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol (base de datos simulada).
@@ -82,12 +84,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-10-27:
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-10-28:
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 64,0 % | 71,1 % | 51,4 % |
-| Unitarias + E2E | 81,5 % | 74,5 % | 81,0 % |
+| Unitarias | 64,8 % | 73,1 % | 52,1 % |
+| Unitarias + E2E | 81,8 % | 76,0 % | 81,5 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

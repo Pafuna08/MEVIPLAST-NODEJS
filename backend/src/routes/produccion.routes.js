@@ -26,6 +26,7 @@ router.get(
   controller.listarPlantillas,
 );
 router.post("/plantillas", verificarRol("admin"), controller.crearPlantilla);
+router.get("/mis-registros", verificarRol("operario"), controller.misRegistros);
 router.delete(
   "/plantillas/:id",
   verificarRol("admin"),
@@ -34,7 +35,7 @@ router.delete(
 router.post("/", verificarRol("admin", "supervisor"), controller.crear);
 router.put(
   "/:id/asignar",
-  verificarRol("supervisor"),
+  verificarRol("admin", "supervisor"),
   controller.asignarOperario,
 );
 router.put(

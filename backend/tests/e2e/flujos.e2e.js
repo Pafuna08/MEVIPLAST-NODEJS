@@ -92,19 +92,22 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("CP-028: orden → asignación → avance → inventario → venta → reportes", async () => {
     const sinVariante = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", cantidad: 1000, prioridad: "alta", supervisor_id: ids.supervisor,
+      producto: "Cargadera", cantidad: 1000, prioridad: "alta",
     });
     assert.equal(sinVariante.status, 400, "la orden exige medida, calibre y color");
     const orden = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
-      cantidad: 1000, prioridad: "alta", supervisor_id: ids.supervisor,
+      cantidad: 1000, prioridad: "alta",
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     assert.equal(orden.body.medida, "40x60 cm");
+    // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor fijo
+    assert.equal(orden.body.supervisor_id, null);
     const ordenId = orden.body.id;
 
     const asignada = await llamar("PUT", `/produccion/${ordenId}/asignar`, tokens.supervisor, { responsable_id: ids.operario });
     assert.equal(asignada.status, 200, JSON.stringify(asignada.body));
+    assert.equal(Number(asignada.body.supervisor_id), ids.supervisor, "el supervisor que asigna toma la orden");
 
     const tareas = await llamar("GET", "/produccion", tokens.operario);
     assert.ok(tareas.body.some((o) => o.id === ordenId), "el operario ve su orden");
@@ -125,6 +128,15 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(Number(stock.cantidad), 1000);
     const [[mov]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE produccion_id = ? AND tipo = 'produccion'", [ordenId]);
     assert.equal(Number(mov.n), 1);
+
+    // Mi historial: el operario ve su avance del día con la observación; otros roles no tienen acceso
+    const historial = await llamar("GET", "/produccion/mis-registros?periodo=diario", tokens.operario);
+    assert.equal(historial.status, 200, JSON.stringify(historial.body));
+    const registro = historial.body.detalle.find((d) => Number(d.orden_id) === ordenId);
+    assert.ok(registro, "el avance aparece en el historial del operario");
+    assert.equal(registro.observaciones, "E2E-01");
+    assert.equal((await llamar("GET", "/produccion/mis-registros?periodo=diario", tokens.supervisor)).status, 403);
+    assert.equal((await llamar("GET", "/produccion/mis-registros?periodo=quincenal", tokens.operario)).status, 400);
 
     const venta = await llamar("POST", "/ventas", tokens.vendedor, {
       cliente: "Cliente E2E", inventario_id: stock.id, cantidad_paquetes: 2, unidades_paquete: 250, precio_paquete: 30000,
@@ -269,12 +281,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     // Consumo: solo en una orden activa que usa esa bobina, y solo admin o supervisor
     const orden = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Sencilla PP", medida: "20x30 cm", calibre: "1.5", color: "Transparente",
-      cantidad: 200, prioridad: "media", supervisor_id: ids.supervisor, materia_prima_id: materiaId,
+      cantidad: 200, prioridad: "media", materia_prima_id: materiaId,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const otra = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
-      cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
+      cantidad: 100, prioridad: "baja",
     });
     assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
     assert.equal((await mover(tokens.supervisor, { tipo: "compra", cantidad: 5 })).status, 403);
@@ -326,7 +338,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
   await t.test("edición de órdenes: solo pendientes sin avance y con la variante completa", async () => {
     const orden = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Troquel riñón", medida: "12 x 18", calibre: "2", color: "Transparente",
-      cantidad: 100, prioridad: "baja", supervisor_id: ids.supervisor,
+      cantidad: 100, prioridad: "baja",
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const id = orden.body.id;
@@ -342,6 +354,27 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     // La orden de CP-028 ya tiene avance: no se puede editar
     const [[conAvance]] = await db.query("SELECT id FROM produccion WHERE cantidad_producida > 0 LIMIT 1");
     assert.equal((await llamar("PUT", `/produccion/${conAvance.id}`, tokens.admin, { cantidad: 5000 })).status, 400);
+
+    // CR-013: el administrador y el supervisor no inician ni finalizan; solo cancelan
+    assert.equal((await llamar("PUT", `/produccion/${id}/estado`, tokens.supervisor, { estado: "en_proceso" })).status, 400);
+    assert.equal((await llamar("PUT", `/produccion/${id}/estado`, tokens.admin, { estado: "finalizado" })).status, 400);
+    const cancelada = await llamar("PUT", `/produccion/${id}/estado`, tokens.supervisor, { estado: "cancelado" });
+    assert.equal(cancelada.status, 200, JSON.stringify(cancelada.body));
+    assert.equal(cancelada.body.estado, "cancelado");
+  });
+
+  await t.test("CR-014: si falta el supervisor, el administrador asigna el operario desde su panel", async () => {
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media",
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const visibles = await llamar("GET", "/produccion", tokens.supervisor);
+    assert.ok(visibles.body.some((o) => o.id === orden.body.id), "los supervisores ven la orden pendiente");
+    const asignada = await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario });
+    assert.equal(asignada.status, 200, JSON.stringify(asignada.body));
+    assert.equal(Number(asignada.body.responsable_id), ids.operario);
+    assert.equal(asignada.body.supervisor_id, null, "asignar como administrador no cambia el supervisor");
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.operario, { responsable_id: ids.operario })).status, 403);
   });
 
   await t.test("plantillas: una por variante, con la variante obligatoria", async () => {

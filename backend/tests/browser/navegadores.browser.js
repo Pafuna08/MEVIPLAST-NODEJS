@@ -124,6 +124,14 @@ async function esperarAviso(pagina, texto) {
   await pagina.locator(".toast.show", { hasText: texto }).waitFor({ timeout: 10000 });
 }
 
+// Los registros que mueven inventario o dinero piden confirmación con un resumen antes de guardar
+async function guardarConConfirmacion(pagina, form) {
+  await form.locator("button[type=submit]").click();
+  const ventana = pagina.locator(".confirm-modal", { has: pagina.locator(".confirm-summary") });
+  await ventana.waitFor({ timeout: 10000 });
+  await ventana.locator(".confirm-delete").click();
+}
+
 const formulario = (pagina, titulo) => pagina.locator("section.form-panel", { has: pagina.locator("h3", { hasText: titulo }) });
 
 // Flujos críticos. Cada uno recibe el navegador y su nombre, y devuelve un detalle corto.
@@ -152,7 +160,12 @@ const FLUJOS = [
       const texto = (await pagina.locator(".main-content").innerText()).trim();
       if (!texto || /No se pudo cargar/i.test(texto)) throw new Error(`vista ${vista} vacía o con error`);
     }
-    await Promise.all([pagina.waitForURL(/login\.html/), pagina.click("text=Cerrar sesión")]);
+    // Cerrar sesión pide confirmación: Cancelar la mantiene y la confirmación lleva al login
+    await pagina.click(".sidebar-footer button");
+    await pagina.click(".confirm-modal .confirm-cancel");
+    if (!pagina.url().includes("dashboard.html")) throw new Error("Cancelar cerró la sesión");
+    await pagina.click(".sidebar-footer button");
+    await Promise.all([pagina.waitForURL(/login\.html/), pagina.click(".confirm-modal .confirm-delete")]);
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
     return `${VISTAS[rol].length} vistas y cierre de sesión`;
@@ -165,7 +178,11 @@ const FLUJOS = [
     await form.locator("input[name=unidades_paquete]").fill("50");
     await form.locator("input[name=cantidad_paquetes]").fill("2");
     await form.locator("input[name=precio_paquete]").fill("1500");
+    // «Revisar» cierra la confirmación sin guardar: no se abre el comprobante
     await form.locator("button[type=submit]").click();
+    await pagina.locator(".confirm-modal .confirm-cancel").click();
+    if (await pagina.locator(".receipt").count()) throw new Error("Revisar guardó la venta");
+    await guardarConConfirmacion(pagina, form);
     const comprobante = pagina.locator(".receipt");
     await comprobante.waitFor({ timeout: 10000 });
     const numero = await comprobante.locator(".receipt-number span").innerText();
@@ -178,13 +195,24 @@ const FLUJOS = [
   ["Operario: registrar avance de producción", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "operario");
-    await pagina.goto(`${URL_BASE}/dashboard.html#registrar`);
+    // Mis tareas → «Registrar avance» abre el formulario con esa orden elegida
+    await pagina.goto(`${URL_BASE}/dashboard.html#tareas`);
+    await pagina.waitForLoadState("networkidle");
+    const primera = pagina.locator(".task-row").first();
+    const ordenId = (await primera.locator("strong").innerText()).match(/#(\d+)/)[1];
+    await Promise.all([pagina.waitForURL(/#registrar$/), primera.locator("text=Registrar avance").click()]);
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Nuevo registro");
+    if ((await form.locator("select[name=id]").inputValue()) !== ordenId) throw new Error("la orden elegida en Mis tareas no quedó seleccionada");
+    const nota = `NAV-${ordenId}-${Date.now()}`;
     await form.locator("input[name=cantidad]").fill("5");
-    await form.locator("textarea[name=observaciones]").fill("NAV-01");
-    await form.locator("button[type=submit]").click();
+    await form.locator("textarea[name=observaciones]").fill(nota);
+    await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
+    // Mi historial → «Hoy» muestra el avance con su observación
+    await pagina.goto(`${URL_BASE}/dashboard.html#historial`);
+    await pagina.locator(".report-period-button", { hasText: "Hoy" }).click();
+    await pagina.locator("td", { hasText: nota }).waitFor({ timeout: 10000 });
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
     return "avance guardado";
@@ -198,7 +226,7 @@ const FLUJOS = [
     await form.locator("select[name=tipo]").selectOption("compra");
     await form.locator("input[name=cantidad]").fill("25");
     await form.locator("input[name=observaciones]").fill("Remisión de prueba");
-    await form.locator("button[type=submit]").click();
+    await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
@@ -212,7 +240,7 @@ const FLUJOS = [
     const form = formulario(pagina, "Registrar movimiento");
     await form.locator("select[name=tipo]").selectOption("ajuste_salida");
     await form.locator("input[name=cantidad]").fill("999999");
-    await form.locator("button[type=submit]").click();
+    await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Stock insuficiente");
     await contexto.close();
     // El 400 de la API es el rechazo esperado
@@ -230,7 +258,7 @@ const FLUJOS = [
     const orden = await form.locator("select[name=produccion_id] option").first().innerText();
     if (!orden.startsWith("#")) throw new Error(`sin órdenes para consumir: ${orden}`);
     await form.locator("input[name=cantidad]").fill("5");
-    await form.locator("button[type=submit]").click();
+    await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
@@ -248,7 +276,7 @@ const FLUJOS = [
     await form.locator("input[name=calibre]").fill("1");
     await form.locator("input[name=color]").fill("Blanco");
     await form.locator("input[name=cantidad]").fill("300");
-    await form.locator("button[type=submit]").click();
+    await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
@@ -262,6 +290,9 @@ const FLUJOS = [
     const [descarga] = await Promise.all([pagina.waitForEvent("download"), pagina.click("text=Descargar Excel")]);
     const nombre = descarga.suggestedFilename();
     const tam = fs.statSync(await descarga.path()).size;
+    // Desde el reporte, el menú lleva a otra sección (antes se quedaba en el reporte)
+    await Promise.all([pagina.waitForURL(/dashboard\.html#usuarios$/), pagina.click(".sidebar nav >> text=Usuarios")]);
+    await pagina.locator(".page-intro h2", { hasText: "Usuarios" }).waitFor({ timeout: 10000 });
     await contexto.close();
     if (!/^reporte-ventas-mensual-\d{4}-\d{2}-\d{2}\.xlsx$/.test(nombre) || tam < 1000) throw new Error(`descarga ${nombre} (${tam} bytes)`);
     if (problemas.length) throw new Error(problemas.join("; "));

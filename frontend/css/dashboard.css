@@ -158,6 +158,23 @@ textarea {
   margin: 0;
   color: var(--navy);
   font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.topbar-welcome {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+.topbar-welcome strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+.topbar-welcome span {
+  color: var(--steel);
+  font-size: 0.8rem;
 }
 .topbar p {
   margin: 2px 0 0;
@@ -216,15 +233,32 @@ textarea {
   font-weight: 800;
   cursor: pointer;
 }
+/* Botón compacto para las acciones de cada fila (Editar, Cancelar) */
+.primary-action.compact-action {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+/* Secundario: blanco con borde azul oscuro, visible tanto sobre el fondo gris como dentro de los paneles */
 .primary-action.secondary {
   color: var(--navy);
-  background: #edf2f8;
-  border: 1px solid var(--line);
+  background: var(--white);
+  border: 1.5px solid var(--navy);
+}
+.primary-action.secondary:hover {
+  background: #e6ecf4;
 }
 .report-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+.primary-action.back-action {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  text-decoration: none;
 }
 .stats-grid {
   display: grid;
@@ -293,15 +327,6 @@ textarea {
   margin: 0;
   color: var(--navy);
   font-size: 1rem;
-}
-.panel-header a,
-.panel-header button {
-  border: 0;
-  color: var(--red);
-  background: transparent;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 0.82rem;
 }
 .panel-search {
   display: flex;
@@ -472,8 +497,7 @@ th {
 }
 .data-form input,
 .data-form select,
-.data-form textarea,
-.state-select {
+.data-form textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--line);
@@ -577,6 +601,9 @@ th {
   gap: 10px;
 }
 
+.form-hint-wide {
+  grid-column: 1 / -1;
+}
 .form-hint {
   margin: 0;
   color: var(--steel);
@@ -613,12 +640,6 @@ th {
   border-color: var(--red);
   color: var(--red);
 }
-.report-shortcut {
-  display: inline-block;
-  margin: 4px 0 18px;
-  color: var(--red);
-  font-weight: 700;
-}
 .order-edit {
   border-bottom: 1px solid #edf0f3;
   background: #f7f9fb;
@@ -628,6 +649,85 @@ th {
   gap: 4px;
   margin-right: auto;
 }
+/* Columnas fijas: producto | prioridad | estado | editar | cancelar */
+.order-row.aligned {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px 110px 90px 100px;
+}
+.order-row.aligned > .order-cell {
+  display: flex;
+  align-items: center;
+  margin-right: 0;
+}
+.status {
+  white-space: nowrap;
+}
+/* Mis tareas: producto | avance | acciones */
+.task-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf0f3;
+}
+.task-info {
+  display: grid;
+  gap: 8px;
+}
+.task-info strong {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+.task-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.task-progress {
+  display: grid;
+  gap: 6px;
+}
+.task-progress small {
+  color: var(--steel);
+  font-size: 0.76rem;
+}
+.progress-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e6ebf1;
+}
+.progress-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--navy);
+}
+.task-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.report-period-button.active {
+  border-color: var(--red);
+  color: var(--white);
+  background: var(--red);
+}
+.history-periods {
+  padding: 0 0 18px;
+}
+.stat-lines {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 14px;
+}
+.stat-units {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.stat-more {
+  grid-column: 1 / -1;
+}
 .order-row strong {
   color: var(--navy);
   font-size: 0.86rem;
@@ -636,15 +736,36 @@ th {
   color: var(--steel);
   font-size: 0.76rem;
 }
+/* Acciones de tablas, listas y encabezados: botones compactos.
+   Gris azulado para acciones normales, rojo para guardar y para las que eliminan o cancelan */
 .text-action {
-  border: 0;
-  color: var(--red);
-  background: transparent;
-  font-weight: 700;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--navy);
+  border-radius: 4px;
+  color: var(--navy);
+  background: var(--white);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
 }
-.text-action.danger {
-  color: var(--red);
+/* Botón que sigue a un texto en la misma celda */
+.text-action.after-text {
+  margin-left: 10px;
+}
+.text-action:hover {
+  background: #e6ecf4;
+}
+.text-action.danger,
+.text-action.primary {
+  color: var(--white);
+  background: var(--red);
+  border-color: var(--red);
+}
+.text-action.danger:hover,
+.text-action.primary:hover {
+  filter: brightness(0.92);
 }
 .inline-actions {
   display: flex;
@@ -722,10 +843,30 @@ th {
   font-weight: 800;
   cursor: pointer;
 }
+/* Resumen de lo que se va a guardar en la ventana de confirmación */
+.confirm-summary {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0 22px 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f7f9fb;
+  font-size: 0.86rem;
+}
+.confirm-summary dt {
+  color: var(--steel);
+  font-weight: 700;
+}
+.confirm-summary dd {
+  margin: 0;
+  color: var(--navy);
+}
 .confirm-cancel {
   color: var(--navy);
-  background: #edf2f8;
-  border-color: var(--line);
+  background: var(--white);
+  border: 1.5px solid var(--navy);
 }
 .confirm-delete {
   color: var(--white);
@@ -902,7 +1043,41 @@ th {
     padding: 20px 14px;
   }
   .topbar {
+    flex-wrap: wrap;
     padding: 10px 14px;
+  }
+  .topbar-left {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .topbar h1 {
+    font-size: 1rem;
+  }
+  .order-row.aligned {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .order-row.aligned > div:first-child {
+    flex-basis: 100%;
+  }
+  .order-row.aligned > .order-cell:empty {
+    display: none;
+  }
+  .task-row {
+    grid-template-columns: 1fr;
+  }
+  .task-actions {
+    justify-content: stretch;
+  }
+  .task-actions > button {
+    flex: 1;
+  }
+  /* En pantallas angostas la bienvenida baja a su propia línea, debajo del título */
+  .topbar-welcome {
+    order: 3;
+    flex-basis: 100%;
+    text-align: left;
   }
   .user-menu > div:last-child {
     display: none;
