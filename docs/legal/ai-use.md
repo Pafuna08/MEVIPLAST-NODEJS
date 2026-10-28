@@ -61,6 +61,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #47 | Trazabilidad del repositorio al día con los PR #39 a #46 |
 | #48 | Prefijos de rama y uso de la plantilla de PR en `CONTRIBUTING.md`; el equipo detectó que seis ramas usaban `feat/` y que los PR #43 a #47 no seguían la plantilla, y pidió seguir la guía al pie de la letra |
 | #49 | Evidencia de las migraciones de variante en `meviplast_db` (autorizadas por el equipo) y corrección del aviso sobre `schema_migrations` |
+| #50 | Ajustes de la segunda ronda de pruebas manuales del equipo: menú desde los reportes, confirmaciones, bienvenida por rol, Mis tareas y Mi historial, tarjetas de Inicio, botones y dos cambios de reglas decididos por el equipo (CR-013 y CR-014); la IA propuso el diseño de Mis tareas y Mi historial y limitar la confirmación a los registros irreversibles, y el equipo eligió |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de las migraciones `20261027_login_lockout.sql`, `20261027_production_variant.sql` y `20261027_template_variant.sql` (EV-2026-10-27-04 y EV-2026-10-27-06).
 

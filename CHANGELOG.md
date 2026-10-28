@@ -35,6 +35,16 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Segunda ronda de pruebas manuales del equipo (PR #50):
+  - Reglas (CR-013): el administrador y el supervisor ya no cambian el estado de una orden con un selector; solo pueden **Cancelar** (con confirmación). El operario la inicia desde «Mis tareas» y la orden se finaliza sola al registrar el avance que completa la meta. La regla también se aplica en la API.
+  - Reglas (CR-014): la orden del administrador ya no pide supervisor; queda pendiente para todos los supervisores y la toma el que asigna el operario. Si falta el supervisor, el administrador asigna el operario desde su panel (`PUT /produccion/{id}/asignar` admite al administrador y no cambia el supervisor).
+  - Operario: «Mis tareas» muestra solo las órdenes abiertas con barra de avance, «Iniciar» y «Registrar avance» (abre el formulario con la orden elegida). «Mi historial» muestra los avances propios por día, semana, mes o año con el nuevo `GET /produccion/mis-registros`. La observación de cada avance se guarda en su movimiento (máx. 255 caracteres).
+  - Navegación: el reporte detallado se abre en la misma pestaña, el menú funciona desde él (antes se quedaba en el reporte) y «← Volver a reportes» es un botón. Cerrar sesión pide confirmación.
+  - Confirmación con resumen antes de guardar los registros irreversibles: venta, salida manual, ingreso de inventario, movimiento de materia prima y avance de producción.
+  - Barra superior: títulos en mayúsculas y bienvenida con el nombre y el rol.
+  - Inicio: las tarjetas explican su número (unidades producidas por línea, órdenes pendientes y en proceso, variantes con existencias, ventas registradas) en lugar de «Datos reales».
+  - Lista de órdenes alineada en columnas; las acciones de tablas y listas son botones (rojo para guardar, eliminar o cancelar; blanco con borde azul para las demás).
+  - «1 paquete de 500» en singular en ventas y comprobantes.
 - Las migraciones de variante (`20261027_production_variant.sql` y `20261027_template_variant.sql`) se aplicaron en el `meviplast_db` local tras un respaldo verificado (EV-2026-10-27-06). El README y `docs/data/schema.md` ya no afirman que esa base tiene migraciones sin registrar: están registradas las 11.
 - `CONTRIBUTING.md` documenta los prefijos de rama que ya se usaban (`docs/`, `test/`, `chore/`), exige el identificador `MEVI-##` y el prefijo completo `feature/`, y pide escribir la descripción del PR sobre la plantilla. Las descripciones de los PR #43 a #47 se reescribieron con esa plantilla.
 - Las plantillas de órdenes frecuentes guardan medida, calibre y color, y «Usar plantilla» los llena en la orden (migración `20261027_template_variant.sql`). La clave única pasa de la línea a la variante, así que una línea puede tener varias plantillas. Las órdenes DEMO de `db:init` traen la variante de las existencias DEMO.
