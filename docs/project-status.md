@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Corte: 04/11/2026, rama `develop` con los PR #1 a #51 fusionados. Sin etiqueta de liberación.
+Corte: 04/11/2026, rama `develop` con los PR #1 a #52 fusionados. Sin etiqueta de liberación.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
 - Pruebas: [`testing/strategy.md`](testing/strategy.md). 72 unitarias, 14 E2E con MySQL, prueba de carga y prueba en Edge, Chrome y Firefox; cobertura medida en CI.
@@ -13,7 +13,7 @@ Corte: 04/11/2026, rama `develop` con los PR #1 a #51 fusionados. Sin etiqueta d
 
 ## Pendiente antes de `v1.0.0`
 
-- Revisión y aprobación de los PR #12 a #38 por Carlos Herrera, y que él repita la instalación en su equipo (RNF-009).
+- Que Carlos Herrera repita la instalación en su equipo (RNF-009) y revise los PR posteriores al #50; los PR #12 a #50 los aprobó el 03/11/2026.
 - Sesión de aceptación con el cliente usando el Acta de Aceptación por Rol (MEV-ACT-01 del paquete documental).
 - Aceptación del cliente por rol.
 - Probar la recuperación de contraseña con el SMTP real y repetir las pruebas de carga y de navegadores en el servidor de MEVIPLAST.

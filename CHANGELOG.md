@@ -36,6 +36,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- La documentación registra la aprobación de los PR #12 a #50 por Carlos Herrera Sibaja (03/11/2026): GIT-04 pasa a «Cumple» en la lista de chequeo y se cierra el bloqueo BLQ-004.
 - Segunda ronda de pruebas manuales del equipo (PR #50):
   - Reglas (CR-013): el administrador y el supervisor ya no cambian el estado de una orden con un selector; solo pueden **Cancelar** (con confirmación). El operario la inicia desde «Mis tareas» y la orden se finaliza sola al registrar el avance que completa la meta. La regla también se aplica en la API.
   - Reglas (CR-014): la orden del administrador ya no pide supervisor; queda pendiente para todos los supervisores y la toma el que asigna el operario. Si falta el supervisor, el administrador asigna el operario desde su panel (`PUT /produccion/{id}/asignar` admite al administrador y no cambia el supervisor).

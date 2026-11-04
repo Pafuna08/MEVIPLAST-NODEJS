@@ -1,6 +1,6 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop`, commit `3a141c3` (27/10/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop`, commit `08f10bf` (04/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas, no la aceptación: ninguna historia está aceptada por el cliente todavía.
 
@@ -57,9 +57,9 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062 |
 | RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062 |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
-| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067 |
+| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078 |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | — |
-| RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028 |
+| RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028, CP-078 |
 | RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031 |
 | RF-022 | Consultar historial de ventas | Implementado | MVP | API-09 | CP-026 |
 | RF-023 | Generar comprobante de venta | Implementado | MVP | API-09 | CP-055, CP-056, CP-057 |

@@ -61,6 +61,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #47 | Trazabilidad del repositorio al día con los PR #39 a #46 |
 | #48 | Prefijos de rama y uso de la plantilla de PR en `CONTRIBUTING.md`; el equipo detectó que seis ramas usaban `feat/` y que los PR #43 a #47 no seguían la plantilla, y pidió seguir la guía al pie de la letra |
 | #49 | Evidencia de las migraciones de variante en `meviplast_db` (autorizadas por el equipo) y corrección del aviso sobre `schema_migrations` |
+| #52 | Registro de la revisión de Carlos (PR #12 a #50) en la documentación |
 | #51 | Validación sin atributos en el HTML por indicación del instructor: validación propia en el panel y control de largo en el servidor; la IA propuso mantener una validación propia y cubrir el largo en el servidor, y el equipo eligió |
 | #50 | Ajustes de la segunda ronda de pruebas manuales del equipo: menú desde los reportes, confirmaciones, bienvenida por rol, Mis tareas y Mi historial, tarjetas de Inicio, botones y dos cambios de reglas decididos por el equipo (CR-013 y CR-014); la IA propuso el diseño de Mis tareas y Mi historial y limitar la confirmación a los registros irreversibles, y el equipo eligió |
 
@@ -73,8 +74,8 @@ Además, operaciones sobre la base de datos local, siempre con autorización exp
 
 ## 3. Validación humana
 
-- Cada cambio de código pasó por un pull request con lint, pruebas unitarias (41) y pruebas E2E (7) en GitHub Actions antes de fusionarse.
-- Revisión de los PR #12 a #23 por Carlos Herrera Sibaja: ____ (pendiente; registrar la fecha).
+- Cada cambio de código pasó por un pull request con lint, pruebas unitarias y pruebas E2E en GitHub Actions antes de fusionarse (al PR #51: 72 unitarias y 14 E2E, más la prueba en Edge, Chrome y Firefox).
+- Revisión de los PR #12 a #50 por Carlos Herrera Sibaja: aprobados en GitHub el 03/11/2026. Los PR posteriores quedan pendientes de su revisión.
 - Los documentos se contrastaron con el código, las pruebas y las capturas. Revisión del equipo: ____.
 
 ## 4. Limitaciones detectadas
