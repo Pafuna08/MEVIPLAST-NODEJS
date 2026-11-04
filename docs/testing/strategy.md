@@ -24,7 +24,7 @@ npm run test:e2e --prefix backend
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
 - DEF-013 (CP-062): compra, ajuste mayor al saldo (rechazo sin cambios), permisos por tipo de movimiento, consumo en una orden que no usa la bobina (rechazo) y consumo válido ligado a la orden.
-- Salida manual de inventario: sin motivo o con «Otro» sin detalle se rechaza sin descontar; con motivo queda en el movimiento.
+- Salida manual de inventario: sin motivo o con «Otro» sin detalle se rechaza sin descontar; con motivo queda en el movimiento. Una medida de 41 caracteres y un cliente de 121 se rechazan con 400 (validación de largo en el servidor).
 - Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
 - Edición de órdenes: la variante incompleta se rechaza, el supervisor edita variante, meta y prioridad de una orden pendiente, y una orden con avance no se puede editar. El administrador y el supervisor no inician ni finalizan (400) y sí cancelan (CR-013).
 - Mi historial: el operario ve su avance del día con la observación (`/produccion/mis-registros`); otro rol recibe 403 y un periodo inválido, 400.
@@ -51,11 +51,11 @@ npm run test:browser
 
 Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usuario (disco C:). Para guardarlos en otro disco, defina la misma ruta al instalar y al ejecutar, por ejemplo `$env:PLAYWRIGHT_BROWSERS_PATH = "J:\playwright-navegadores"`.
 
-`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima; cerrar sesión con confirmación; el menú desde un reporte; «Mis tareas» → «Registrar avance» → «Mi historial»; y la confirmación con resumen de los registros irreversibles, donde «Revisar» no guarda) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
+`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 13 flujos críticos (incluidos compra, ajuste rechazado y consumo de materia prima; cerrar sesión con confirmación; el menú desde un reporte; «Mis tareas» → «Registrar avance» → «Mi historial»; y la confirmación con resumen de los registros irreversibles, donde «Revisar» no guarda; y la validación propia del panel: venta sin cliente y paquete de 600 unidades muestran su aviso sin abrir la confirmación) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
 
-70 pruebas unitarias y de rutas con `node:test` (70 aprobadas el 2026-10-28):
+72 pruebas unitarias y de rutas con `node:test` (72 aprobadas el 2026-11-04):
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -64,6 +64,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 16 claves foráneas con la regla de borrado.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
+- `longitudes.test.js` (2): un texto más largo que su columna se rechaza con 400 y la variante respeta el largo de medida, calibre y color.
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 48 rutas registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
@@ -84,12 +85,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-10-28:
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-04:
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 64,8 % | 73,1 % | 52,1 % |
-| Unitarias + E2E | 81,8 % | 76,0 % | 81,5 % |
+| Unitarias | 65,2 % | 73,5 % | 52,4 % |
+| Unitarias + E2E | 82,2 % | 76,2 % | 81,6 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

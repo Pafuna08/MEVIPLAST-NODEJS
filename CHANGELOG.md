@@ -28,6 +28,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Security
 
+- Los formularios ya no usan atributos de validación en el HTML (`required`, `maxlength`, `minlength`, `min`, `max`, `step`, `type="email"`), por indicación del instructor. El panel valida con su propio código (campo obligatorio, largo, número positivo, correo) y muestra «Completa el campo …»; el servidor sigue validando todo y ahora rechaza con 400 los textos más largos que su columna (`validarLongitudes`, y medida, calibre y color de las variantes), en lugar de fallar al guardarlos.
 - La API solo acepta llamadas de otros dominios listados en `CORS_ORIGINS`.
 - El token de un usuario desactivado, eliminado o con el rol cambiado deja de servir de inmediato (401), en lugar de seguir vigente hasta 8 horas.
 - Un token vencido o inválido responde 401 en lugar de 403, para que el panel cierre la sesión y lleve al login.

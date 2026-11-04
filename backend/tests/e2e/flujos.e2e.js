@@ -308,6 +308,16 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     });
     assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
     const variante = ingreso.body.id;
+    // Sin límites en el HTML: el servidor rechaza textos más largos que su columna
+    const medidaLarga = await llamar("POST", "/inventario", tokens.almacenista, {
+      familia: "Sencilla PP", medida: "8".repeat(41), calibre: "1", color: "Natural", cantidad: 10,
+    });
+    assert.equal(medidaLarga.status, 400, JSON.stringify(medidaLarga.body));
+    const clienteLargo = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "C".repeat(121), inventario_id: variante, cantidad_paquetes: 1, unidades_paquete: 1, precio_paquete: 100,
+    });
+    assert.equal(clienteLargo.status, 400);
+    assert.match(clienteLargo.body.mensaje, /máximo 120 caracteres/);
     const sinMotivo = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5 });
     assert.equal(sinMotivo.status, 400);
     const otroSinDetalle = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5, motivo: "Otro" });

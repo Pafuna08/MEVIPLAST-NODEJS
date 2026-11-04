@@ -18,10 +18,10 @@
         <p id="recovery-description">Ingresa el correo registrado y elige si quieres recuperar tu contraseña o tu nombre de usuario.</p>
       </div>
 
-      <form id="account-recovery-form" class="recovery-form">
+      <form id="account-recovery-form" class="recovery-form" novalidate>
         <div class="field">
           <label for="recovery-email">Correo electrónico</label>
-          <input id="recovery-email" name="correo" type="email" autocomplete="email" maxlength="254" required>
+          <input id="recovery-email" name="correo" type="text" inputmode="email" autocomplete="email">
         </div>
         <div class="recovery-actions">
           <button class="login-button" id="recover-password" type="button">Recuperar contraseña</button>
@@ -30,14 +30,14 @@
         <p class="login-status" id="recovery-status" role="status" aria-live="polite"></p>
       </form>
 
-      <form id="reset-password-form" class="recovery-form">
+      <form id="reset-password-form" class="recovery-form" novalidate>
         <div class="field">
           <label for="new-password">Nueva contraseña</label>
-          <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+          <input id="new-password" name="password" type="password" autocomplete="new-password">
         </div>
         <div class="field">
           <label for="confirm-password">Confirmar contraseña</label>
-          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password">
         </div>
         <button class="login-button" type="submit">Cambiar contraseña</button>
         <p class="login-status" id="reset-status" role="status" aria-live="polite"></p>

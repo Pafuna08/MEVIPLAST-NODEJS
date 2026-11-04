@@ -335,12 +335,111 @@ function Field({ label, children }) {
   return <label>{label}{children}</label>;
 }
 
-function FormPanel({ title, onSubmit, children, saving }) {
+// Campos obligatorios: se revisan aquí, sin atributos de validación ni otras marcas en el HTML.
+// El servidor vuelve a validar cada dato; esto solo evita enviar formularios incompletos.
+const VARIANT_FIELDS = ["medida", "calibre", "color"];
+
+// Reglas de cada campo (largo según la columna en la base, números positivos y correo); el servidor las repite
+const FIELD_RULES = {
+  nombre: { max: 120 },
+  usuario: { max: 50 },
+  correo: { max: 254, email: true },
+  password: { min: 6 },
+  cliente: { max: 120 },
+  medida: { max: 40 },
+  calibre: { max: 40 },
+  color: { max: 80 },
+  ubicacion: { max: 80 },
+  detalle: { max: 200 },
+  observaciones: { max: 255 },
+  cantidad: { positive: true },
+  peso_rollo: { positive: true },
+  precio_paquete: { positive: true },
+  cantidad_paquetes: { positive: true, integer: true },
+  unidades_paquete: { positive: true, integer: true, maxValue: 500 },
+};
+
+function ruleError(field, rule) {
+  const value = String(field.value ?? "").trim();
+  if (!value) return "";
+  const label = fieldLabel(field);
+  if (rule.max && value.length > rule.max) return `«${label}» admite máximo ${rule.max} caracteres.`;
+  if (rule.min && value.length < rule.min) return `«${label}» debe tener al menos ${rule.min} caracteres.`;
+  if (rule.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return `«${label}» no es un correo válido.`;
+  if (rule.positive) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number <= 0) return `«${label}» debe ser un número mayor que cero.`;
+    if (rule.integer && !Number.isInteger(number)) return `«${label}» debe ser un número entero.`;
+    if (rule.maxValue && number > rule.maxValue) return `«${label}» admite como máximo ${rule.maxValue}.`;
+  }
+  return "";
+}
+
+// Primer campo con un valor fuera de su regla; limits ajusta el largo en formularios puntuales
+function invalidField(form, limits = {}) {
+  for (const field of form.elements) {
+    const rule = FIELD_RULES[field.name];
+    if (!rule) continue;
+    const message = ruleError(field, limits[field.name] ? { ...rule, max: limits[field.name] } : rule);
+    if (message) return { field, message };
+  }
+  return null;
+}
+
+function missingField(form, names) {
+  for (const name of names) {
+    const field = form.elements.namedItem(name);
+    if (field && !String(field.value ?? "").trim()) return field;
+  }
+  return null;
+}
+
+function fieldLabel(field) {
+  // «Detalle (obligatorio)» → «Detalle»
+  const text = field.closest("label")?.firstChild?.textContent?.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  return text || "obligatorio";
+}
+
+// Devuelve el aviso vigente y la función que revisa el formulario al enviarlo
+function useObligatorios() {
+  const [warning, setWarning] = useState({ key: null, text: "" });
+  function check(event, names, key = "form", limits = {}) {
+    const missing = missingField(event.currentTarget, names);
+    const invalid = missing
+      ? { field: missing, message: `Completa el campo «${fieldLabel(missing)}».` }
+      : invalidField(event.currentTarget, limits);
+    if (!invalid) {
+      setWarning({ key: null, text: "" });
+      return true;
+    }
+    event.preventDefault();
+    setWarning({ key, text: invalid.message });
+    invalid.field.classList.add("field-invalid");
+    invalid.field.focus();
+    return false;
+  }
+  return [warning, check];
+}
+
+function clearInvalid(event) {
+  event.target.classList?.remove("field-invalid");
+}
+
+function FormPanel({ title, onSubmit, children, saving, obligatorios = [], limites = {} }) {
+  const [warning, check] = useObligatorios();
   return (
     <section className="panel form-panel">
       <header className="panel-header"><h3>{title}</h3></header>
-      <form className="data-form" onSubmit={onSubmit}>
+      <form
+        className="data-form"
+        noValidate
+        onInput={clearInvalid}
+        onSubmit={(event) => {
+          if (check(event, obligatorios, "form", limites)) onSubmit(event);
+        }}
+      >
         {children}
+        {warning.text && <p className="form-error" role="alert">{warning.text}</p>}
         <button className="primary-action" type="submit" disabled={saving}>
           {saving ? "Guardando..." : "Guardar"}
         </button>
@@ -381,13 +480,13 @@ function orderVariant(order) {
 
 function VariantFields({ idPrefix, order }) {
   const suggestions = [
-    ["medida", "Medida", 40, ["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"]],
-    ["calibre", "Calibre", 40, ["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"]],
-    ["color", "Color", 80, ["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"]],
+    ["medida", "Medida", ["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"]],
+    ["calibre", "Calibre", ["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"]],
+    ["color", "Color", ["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"]],
   ];
-  return suggestions.map(([name, label, maxLength, values]) => (
+  return suggestions.map(([name, label, values]) => (
     <Field key={name} label={label}>
-      <input name={name} list={`${idPrefix}-${name}`} maxLength={maxLength} defaultValue={order?.[name] || ""} required />
+      <input name={name} list={`${idPrefix}-${name}`} defaultValue={order?.[name] || ""} />
       <datalist id={`${idPrefix}-${name}`}>
         {values.map((value) => <option key={value} value={value} />)}
       </datalist>
@@ -1187,20 +1286,21 @@ function Users({
   const lockedUntil = (user) =>
     new Date(user.bloqueado_hasta).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
   const [emailUser, setEmailUser] = useState(null);
+  const [emailWarning, checkEmail] = useObligatorios();
   return (
     <>
       <Intro title="Gestión de usuarios" description="Crea cuentas, activa o desactiva accesos y administra los usuarios del sistema." />
-      <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving}>
-        <Field label="Nombre"><input name="nombre" maxLength="120" required /></Field>
-        <Field label="Usuario"><input name="usuario" maxLength="50" required /></Field>
-        <Field label="Correo electrónico"><input name="correo" type="email" maxLength="254" autoComplete="email" required /></Field>
-        <Field label="Contraseña"><input name="password" type="password" minLength="6" required /></Field>
+      <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving} obligatorios={["nombre", "usuario", "correo", "password"]}>
+        <Field label="Nombre"><input name="nombre" /></Field>
+        <Field label="Usuario"><input name="usuario" /></Field>
+        <Field label="Correo electrónico"><input name="correo" type="text" inputMode="email" autoComplete="email" /></Field>
+        <Field label="Contraseña"><input name="password" type="password" /></Field>
         <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
       </FormPanel>
       <Panel title="Usuarios registrados">
         <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({
           key: user.id,
-          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <form className="inline-email-form" onSubmit={async (event) => { event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="email" maxLength="254" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} required /><button className="text-action primary" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action after-text" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}{Number(user.bloqueado) ? ` · Bloqueado hasta las ${lockedUntil(user)}` : ""}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{Number(user.bloqueado) ? <button className="text-action" type="button" onClick={() => onUnlock(user)}>Desbloquear</button> : null}{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
+          cells: <><td>{sanitizeText(user.nombre)}</td><td>{sanitizeText(user.usuario)}</td><td>{emailUser === user.id ? <><form className="inline-email-form" noValidate onInput={clearInvalid} onSubmit={async (event) => { if (!checkEmail(event, ["correo"])) return; event.preventDefault(); const correo = new FormData(event.currentTarget).get("correo"); if (await onUpdateEmail(user.id, correo)) setEmailUser(null); }}><input name="correo" type="text" inputMode="email" defaultValue={user.correo || ""} aria-label={`Correo de ${user.usuario}`} /><button className="text-action primary" type="submit">Guardar correo</button><button className="text-action" type="button" onClick={() => setEmailUser(null)}>Cancelar</button></form>{emailWarning.text && <span className="form-error" role="alert">{emailWarning.text}</span>}</> : <>{sanitizeText(user.correo || "Sin correo registrado")}<button className="text-action after-text" type="button" onClick={() => setEmailUser(user.id)}>{user.correo ? "Cambiar" : "Agregar correo"}</button></>}</td><td>{roleName(user.rol)}</td><td>{user.activo ? "Activo" : "Inactivo"}{Number(user.bloqueado) ? ` · Bloqueado hasta las ${lockedUntil(user)}` : ""}</td><td><div className="inline-actions"><button className="text-action" type="button" onClick={() => onToggle(user)}>{user.activo ? "Desactivar" : "Activar"}</button>{Number(user.bloqueado) ? <button className="text-action" type="button" onClick={() => onUnlock(user)}>Desbloquear</button> : null}{role === "admin" && user.usuario !== username && <button className="text-action danger" type="button" onClick={() => onDelete(user)}>Eliminar</button>}</div></td></>,
         }))} />
       </Panel>
     </>
@@ -1234,53 +1334,53 @@ function Materials({ data, role, onSubmit, saving }) {
   return (
     <>
       <Intro title="Materias primas" description="Registra bobinas, compras, ajustes y consumos, y consulta existencias por material, medida, calibre y color." />
-      {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving}>
+      {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving} obligatorios={["materia_prima_id", "tipo", "produccion_id", "cantidad"]}>
         <Field label="Materia prima">
-          <select name="materia_prima_id" value={selectedMaterialId} onChange={(event) => setMaterialId(event.target.value)} required>
+          <select name="materia_prima_id" value={selectedMaterialId} onChange={(event) => setMaterialId(event.target.value)}>
             {data.materials.map((item) => <option key={item.id} value={item.id}>{materialLabel(item)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}
           </select>
         </Field>
         <Field label="Movimiento">
-          <select name="tipo" value={movementType} onChange={(event) => setMovementType(event.target.value)} required>
+          <select name="tipo" value={movementType} onChange={(event) => setMovementType(event.target.value)}>
             {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </Field>
         {movementType === "consumo_produccion" && <Field label="Orden que usa esta bobina">
-          <select name="produccion_id" required>
+          <select name="produccion_id">
             {consumableOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} ({order.estado === "en_proceso" ? "en proceso" : order.estado})</option>)}
             {!consumableOrders.length && <option value="">No hay órdenes activas que usen esta bobina</option>}
           </select>
         </Field>}
-        <Field label="Cantidad (kg)"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Observaciones"><input name="observaciones" maxLength="255" /></Field>
+        <Field label="Cantidad (kg)"><input name="cantidad" type="number" /></Field>
+        <Field label="Observaciones"><input name="observaciones" /></Field>
       </FormPanel>}
-      {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving}>
+      {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving} obligatorios={["tipo", ...VARIANT_FIELDS, "peso_rollo"]} limites={{ medida: 80 }}>
         <Field label="Material">
-          <select name="tipo" defaultValue="" required>
+          <select name="tipo" defaultValue="">
             <option value="" disabled>Selecciona un material</option>
             {polymerMaterials.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </Field>
         <Field label="Medida (ancho x largo)">
-          <input name="medida" list="materia-medidas" maxLength="80" required />
+          <input name="medida" list="materia-medidas" />
           <datalist id="materia-medidas">
             {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Calibre">
-          <input name="calibre" list="materia-calibres" maxLength="40" required />
+          <input name="calibre" list="materia-calibres" />
           <datalist id="materia-calibres">
             {["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Color">
-          <input name="color" list="materia-colores" maxLength="80" required />
+          <input name="color" list="materia-colores" />
           <datalist id="materia-colores">
             {["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"].map((value) => <option key={value} value={value} />)}
           </datalist>
         </Field>
         <Field label="Peso del rollo (kg)">
-          <input name="peso_rollo" type="number" min="0.01" step="0.01" required />
+          <input name="peso_rollo" type="number" />
         </Field>
       </FormPanel>}
       <Panel title="Materiales registrados"><DataTable columns={["Material", "Medida", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
@@ -1300,24 +1400,24 @@ function Inventory({ data, onSubmit, saving }) {
   return (
     <>
       <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
-      <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving}>
-        <Field label="Línea de producto"><select name="familia" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
-        <Field label="Medida"><input name="medida" maxLength="40" required /></Field>
-        <Field label="Calibre"><input name="calibre" maxLength="40" required /></Field>
-        <Field label="Color"><input name="color" maxLength="80" required /></Field>
-        <Field label="Unidades"><input name="cantidad" type="number" min="1" step="1" required /></Field>
-        <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" maxLength="80" /></Field>
+      <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving} obligatorios={["familia", ...VARIANT_FIELDS, "cantidad"]}>
+        <Field label="Línea de producto"><select name="familia" defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+        <Field label="Medida"><input name="medida" /></Field>
+        <Field label="Calibre"><input name="calibre" /></Field>
+        <Field label="Color"><input name="color" /></Field>
+        <Field label="Unidades"><input name="cantidad" type="number" /></Field>
+        <Field label="Ubicación"><input name="ubicacion" defaultValue="Bodega A" /></Field>
       </FormPanel>
-      <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><select name="inventario_id" required>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
-        <Field label="Cantidad"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
+      <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving} obligatorios={["inventario_id", "cantidad", "motivo", ...(exitReason === "Otro" ? ["detalle"] : [])]}>
+        <Field label="Producto"><select name="inventario_id">{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Cantidad"><input name="cantidad" type="number" /></Field>
         <Field label="Motivo">
-          <select name="motivo" value={exitReason} onChange={(event) => setExitReason(event.target.value)} required>
+          <select name="motivo" value={exitReason} onChange={(event) => setExitReason(event.target.value)}>
             <option value="" disabled>Selecciona el motivo</option>
             {exitReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}
           </select>
         </Field>
-        <Field label={exitReason === "Otro" ? "Detalle (obligatorio)" : "Detalle (opcional)"}><input name="detalle" maxLength="200" required={exitReason === "Otro"} /></Field>
+        <Field label={exitReason === "Otro" ? "Detalle (obligatorio)" : "Detalle (opcional)"}><input name="detalle" /></Field>
       </FormPanel>
       <Panel title="Productos disponibles"><DataTable columns={["Línea", "Medida", "Calibre", "Color", "Unidades", "Ubicación"]} rows={data.items.map((item) => ({ key: item.id, cells: <><td>{sanitizeText(item.familia)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{number(item.cantidad)}</td><td>{sanitizeText(item.ubicacion || "—")}</td></> }))} /></Panel>
       <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Producto", "Movimiento", "Cantidad", "Venta / orden", "Motivo / observación"]} rows={data.movements.map((movement) => ({
@@ -1341,6 +1441,7 @@ function Production({
   onDeleteTemplate,
 }) {
   const [editingOrder, setEditingOrder] = useState(null);
+  const [inlineWarning, checkInline] = useObligatorios();
   const [cancelTarget, setCancelTarget] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const orders = Array.isArray(data) ? data : data.orders;
@@ -1407,6 +1508,7 @@ function Production({
           </Panel>
           <FormPanel
             title="Nueva orden de producción"
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad"]}
             onSubmit={(event) => {
               setSelectedTemplateId("");
               onSubmit(event);
@@ -1424,7 +1526,6 @@ function Production({
                 key={`producto-${selectedTemplateId}`}
                 name="producto"
                 defaultValue={safeProductName(selectedTemplate?.producto) || ""}
-                required
               >
                 <option value="" disabled>Selecciona una línea</option>
                 {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
@@ -1436,10 +1537,7 @@ function Production({
                 key={`cantidad-${selectedTemplateId}`}
                 name="cantidad"
                 type="number"
-                min="0.01"
-                step="0.01"
                 defaultValue={selectedTemplate?.cantidad || ""}
-                required
               />
             </Field>
             <Field label="Materia prima">
@@ -1468,6 +1566,7 @@ function Production({
           </FormPanel>
           <FormPanel
             title="Guardar plantilla frecuente"
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad"]}
             onSubmit={async (event) => {
               event.preventDefault();
               const payload = sanitizePayload(
@@ -1479,11 +1578,11 @@ function Production({
             saving={false}
           >
             <Field label="Producto">
-              <select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
+              <select name="producto" defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
             </Field>
             <VariantFields idPrefix="plantilla-nueva" />
             <Field label="Meta habitual">
-              <input name="cantidad" type="number" min="0.01" step="0.01" required />
+              <input name="cantidad" type="number" />
             </Field>
             <Field label="Materia prima">
               <select name="materia_prima_id" defaultValue="">
@@ -1519,18 +1618,22 @@ function Production({
               <form
                 className="data-form order-edit"
                 aria-label={`Editar orden #${order.id}`}
+                noValidate
+                onInput={clearInvalid}
                 onSubmit={async (event) => {
+                  if (!checkInline(event, ["producto", ...VARIANT_FIELDS, "cantidad"], `editar-${order.id}`)) return;
                   event.preventDefault();
                   const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
                   // Se cierra solo si se guardó; si falla, el formulario conserva lo escrito
                   if (await onEditOrder(order.id, payload)) setEditingOrder(null);
                 }}
               >
-                <Field label="Producto"><select name="producto" defaultValue={order.producto} required>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+                <Field label="Producto"><select name="producto" defaultValue={order.producto}>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
                 <VariantFields idPrefix={`orden-${order.id}`} order={order} />
-                <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" defaultValue={order.cantidad} required /></Field>
+                <Field label="Meta"><input name="cantidad" type="number" defaultValue={order.cantidad} /></Field>
                 <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
                 <Field label="Prioridad"><select name="prioridad" defaultValue={order.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
+                {inlineWarning.key === `editar-${order.id}` && <p className="form-error" role="alert">{inlineWarning.text}</p>}
                 <button className="primary-action secondary" type="button" onClick={() => setEditingOrder(null)}>Descartar cambios</button>
                 <button className="primary-action" type="submit">Guardar cambios</button>
               </form>
@@ -1538,20 +1641,24 @@ function Production({
             {(isSupervisor || isAdmin) && !order.responsable_id && order.estado === "pendiente" && (
               <form
                 className="data-form"
+                noValidate
+                onInput={clearInvalid}
                 onSubmit={(event) => {
+                  if (!checkInline(event, ["responsable_id"], `asignar-${order.id}`)) return;
                   event.preventDefault();
                   const responsableId = new FormData(event.currentTarget).get("responsable_id");
                   onAssignOrder(order.id, responsableId);
                 }}
               >
                 <Field label={isAdmin ? `Asignar operario a la orden #${order.id} (si falta el supervisor)` : `Asignar operario a la orden #${order.id}`}>
-                  <select name="responsable_id" required defaultValue="">
+                  <select name="responsable_id" defaultValue="">
                     <option value="" disabled>Selecciona un operario</option>
                     {data.operators.map((operator) => (
                       <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>
                     ))}
                   </select>
                 </Field>
+                {inlineWarning.key === `asignar-${order.id}` && <p className="form-error" role="alert">{inlineWarning.text}</p>}
                 <button className="primary-action" type="submit" disabled={!data.operators.length}>
                   Asignar operario
                 </button>
@@ -1725,11 +1832,11 @@ function Assign({ data, onSubmit, saving }) {
   return (
     <>
       <Intro title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
-      <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving}>
-        <Field label="Producto"><select name="producto" required defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+      <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving} obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "responsable_id"]}>
+        <Field label="Producto"><select name="producto" defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
         <VariantFields idPrefix="tarea-nueva" />
-        <Field label="Meta"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Operario"><select name="responsable_id" required>{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
+        <Field label="Meta"><input name="cantidad" type="number" /></Field>
+        <Field label="Operario"><select name="responsable_id">{data.operators.map((operator) => <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>)}</select></Field>
         <Field label="Materia prima"><select name="materia_prima_id"><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
         <Field label="Prioridad"><select name="prioridad" defaultValue="media"><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
       </FormPanel>
@@ -1752,10 +1859,10 @@ function Advance({ data, onSubmit, saving }) {
   return (
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
-      <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving}>
-        <Field label="Orden"><select name="id" required defaultValue={chosenOrder}>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
-        <Field label="Cantidad producida"><input name="cantidad" type="number" min="0.01" step="0.01" required /></Field>
-        <Field label="Observaciones"><textarea name="observaciones" rows="3" maxLength="255" /></Field>
+      <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving} obligatorios={["id", "cantidad"]}>
+        <Field label="Orden"><select name="id" defaultValue={chosenOrder}>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Cantidad producida"><input name="cantidad" type="number" /></Field>
+        <Field label="Observaciones"><textarea name="observaciones" rows="3" /></Field>
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}
       </FormPanel>
     </>
@@ -1798,8 +1905,8 @@ function Sales({ data, onSubmit, saving, onReceipt }) {
           );
         })}
       </div>
-      <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving}>
-        <Field label="Cliente"><input name="cliente" maxLength="120" required /></Field>
+      <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving} obligatorios={["cliente", "inventario_id", "unidades_paquete", "cantidad_paquetes", "precio_paquete"]}>
+        <Field label="Cliente"><input name="cliente" /></Field>
         <Field label="Línea de producto">
           <select value={selectedFamily} onChange={(event) => {
             const family = event.target.value;
@@ -1815,7 +1922,7 @@ function Sales({ data, onSubmit, saving, onReceipt }) {
             const item = products.find((product) => String(product.id) === event.target.value);
             if (item) setSelectedFamily(item.familia);
             setSelectedInventoryId(event.target.value);
-          }} required>
+          }}>
             {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
               <option key={item.id} value={item.id}>{item.medida || "Sin medida"} · calibre {item.calibre || "Sin especificar"} · {item.color || "Sin especificar"} · {number(item.cantidad)} unidades</option>
             ))}
@@ -1828,9 +1935,9 @@ function Sales({ data, onSubmit, saving, onReceipt }) {
           <div><small>COLOR</small><span>{sanitizeText(selectedProduct.color || "Sin especificar")}</span></div>
           <div><small>DISPONIBLE</small><span>{number(selectedProduct.cantidad)} unidades</span></div>
         </div>}
-        <Field label="Unidades por paquete (máximo 500)"><input name="unidades_paquete" type="number" min="1" max="500" step="1" defaultValue="50" required /></Field>
-        <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" min="1" step="1" required /></Field>
-        <Field label="Precio por paquete"><input name="precio_paquete" type="number" min="0.01" step="0.01" required /></Field>
+        <Field label="Unidades por paquete (máximo 500)"><input name="unidades_paquete" type="number" defaultValue="50" /></Field>
+        <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" /></Field>
+        <Field label="Precio por paquete"><input name="precio_paquete" type="number" /></Field>
       </FormPanel>
       <Panel title="Ventas registradas"><DataTable columns={["Cliente", "Producto", "Medida", "Calibre", "Color", "Presentación", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.cliente)}</td><td>{sanitizeText(sale.familia || sale.producto)}</td><td>{sanitizeText(sale.medida || "—")}</td><td>{sanitizeText(sale.calibre || "—")}</td><td>{sanitizeText(sale.color || "—")}</td><td>{packagesLabel(sale)}</td><td>{number(sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
     </>

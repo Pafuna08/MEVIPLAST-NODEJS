@@ -174,7 +174,17 @@ const FLUJOS = [
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "vendedor");
     const form = formulario(pagina, "Nueva venta");
+    // Sin el atributo required: el panel avisa del campo vacío y no abre la confirmación
+    await form.locator("button[type=submit]").click();
+    await form.locator(".form-error", { hasText: "Cliente" }).waitFor({ timeout: 10000 });
+    if (await pagina.locator(".confirm-modal").count()) throw new Error("se abrió la confirmación con campos vacíos");
     await form.locator("input[name=cliente]").fill(`Cliente ${nombre}`);
+    // Sin el atributo max: el panel avisa que el paquete admite como máximo 500 unidades
+    await form.locator("input[name=unidades_paquete]").fill("600");
+    await form.locator("input[name=cantidad_paquetes]").fill("1");
+    await form.locator("input[name=precio_paquete]").fill("1500");
+    await form.locator("button[type=submit]").click();
+    await form.locator(".form-error", { hasText: "500" }).waitFor({ timeout: 10000 });
     await form.locator("input[name=unidades_paquete]").fill("50");
     await form.locator("input[name=cantidad_paquetes]").fill("2");
     await form.locator("input[name=precio_paquete]").fill("1500");
