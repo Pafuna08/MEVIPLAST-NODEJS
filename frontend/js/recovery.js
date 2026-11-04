@@ -38,14 +38,26 @@ accountForm.addEventListener("submit", (event) => {
   event.preventDefault();
 });
 
+// Validación propia (sin atributos de validación en el HTML); el servidor vuelve a validar el correo
+function validEmail() {
+  const correo = recoveryEmail.value.trim();
+  if (correo.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    recoveryStatus.classList.remove("success-message");
+    recoveryStatus.textContent = correo ? "Escribe un correo electrónico válido." : "Escribe el correo registrado.";
+    recoveryEmail.focus();
+    return null;
+  }
+  return correo;
+}
+
 document.querySelector("#recover-password").addEventListener("click", () => {
-  if (!accountForm.reportValidity()) return;
-  sendRequest("recuperar-password", recoveryEmail.value, recoveryStatus);
+  const correo = validEmail();
+  if (correo) sendRequest("recuperar-password", correo, recoveryStatus);
 });
 
 document.querySelector("#recover-username").addEventListener("click", () => {
-  if (!accountForm.reportValidity()) return;
-  sendRequest("recordar-usuario", recoveryEmail.value, recoveryStatus);
+  const correo = validEmail();
+  if (correo) sendRequest("recordar-usuario", correo, recoveryStatus);
 });
 
 resetForm.addEventListener("submit", async (event) => {
@@ -54,6 +66,10 @@ resetForm.addEventListener("submit", async (event) => {
   const confirmation = document.querySelector("#confirm-password").value;
   const status = document.querySelector("#reset-status");
   status.classList.remove("success-message");
+  if (password.length < 8 || password.length > 128) {
+    status.textContent = "La contraseña debe tener entre 8 y 128 caracteres.";
+    return;
+  }
   if (password !== confirmation) {
     status.textContent = "Las contraseñas no coinciden.";
     return;

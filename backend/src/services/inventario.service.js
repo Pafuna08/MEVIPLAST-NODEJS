@@ -37,6 +37,14 @@ function validarVariante({ familia, medida, calibre, color }) {
       throw error;
     }
   }
+  // Largo de las columnas de inventario y producción (schema.sql)
+  for (const [campo, valor, maximo] of [["medida", medida, 40], ["calibre", calibre, 40], ["color", color, 80]]) {
+    if (valor.trim().length > maximo) {
+      const error = new Error(`${campo} admite máximo ${maximo} caracteres`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
   const producto = `${familia} · ${medida.trim()} · calibre ${calibre.trim()} · ${color.trim()}`;
   if (producto.length > 255) {
     const error = new Error("Las especificaciones son demasiado largas");

@@ -601,6 +601,24 @@ th {
   gap: 10px;
 }
 
+/* Aviso de campo obligatorio vacío (validación propia del panel) */
+.form-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #9a2631;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.data-form .field-invalid,
+.inline-email-form .field-invalid {
+  border-color: #c9303e;
+  box-shadow: 0 0 0 2px rgba(201, 48, 62, 0.15);
+}
+.data-form .field-invalid:focus,
+.inline-email-form .field-invalid:focus {
+  outline: 2px solid #c9303e;
+  outline-offset: 0;
+}
 .form-hint-wide {
   grid-column: 1 / -1;
 }
