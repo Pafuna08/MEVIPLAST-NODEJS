@@ -61,6 +61,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- `db:init` explica por qué falla cuando MySQL está apagado, no existe el servidor o se rechaza el usuario; antes mostraba el error vacío (DEF-016). En una base nueva ya no avisa de migraciones pendientes: las registra como aplicadas porque `schema.sql` trae el esquema final; en una base existente lista solo las que faltan (DEF-017). Hallados en la instalación limpia del 2026-11-08 (EV-2026-11-08-01); el README lista ahora las cuentas de demostración.
 - `db:init` crea una cuenta de demostración por rol (antes faltaban vendedor y almacenista) y carga las existencias DEMO de producto terminado, que antes quedaban en cero (DEF-014). Hallado en la prueba de instalación limpia.
 - `db:init` buscaba las migraciones en una ruta inexistente, así que `DB_APPLY_MIGRATIONS=true` no aplicaba nada ni mostraba aviso (DEF-015).
 - Formulario «Registrar movimiento» de materias primas, retirado por error en el cambio de catálogos (DEF-013): compras y ajustes para administrador y almacenista, y consumo en una orden activa que usa la bobina para administrador y supervisor.
