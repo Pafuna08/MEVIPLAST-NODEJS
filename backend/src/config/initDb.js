@@ -10,19 +10,33 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const mysql = require("mysql2/promise");
-const { leerEsquema, validarNombreBase } = require("./schema");
+const {
+  leerEsquema,
+  validarNombreBase,
+  describirErrorBase,
+  migracionesPendientes,
+} = require("./schema");
 require("dotenv").config();
+
+const servidor = {
+  host: process.env.DB_HOST || "localhost",
+  port: process.env.DB_PORT || 3306,
+};
 
 async function main() {
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 3306,
+    ...servidor,
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
     multipleStatements: true,
   });
 
   const nombreBase = validarNombreBase(process.env.DB_NAME || "meviplast_db");
+  const [existentes] = await connection.query(
+    "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?",
+    [nombreBase],
+  );
+  const baseNueva = existentes.length === 0;
   console.log(`Ejecutando sql/schema.sql en ${nombreBase} ...`);
   await connection.query(
     `CREATE DATABASE IF NOT EXISTS \`${nombreBase}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
@@ -203,6 +217,31 @@ async function main() {
   }
 
   const migracionesPath = path.join(__dirname, "..", "..", "sql", "migrations");
+  const archivosMigracion = fs.existsSync(migracionesPath)
+    ? fs.readdirSync(migracionesPath).filter((file) => file.endsWith(".sql"))
+    : [];
+  const crearTablaMigraciones = () =>
+    connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(255) NOT NULL UNIQUE,
+      aplicada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+  // Una base nueva ya tiene el esquema final de schema.sql: las migraciones
+  // solo sirven para bases anteriores, así que se registran como aplicadas.
+  if (baseNueva && archivosMigracion.length) {
+    await crearTablaMigraciones();
+    for (const migracion of archivosMigracion) {
+      await connection.query(
+        "INSERT IGNORE INTO schema_migrations (nombre) VALUES (?)",
+        [migracion],
+      );
+    }
+    console.log(
+      `Base nueva: schema.sql ya incluye las ${archivosMigracion.length} migraciones; quedaron registradas en schema_migrations.`,
+    );
+  }
+
   if (
     fs.existsSync(migracionesPath) &&
     process.env.DB_APPLY_MIGRATIONS === "true"
@@ -212,15 +251,8 @@ async function main() {
         "Confirma un respaldo verificado con DB_BACKUP_CONFIRMED=true antes de aplicar migraciones",
       );
     }
-    await connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      nombre VARCHAR(255) NOT NULL UNIQUE,
-      aplicada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`);
-    const migraciones = fs
-      .readdirSync(migracionesPath)
-      .filter((file) => file.endsWith(".sql"))
-      .sort();
+    await crearTablaMigraciones();
+    const migraciones = [...archivosMigracion].sort();
     for (const migracion of migraciones) {
       const [aplicadas] = await connection.query(
         "SELECT id FROM schema_migrations WHERE nombre = ?",
@@ -238,10 +270,25 @@ async function main() {
       );
       console.log(`Migracion aplicada: ${migracion}`);
     }
-  } else if (fs.existsSync(migracionesPath)) {
-    console.warn(
-      "Migraciones pendientes omitidas. Revisa un respaldo verificado y configura DB_APPLY_MIGRATIONS=true y DB_BACKUP_CONFIRMED=true para autorizarlas.",
+  } else if (!baseNueva && archivosMigracion.length) {
+    const [tabla] = await connection.query(
+      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'schema_migrations'",
+      [nombreBase],
     );
+    const [registradas] = tabla.length
+      ? await connection.query("SELECT nombre FROM schema_migrations")
+      : [[]];
+    const pendientes = migracionesPendientes(
+      archivosMigracion,
+      registradas.map((fila) => fila.nombre),
+    );
+    if (pendientes.length) {
+      console.warn(
+        `Migraciones pendientes omitidas (${pendientes.length}): ${pendientes.join(", ")}. Revisa un respaldo verificado y configura DB_APPLY_MIGRATIONS=true y DB_BACKUP_CONFIRMED=true para autorizarlas.`,
+      );
+    } else {
+      console.log("Sin migraciones pendientes.");
+    }
   }
 
   console.log("Base de datos inicializada correctamente.");
@@ -250,6 +297,9 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("Error al inicializar la base de datos:", error.message);
+  console.error(
+    "Error al inicializar la base de datos:",
+    describirErrorBase(error, servidor),
+  );
   process.exit(1);
 });
