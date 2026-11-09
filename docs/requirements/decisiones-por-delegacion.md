@@ -50,5 +50,5 @@ El acta reservaba DEF-016 a DEF-020 para los hallazgos de la sesión. Como la se
 ## Qué no cubre este registro
 
 - No es la aceptación firmada por MEVIPLAST ni su medición de usabilidad.
-- No sustituye la repetición de la instalación por Carlos Herrera Sibaja en su equipo (RNF-009) ni la revisión del instructor.
+- No sustituye la revisión del instructor. La instalación por una persona distinta al autor (RNF-009) la hizo Carlos Herrera Sibaja en su equipo (EV-2026-11-08-05).
 - Si MEVIPLAST pide otra cosa más adelante, se tramita como un cambio nuevo (CR-###).
