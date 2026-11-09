@@ -4,6 +4,7 @@ const reportesService = require("./reportes.service");
 const FORMATO_DINERO = '"$" #,##0';
 const FORMATO_UNIDADES = "#,##0";
 const FORMATO_FECHA = "dd/mm/yyyy hh:mm";
+const FORMATO_PORCENTAJE = "0.0";
 
 // Columnas de cada reporte: [encabezado, campo, ancho, formato]
 const COLUMNAS = {
@@ -31,6 +32,29 @@ const COLUMNAS = {
       ["Total", "total", 16, FORMATO_DINERO],
     ],
     resumen: (r) => [["Número de ventas", r.numero_ventas, FORMATO_UNIDADES], ["Unidades vendidas", r.unidades, FORMATO_UNIDADES], ["Total vendido", r.total_vendido, FORMATO_DINERO]],
+  },
+  // HU-022: una sola hoja con una fila por operario
+  rendimiento: {
+    titulo: "Rendimiento",
+    cargar: (periodo, ahora) => reportesService.rendimientoOperarios(periodo, ahora),
+    hojas: [
+      ["Por operario", "operarios", [
+        ["Operario", "nombre", 28],
+        ["Órdenes", "ordenes", 10, FORMATO_UNIDADES],
+        ["Finalizadas", "finalizadas", 12, FORMATO_UNIDADES],
+        ["Meta", "meta", 12, FORMATO_UNIDADES],
+        ["Producido", "producido", 12, FORMATO_UNIDADES],
+        ["Cumplimiento (%)", "cumplimiento", 18, FORMATO_PORCENTAJE],
+        ["Unidades registradas en el periodo", "unidades_periodo", 32, FORMATO_UNIDADES],
+      ]],
+    ],
+    resumen: (r) => [
+      ["Operarios activos", r.operarios, FORMATO_UNIDADES],
+      ["Órdenes del periodo", r.ordenes, FORMATO_UNIDADES],
+      ["Meta (unidades)", r.meta, FORMATO_UNIDADES],
+      ["Producido (unidades)", r.producido, FORMATO_UNIDADES],
+      ["Cumplimiento (%)", r.cumplimiento, FORMATO_PORCENTAJE],
+    ],
   },
 };
 
@@ -62,10 +86,12 @@ function hojaTabla(libro, nombre, columnas, filas) {
 
 async function libroDetalle(tipo, periodo, ahora = new Date()) {
   const config = COLUMNAS[tipo];
-  if (!config) throw new Error("El reporte debe ser de producción o de ventas");
-  const datos = tipo === "produccion"
-    ? await reportesService.detalleProduccion(periodo, ahora)
-    : await reportesService.detalleVentas(periodo, ahora);
+  if (!config) throw new Error("El reporte debe ser de producción, ventas o rendimiento");
+  const datos = config.cargar
+    ? await config.cargar(periodo, ahora)
+    : tipo === "produccion"
+      ? await reportesService.detalleProduccion(periodo, ahora)
+      : await reportesService.detalleVentas(periodo, ahora);
 
   const libro = new ExcelJS.Workbook();
   libro.creator = "MEVIPLAST";
@@ -79,11 +105,18 @@ async function libroDetalle(tipo, periodo, ahora = new Date()) {
   resumen.addRow(["Generado", fechaLocal(ahora)]).getCell(2).numFmt = FORMATO_FECHA;
   resumen.addRow([]);
   for (const [etiqueta, valor, numFmt] of config.resumen(datos.resumen)) {
-    resumen.addRow([etiqueta, Number(valor || 0)]).getCell(2).numFmt = numFmt;
+    // Sin meta no hay porcentaje: la celda queda vacía en lugar de 0
+    const celda = valor === null && numFmt === FORMATO_PORCENTAJE ? null : Number(valor || 0);
+    resumen.addRow([etiqueta, celda]).getCell(2).numFmt = numFmt;
   }
 
-  hojaTabla(libro, "Por producto", config.porProducto, datos.porProducto);
-  hojaTabla(libro, "Detalle", config.detalle, datos.detalle);
+  const hojas = config.hojas || [
+    ["Por producto", "porProducto", config.porProducto],
+    ["Detalle", "detalle", config.detalle],
+  ];
+  for (const [nombre, campo, columnas] of hojas) {
+    hojaTabla(libro, nombre, columnas, datos[campo]);
+  }
 
   return {
     buffer: Buffer.from(await libro.xlsx.writeBuffer()),

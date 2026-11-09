@@ -12,6 +12,8 @@ router.get("/produccion/detalle/excel", controller.excelProduccion);
 router.get("/ventas", controller.ventas);
 router.get("/ventas/detalle", controller.detalleVentas);
 router.get("/ventas/detalle/excel", controller.excelVentas);
+router.get("/rendimiento", controller.rendimiento);
+router.get("/rendimiento/excel", controller.excelRendimiento);
 router.get("/inventario", controller.inventario);
 router.get("/auditoria", verificarRol("admin"), controller.auditoria);
 

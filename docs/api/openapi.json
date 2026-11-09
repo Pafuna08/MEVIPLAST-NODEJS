@@ -2419,6 +2419,100 @@
         ]
       }
     },
+    "/reportes/rendimiento": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Cumplimiento de la meta por operario en el periodo calendario actual (HU-022)",
+        "x-requisitos": "RF-027",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ],
+        "description": "Por cada operario activo: órdenes asignadas y creadas en el periodo (sin las canceladas), finalizadas, meta, producido (limitado a la meta de cada orden), cumplimiento = producido / meta × 100 (null si no tiene órdenes) y unidades que registró en el periodo."
+      }
+    },
+    "/reportes/rendimiento/excel": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Cumplimiento de la meta por operario en Excel",
+        "x-requisitos": "RF-027, RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Excel"
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ]
+      }
+    },
     "/reportes/inventario": {
       "get": {
         "tags": [

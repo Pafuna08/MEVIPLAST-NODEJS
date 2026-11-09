@@ -84,6 +84,80 @@ async function detalleVentas(periodo, ahora = new Date()) {
   return { periodo, ...rango, resumen: resumen[0], porProducto, detalle };
 }
 
+// HU-022 / RF-027: cumplimiento de la meta por operario. Cuenta las órdenes
+// asignadas al operario que se crearon en el periodo, sin las canceladas:
+// cumplimiento = unidades producidas de esas órdenes / meta de esas órdenes.
+// Lo producido de cada orden se limita a su meta.
+function porcentaje(producido, meta) {
+  return meta > 0 ? Math.round((producido / meta) * 1000) / 10 : null;
+}
+
+function calcularCumplimiento(filas, unidadesPorUsuario = new Map()) {
+  const operarios = filas.map((fila) => {
+    const meta = Number(fila.meta || 0);
+    const producido = Number(fila.producido || 0);
+    return {
+      id: fila.id,
+      nombre: fila.nombre,
+      ordenes: Number(fila.ordenes || 0),
+      finalizadas: Number(fila.finalizadas || 0),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+      unidades_periodo: Number(unidadesPorUsuario.get(fila.id) || 0),
+    };
+  });
+  operarios.sort(
+    (a, b) =>
+      (b.cumplimiento ?? -1) - (a.cumplimiento ?? -1) ||
+      a.nombre.localeCompare(b.nombre, "es"),
+  );
+  const sumar = (campo) => operarios.reduce((total, o) => total + o[campo], 0);
+  const meta = sumar("meta");
+  const producido = sumar("producido");
+  return {
+    resumen: {
+      operarios: operarios.length,
+      con_ordenes: operarios.filter((o) => o.ordenes > 0).length,
+      ordenes: sumar("ordenes"),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+      unidades_periodo: sumar("unidades_periodo"),
+    },
+    operarios,
+  };
+}
+
+async function rendimientoOperarios(periodo, ahora = new Date()) {
+  const rango = limitesPeriodo(periodo, ahora);
+  const [filas] = await pool.query(
+    `SELECT u.id, u.nombre,
+            COUNT(p.id) AS ordenes,
+            COALESCE(SUM(p.estado = 'finalizado'), 0) AS finalizadas,
+            COALESCE(SUM(p.cantidad), 0) AS meta,
+            COALESCE(SUM(LEAST(p.cantidad_producida, p.cantidad)), 0) AS producido
+     FROM usuarios u
+     LEFT JOIN produccion p
+       ON p.responsable_id = u.id AND p.estado <> 'cancelado'
+      AND p.fecha_inicio >= ? AND p.fecha_inicio < ?
+     WHERE u.rol = 'operario' AND u.activo = 1
+     GROUP BY u.id, u.nombre`,
+    [rango.desde, rango.hasta],
+  );
+  const [unidades] = await pool.query(
+    `SELECT usuario_id, SUM(cantidad) AS unidades
+     FROM movimientos_inventario
+     WHERE tipo = 'produccion' AND fecha >= ? AND fecha < ?
+     GROUP BY usuario_id`,
+    [rango.desde, rango.hasta],
+  );
+  const unidadesPorUsuario = new Map(
+    unidades.map((fila) => [fila.usuario_id, Number(fila.unidades)]),
+  );
+  return { periodo, ...rango, ...calcularCumplimiento(filas, unidadesPorUsuario) };
+}
+
 async function resumenProduccion() {
   const [filas] = await pool.query(
     `SELECT estado, COUNT(*) AS total, SUM(cantidad) AS cantidad_total
@@ -143,6 +217,8 @@ module.exports = {
   resumenVentas,
   detalleProduccion,
   detalleVentas,
+  calcularCumplimiento,
+  rendimientoOperarios,
   resumenInventario,
   bitacoraAuditoria,
 };
