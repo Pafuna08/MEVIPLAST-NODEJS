@@ -97,7 +97,10 @@ Los controladores se cubren sobre todo con la suite E2E, por eso suben al combin
 
 ## Cobertura pendiente
 
-- Envío de un correo de recuperación real con el SMTP de MEVIPLAST.
+La recuperación de contraseña y de usuario con un buzón real (Gmail del proyecto) se probó el 08/11/2026: CP-030, [`../evidence/EV-2026-11-08-correo.md`](../evidence/EV-2026-11-08-correo.md).
+
+Queda pendiente:
+
 - Rendimiento medido en el servidor y la red de la empresa.
 - Compatibilidad con el Firefox oficial y con la penúltima versión de cada navegador.
 - Usabilidad (RNF-006) y accesibilidad (RNF-012) con usuarios de MEVIPLAST.

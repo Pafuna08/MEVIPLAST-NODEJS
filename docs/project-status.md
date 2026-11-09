@@ -23,7 +23,7 @@ Las 25 historias tienen código: 20 implementadas y 5 parciales. MEVIPLAST aprob
 ## Limitaciones conocidas de la entrega
 
 - Sin sesión de aceptación con usuarios de MEVIPLAST: la usabilidad (RNF-006) no se midió con ellos.
-- La recuperación de contraseña se probó con un servidor SMTP local, no con el correo de la empresa (CP-030).
+- La recuperación por correo se probó con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04), no con un servidor de correo corporativo de MEVIPLAST.
 - Las pruebas de carga y de navegadores se hicieron en un equipo del equipo de desarrollo, no en el servidor de MEVIPLAST; la disponibilidad no se midió.
 
 Este archivo describe el código y sus pruebas, no la aprobación del instructor ni la aceptación del cliente. Los documentos Word fuente se mantienen fuera del repositorio para no exponer datos personales.

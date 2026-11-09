@@ -76,6 +76,8 @@ El servidor escribe sus registros como una línea JSON por evento, con `fecha`, 
 
 La pantalla `recuperar.html` permite pedir un enlace de restablecimiento (válido 30 minutos y de un solo uso) o solicitar que se envíe el nombre de usuario. Configura `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` y opcionalmente `SMTP_FROM` en `backend/.env`; usa una contraseña de aplicación del proveedor SMTP y no la guardes en Git. La migración `20261022_recovery_tokens.sql` crea la tabla de tokens. Las cuentas anteriores deben recibir un correo desde Gestión de usuarios antes de poder recuperarlas.
 
+Con Gmail: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_SECURE=false` y, en `SMTP_PASSWORD`, una **contraseña de aplicación** de 16 caracteres (Cuenta de Google → Seguridad → Verificación en 2 pasos activada → Contraseñas de aplicaciones); Google rechaza la contraseña normal de la cuenta. Probado con el buzón del proyecto el 2026-11-08 ([`docs/evidence/EV-2026-11-08-correo.md`](docs/evidence/EV-2026-11-08-correo.md)).
+
 ## Desarrollo
 
 Con MySQL activo y el backend ejecutándose, abre otra terminal:
