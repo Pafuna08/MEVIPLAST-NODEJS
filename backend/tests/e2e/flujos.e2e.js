@@ -45,11 +45,16 @@ async function prepararBase() {
       [`E2E ${rol}`, `e2e_${rol}`, `e2e_${rol}@example.test`, hash, rol],
     );
   }
+  // RN-026: toda orden indica su materia prima; esta bobina la usan las órdenes de los flujos
+  await raiz.query(
+    "INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD base E2E', 'PEBD', '10 x 15', '2', 'Transparente', 1000, 0)",
+  );
   return raiz;
 }
 
 test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
   const db = await prepararBase();
+  const [[{ id: bobina }]] = await db.query("SELECT id FROM materia_prima WHERE nombre = 'PEBD base E2E'");
   const app = require("../../src/app");
   const { pool } = require("../../src/config/database");
   const server = app.listen(0, "127.0.0.1");
@@ -92,12 +97,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("CP-028: orden → asignación → avance → inventario → venta → reportes", async () => {
     const sinVariante = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", cantidad: 1000, prioridad: "alta",
+      producto: "Cargadera", cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
     });
     assert.equal(sinVariante.status, 400, "la orden exige medida, calibre y color");
     const orden = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
-      cantidad: 1000, prioridad: "alta",
+      cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     // RN-025: la medida se guarda normalizada y un dato sin formato se rechaza en el servidor
@@ -106,6 +111,16 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       familia: "Cargadera", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
     });
     assert.equal(invalida.status, 400, "medida y calibre sin formato se rechazan");
+    // RN-025: el color debe ser de la lista; RN-026: la orden exige materia prima
+    const colorInventado = await llamar("POST", "/inventario", tokens.admin, {
+      familia: "Cargadera", medida: "10 x 15", calibre: "2", color: "Fdsa", cantidad: 5,
+    });
+    assert.equal(colorInventado.status, 400, "un color fuera de la lista se rechaza");
+    const sinMateria = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Cargadera", medida: "10 x 15", calibre: "2", color: "Negro", cantidad: 10, prioridad: "media",
+    });
+    assert.equal(sinMateria.status, 400);
+    assert.match(sinMateria.body.mensaje, /materia prima/);
     // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor fijo
     assert.equal(orden.body.supervisor_id, null);
     const ordenId = orden.body.id;
@@ -292,7 +307,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const otra = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
-      cantidad: 100, prioridad: "baja",
+      cantidad: 100, prioridad: "baja", materia_prima_id: bobina,
     });
     assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
     assert.equal((await mover(tokens.supervisor, { tipo: "compra", cantidad: 5 })).status, 403);
@@ -354,7 +369,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
   await t.test("edición de órdenes: solo pendientes sin avance y con la variante completa", async () => {
     const orden = await llamar("POST", "/produccion", tokens.admin, {
       producto: "Troquel riñón", medida: "12 x 18", calibre: "2", color: "Transparente",
-      cantidad: 100, prioridad: "baja",
+      cantidad: 100, prioridad: "baja", materia_prima_id: bobina,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const id = orden.body.id;
@@ -381,7 +396,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("CR-014: si falta el supervisor, el administrador asigna el operario desde su panel", async () => {
     const orden = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media",
+      producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media", materia_prima_id: bobina,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const visibles = await llamar("GET", "/produccion", tokens.supervisor);
@@ -401,7 +416,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     const previo = fila(antes.body);
     assert.ok(previo, "el operario activo aparece aunque no tenga órdenes");
 
-    const variante = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media" };
+    const variante = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media", materia_prima_id: bobina };
     const orden = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 200 });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
@@ -436,9 +451,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.ok(nombres.includes("E2E operario"), "el Excel trae la fila del operario");
   });
 
-  await t.test("plantillas: una por variante, con la variante obligatoria", async () => {
-    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300 };
-    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300 })).status, 400);
+  await t.test("plantillas: una por variante, con la variante y la materia prima obligatorias", async () => {
+    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: bobina };
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300, materia_prima_id: bobina })).status, 400);
+    const sinMateria = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, materia_prima_id: undefined });
+    assert.equal(sinMateria.status, 400, "RN-026: la plantilla exige materia prima");
+    assert.match(sinMateria.body.mensaje, /materia prima/);
     const creada = await llamar("POST", "/produccion/plantillas", tokens.admin, base);
     assert.equal(creada.status, 201, JSON.stringify(creada.body));
     assert.equal(creada.body.medida, "15 x 20");

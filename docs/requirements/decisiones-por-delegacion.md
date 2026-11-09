@@ -41,7 +41,8 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 | RN-012 | Catálogo de producto terminado (6 líneas) | Aprobada |
 | RN-013 | Catálogo de materias primas (PEBD, PEAD, PP con medida, calibre, color y peso) | Aprobada |
 | RN-018 | Venta por paquetes de 1 a 500 unidades | Aprobada |
-| RN-025 | Formato de la variante: medida «ancho x largo» con unidad opcional (cm, mm, m, in, pulg), calibre numérico mayor que cero con hasta 2 decimales y color solo con letras y espacios (3 a 40); se guardan normalizados («10x15» → «10 x 15») | Decisión del equipo por delegación |
+| RN-025 | Formato de la variante: medida «ancho x largo» con unidad opcional (cm, mm, m, in, pulg), calibre numérico mayor que cero con hasta 2 decimales y color de una lista fija (Amarillo, Azul, Blanco, Café, Gris, Morado, Naranja, Natural, Negro, Rojo, Rosado, Transparente y Verde); se guardan normalizados («10x15» → «10 x 15», «cafe» → «Café») | Decisión del equipo por delegación (la lista de colores, tras las pruebas del 09/11/2026) |
+| RN-026 | Toda orden de producción y toda plantilla frecuente indican la materia prima (bobina) con la que se produce; al editar una orden se puede cambiar por otra existente, pero no quitar | Decisión del equipo por delegación (pruebas del 09/11/2026) |
 
 ## Hallazgos registrados en lugar de los de la sesión
 

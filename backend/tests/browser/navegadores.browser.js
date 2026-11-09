@@ -284,7 +284,7 @@ const FLUJOS = [
     // Una medida distinta por navegador, para crear una variante nueva en cada uno
     await form.locator("input[name=medida]").fill(`8 x ${10 + NAVEGADORES.findIndex(([n]) => n === nombre)}`);
     await form.locator("input[name=calibre]").fill("1");
-    await form.locator("input[name=color]").fill("Blanco");
+    await form.locator("select[name=color]").selectOption("Blanco");
     await form.locator("input[name=cantidad]").fill("300");
     await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");

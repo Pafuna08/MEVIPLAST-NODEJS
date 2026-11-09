@@ -74,6 +74,7 @@ async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
   validarProducto(producto);
   const variante = varianteOrden(producto, datos);
+  const materiaPrimaId = await validarMateriaPrima(materia_prima_id, pool, "la plantilla");
   const [resultado] = await pool.query(
     "INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -82,7 +83,7 @@ async function crearPlantilla(datos, actorId) {
       variante.calibre,
       variante.color,
       Number(cantidad),
-      Number(materia_prima_id) || null,
+      materiaPrimaId,
       prioridad || "media",
       actorId,
     ],
@@ -105,6 +106,23 @@ async function obtenerPorId(id) {
   return filas[0] || null;
 }
 
+// RN-026: toda orden y toda plantilla indican la materia prima (bobina) con la que se produce, y esa bobina debe existir
+async function validarMateriaPrima(materiaPrimaId, consulta = pool, registro = "la orden") {
+  const id = Number(materiaPrimaId);
+  if (!Number.isInteger(id) || id <= 0) {
+    const error = new Error(`Selecciona la materia prima de ${registro}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  const [materiales] = await consulta.query("SELECT id FROM materia_prima WHERE id = ?", [id]);
+  if (!materiales.length) {
+    const error = new Error("Materia prima no encontrada");
+    error.statusCode = 400;
+    throw error;
+  }
+  return id;
+}
+
 async function crear(datos, actor) {
   const {
     producto,
@@ -115,6 +133,7 @@ async function crear(datos, actor) {
   } = datos;
   validarProducto(producto);
   const variante = varianteOrden(producto, datos);
+  const materiaPrimaId = await validarMateriaPrima(materia_prima_id);
   let supervisorId = null;
   let responsableId = Number(responsable_id) || null;
   if (actor.rol === "admin") {
@@ -139,7 +158,7 @@ async function crear(datos, actor) {
       variante.calibre,
       variante.color,
       cantidad,
-      materia_prima_id || null,
+      materiaPrimaId,
       supervisorId,
       responsableId,
       prioridad || "media",
@@ -277,13 +296,8 @@ async function actualizarOrden(id, datos, actor) {
       if (!usuarios.length)
         throw new Error("El responsable debe ser un operario activo");
     }
-    if (materia_prima_id !== undefined && materia_prima_id !== null && Number(materia_prima_id) !== 0) {
-      const [materiales] = await connection.query(
-        "SELECT id FROM materia_prima WHERE id = ?",
-        [materia_prima_id],
-      );
-      if (!materiales.length) throw new Error("Materia prima no encontrada");
-    }
+    // RN-026: al editar, la materia prima se puede cambiar por otra, pero no quitar
+    const materiaPrimaId = materia_prima_id !== undefined ? await validarMateriaPrima(materia_prima_id, connection) : undefined;
 
     const actualizaciones = [];
     const valores = [];
@@ -303,9 +317,9 @@ async function actualizarOrden(id, datos, actor) {
       actualizaciones.push("responsable_id = ?");
       valores.push(Number(responsable_id) || null);
     }
-    if (materia_prima_id !== undefined) {
+    if (materiaPrimaId !== undefined) {
       actualizaciones.push("materia_prima_id = ?");
-      valores.push(Number(materia_prima_id) || null);
+      valores.push(materiaPrimaId);
     }
     if (prioridad !== undefined) {
       actualizaciones.push("prioridad = ?");

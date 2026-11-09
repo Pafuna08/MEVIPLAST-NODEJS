@@ -32,11 +32,11 @@ test("RN-025: el calibre es un número mayor que cero con hasta 2 decimales", ()
   }
 });
 
-test("RN-025: el color solo admite letras y espacios y se guarda con mayúscula inicial", () => {
+test("RN-025: el color debe ser de la lista fija y se guarda con el nombre de la lista", () => {
   assert.equal(normalizarColor("transparente"), "Transparente");
-  assert.equal(normalizarColor("  BLANCO   hueso "), "Blanco hueso");
-  assert.equal(normalizarColor("ámbar"), "Ámbar");
-  for (const valor of ["essd123", "Az", "Rojo!", "Negro-mate", "x".repeat(41), ""]) {
+  assert.equal(normalizarColor("  NEGRO "), "Negro");
+  assert.equal(normalizarColor("cafe"), "Café");
+  for (const valor of ["Fdsa", "Gtf", "Fres", "essd", "Blanco hueso", "Ámbar", "essd123", "Rojo!", "x".repeat(41), ""]) {
     assert.throws(() => normalizarColor(valor), rechazo(/color/), `debió rechazar ${valor}`);
   }
 });
@@ -46,6 +46,18 @@ test("RN-025: el ingreso de inventario rechaza una medida inválida antes de toc
     inventarioService.ingresar({ familia: "Adhesivo Seguridad", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233 }, 4),
     rechazo(/ancho x largo/),
   );
+});
+
+test("RN-026: la orden de producción exige una materia prima existente", async (t) => {
+  const { pool } = require("../src/config/database");
+  const original = pool.query;
+  pool.query = async (sql, params = []) => (sql.startsWith("SELECT id FROM materia_prima") ? [Number(params[0]) === 4 ? [{ id: 4 }] : []] : [[], []]);
+  t.after(() => { pool.query = original; });
+  const orden = { producto: "Cargadera", cantidad: 10, medida: "40 x 60", calibre: "2", color: "Negro" };
+  for (const materia of [undefined, "", 0, null]) {
+    await assert.rejects(productionService.crear({ ...orden, materia_prima_id: materia }, { id: 1, rol: "admin" }), rechazo(/Selecciona la materia prima/));
+  }
+  await assert.rejects(productionService.crear({ ...orden, materia_prima_id: 99 }, { id: 1, rol: "admin" }), rechazo(/Materia prima no encontrada/));
 });
 
 test("RN-025: la orden de producción y la bobina usan la misma regla", async () => {

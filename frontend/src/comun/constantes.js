@@ -1,3 +1,6 @@
+// RN-025: lista fija de colores, la misma de backend/src/constants/colores.js
+export const productColors = ["Amarillo", "Azul", "Blanco", "Café", "Gris", "Morado", "Naranja", "Natural", "Negro", "Rojo", "Rosado", "Transparente", "Verde"];
+
 export const finishedProductFamilies = [
   "Adhesivo PP",
   "Adhesivo Seguridad",
