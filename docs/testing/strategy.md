@@ -23,6 +23,7 @@ npm run test:e2e --prefix backend
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
+- DEF-021 (CP-089): el administrador no puede quitarse el rol, desactivarse ni eliminarse (400 y sin cambios en la base); sí puede desactivar a otro administrador.
 - DEF-013 (CP-062): compra, ajuste mayor al saldo (rechazo sin cambios), permisos por tipo de movimiento, consumo en una orden que no usa la bobina (rechazo) y consumo válido ligado a la orden.
 - Salida manual de inventario: sin motivo o con «Otro» sin detalle se rechaza sin descontar; con motivo queda en el movimiento. Una medida de 41 caracteres y un cliente de 121 se rechazan con 400 (validación de largo en el servidor).
 - Migración `20261027_login_lockout.sql` aplicada sobre una tabla sin las columnas y ejecutada dos veces (idempotente).
@@ -59,7 +60,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-92 pruebas unitarias y de rutas con `node:test` (92 aprobadas el 2026-11-09), en 20 archivos:
+97 pruebas unitarias y de rutas con `node:test` (97 aprobadas el 2026-11-09), en 21 archivos:
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -80,6 +81,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
 - `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
+- `usuarios.service.test.js` (5): nadie se quita su propio rol de administrador, se desactiva ni se elimina; con otro administrador activo sí se cambia a un admin; siempre queda al menos uno activo; el admin sí cambia su propio nombre o correo (DEF-021).
 - `variantes.test.js` (7): medida «ancho x largo» normalizada, calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
 - `ventas.service.test.js` (5): límite de 500 unidades por paquete, descuento por paquetes, aislamiento del vendedor y comprobante.
 
@@ -92,14 +94,14 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-09, sobre `develop` tras el PR #68:
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-09, sobre la rama `fix/MEVI-69-proteger-administrador` (DEF-021):
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 68,0 % | 77,6 % | 61,6 % |
-| Unitarias + E2E | 84,7 % | 79,6 % | 85,2 % |
+| Unitarias | 69,0 % | 78,8 % | 63,4 % |
+| Unitarias + E2E | 86,1 % | 80,4 % | 87,0 % |
 
-Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
+Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 
 ## Cobertura pendiente
 

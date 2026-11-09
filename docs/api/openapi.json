@@ -476,7 +476,8 @@
         },
         "x-roles": [
           "admin"
-        ]
+        ],
+        "description": "Nadie puede quitarse su propio rol de administrador ni desactivar su propia cuenta, y siempre queda al menos un administrador activo (DEF-021): esos cambios responden 400."
       },
       "delete": {
         "tags": [
@@ -506,6 +507,9 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
           "401": {
             "$ref": "#/components/responses/SesionInvalida"
           },
@@ -521,7 +525,8 @@
         },
         "x-roles": [
           "admin"
-        ]
+        ],
+        "description": "Nadie puede eliminar su propia cuenta y siempre queda al menos un administrador activo (DEF-021): responde 400."
       }
     },
     "/usuarios/{id}/desbloquear": {
