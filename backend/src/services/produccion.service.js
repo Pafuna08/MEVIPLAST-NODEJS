@@ -74,7 +74,7 @@ async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
   validarProducto(producto);
   const variante = varianteOrden(producto, datos);
-  const materiaPrimaId = await validarMateriaPrima(materia_prima_id);
+  const materiaPrimaId = await validarMateriaPrima(materia_prima_id, pool, "la plantilla");
   const [resultado] = await pool.query(
     "INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -107,10 +107,10 @@ async function obtenerPorId(id) {
 }
 
 // RN-026: toda orden y toda plantilla indican la materia prima (bobina) con la que se produce, y esa bobina debe existir
-async function validarMateriaPrima(materiaPrimaId, consulta = pool) {
+async function validarMateriaPrima(materiaPrimaId, consulta = pool, registro = "la orden") {
   const id = Number(materiaPrimaId);
   if (!Number.isInteger(id) || id <= 0) {
-    const error = new Error("Selecciona la materia prima de la orden");
+    const error = new Error(`Selecciona la materia prima de ${registro}`);
     error.statusCode = 400;
     throw error;
   }
