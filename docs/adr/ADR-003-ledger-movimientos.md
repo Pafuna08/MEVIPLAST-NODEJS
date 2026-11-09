@@ -11,7 +11,7 @@ Las tablas `materia_prima` e `inventario` guardan el saldo actual de cada materi
 - No quedaba registro de quién movió el stock, cuándo ni por qué. El almacenista y el administrador no podían revisar el historial, y los reportes por periodo no tenían de dónde calcular entradas y salidas.
 - Dos usuarios que vendían o consumían el mismo producto al mismo tiempo podían leer el mismo saldo y dejarlo incorrecto o negativo.
 
-Con los perfiles de vendedor y almacenista (sprint 3), aumentaron los usuarios que mueven stock a la vez.
+Con los perfiles de vendedor y almacenista (sprint 7, PR #12), aumentaron los usuarios que mueven stock a la vez.
 
 ## Opciones
 

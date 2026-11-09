@@ -1167,3 +1167,50 @@ th {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Correo y botón «Cambiar» en la tabla de usuarios: el botón queda alineado al borde derecho */
+.email-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.email-cell > span {
+  overflow-wrap: anywhere;
+}
+.email-cell .text-action {
+  flex-shrink: 0;
+}
+
+/* Ventas: referencias de la línea elegida, para escoger con un clic */
+.reference-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px 18px;
+}
+.reference-option {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid #d5dce6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #001f54;
+  cursor: pointer;
+  font: inherit;
+}
+.reference-option span {
+  color: #5b6b7f;
+  font-size: 13px;
+}
+.reference-option:hover,
+.reference-option.selected {
+  border-color: #e63946;
+  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
+}
+.reference-option.selected strong::after {
+  content: " ✓";
+  color: #e63946;
+}
