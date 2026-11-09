@@ -623,6 +623,6 @@ function renderView({
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports />;
-  if (view === "auditoria") return <Audit data={data} />;
+  if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }

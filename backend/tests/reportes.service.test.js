@@ -66,20 +66,21 @@ test("detalleVentas filtra los registros por el rango seleccionado", async (t) =
   }
 });
 
-test("la bitácora limita los registros entre 1 y 1 000 y ordena del más reciente al más antiguo", async (t) => {
+test("la bitácora pagina entre 1 y 100 registros y ordena del más reciente al más antiguo (CR-016)", async (t) => {
   const originalQuery = pool.query;
-  const llamadas = [];
+  const paginas = [];
   pool.query = async (sql, params) => {
-    llamadas.push({ sql, params });
+    if (sql.startsWith("SELECT COUNT(*)")) return [[{ total: 0 }]];
+    if (sql.includes("LIMIT ? OFFSET ?")) paginas.push({ sql, params });
     return [[], []];
   };
   t.after(() => {
     pool.query = originalQuery;
   });
 
-  for (const limite of [50, 5000, 0, -3, "abc", undefined]) await reportesService.bitacoraAuditoria(limite);
-  assert.deepEqual(llamadas.map((l) => l.params[0]), [50, 1000, 100, 1, 100, 100]);
-  assert.match(llamadas[0].sql, /ORDER BY a\.fecha DESC, a\.id DESC/);
+  for (const porPagina of [50, 5000, 0, -3, "abc", undefined]) await reportesService.bitacoraAuditoria({ porPagina });
+  assert.deepEqual(paginas.map((l) => l.params.at(-2)), [50, 100, 50, 1, 50, 50]);
+  assert.match(paginas[0].sql, /ORDER BY a\.fecha DESC, a\.id DESC/);
 });
 
 test("HU-022: calcularCumplimiento da el % de la meta por operario y en total", () => {

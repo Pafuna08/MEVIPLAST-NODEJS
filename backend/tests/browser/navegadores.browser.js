@@ -82,7 +82,7 @@ async function levantarApi() {
   const log = fs.openSync(LOG_API, "w");
   const proceso = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, "..", ".."),
-    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "browser-only-secret", CORS_ORIGINS: "" },
+    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "browser-only-secret", CORS_ORIGINS: "", LOG_DIR: "off" },
     stdio: ["ignore", log, log],
   });
   proceso.on("exit", (codigo) => {

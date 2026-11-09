@@ -465,6 +465,50 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
   });
 
+  await t.test("CR-016: inicios de sesión fuera de la tabla, auditoría filtrada y archivo de lo antiguo", async () => {
+    // 1. Ya hubo inicios de sesión de los cinco roles en esta prueba y ninguno quedó en la tabla
+    const [[logins]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'LOGIN'");
+    assert.equal(Number(logins.n), 0, "los inicios de sesión van al archivo de accesos");
+
+    // 3. El administrador filtra en el servidor y recibe una página con el total
+    const bloqueos = await llamar("GET", "/reportes/auditoria?accion=BLOQUEO_CUENTA&porPagina=5", tokens.admin);
+    assert.equal(bloqueos.status, 200, JSON.stringify(bloqueos.body));
+    assert.ok(bloqueos.body.total >= 1);
+    assert.ok(bloqueos.body.registros.every((evento) => evento.accion === "BLOQUEO_CUENTA"));
+    assert.ok(bloqueos.body.opciones.acciones.includes("BLOQUEO_CUENTA"));
+    const vacio = await llamar("GET", "/reportes/auditoria?desde=2000-01-01&hasta=2000-01-31", tokens.admin);
+    assert.deepEqual([vacio.body.total, vacio.body.registros.length], [0, 0]);
+    assert.equal((await llamar("GET", "/reportes/auditoria?desde=09/11/2026", tokens.admin)).status, 400);
+
+    // 4. Lo que tiene más de 12 meses pasa a auditoria-AAAA.csv y sale de la tabla; lo reciente se queda
+    await db.query(
+      `INSERT INTO auditoria (usuario_id, accion, tabla_afectada, detalle, fecha) VALUES
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 1; con punto y coma', DATE_SUB(NOW(), INTERVAL 25 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 2', DATE_SUB(NOW(), INTERVAL 13 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'reciente', DATE_SUB(NOW(), INTERVAL 2 MONTH))`,
+    );
+    const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "meviplast-archivo-"));
+    try {
+      const { archivarAuditoria } = require("../../src/services/archivoAuditoria.service");
+      const simulado = await archivarAuditoria({ meses: 12, directorio: dir, simular: true });
+      assert.equal(simulado.archivados, 2);
+      assert.equal(fs.readdirSync(dir).length, 0, "--simular no escribe ni borra");
+      const resultado = await archivarAuditoria({ meses: 12, directorio: dir });
+      assert.equal(resultado.archivados, 2);
+      const contenido = fs.readdirSync(dir).map((nombre) => fs.readFileSync(path.join(dir, nombre), "utf8")).join("");
+      assert.match(contenido, /^\uFEFFid;fecha;usuario_id;usuario;accion;tabla;detalle/);
+      assert.match(contenido, /"antiguo 1; con punto y coma"/);
+      assert.match(contenido, /antiguo 2/);
+      const [quedan] = await db.query("SELECT detalle FROM auditoria WHERE accion = 'PRUEBA_ARCHIVO'");
+      assert.deepEqual(quedan.map((fila) => fila.detalle), ["reciente"]);
+      const [[registro]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'ARCHIVAR_AUDITORIA'");
+      assert.equal(Number(registro.n), 1, "el archivo queda registrado en la auditoría");
+      assert.equal((await archivarAuditoria({ meses: 12, directorio: dir })).archivados, 0, "una segunda corrida no repite");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   await t.test("CR-015: la migración que quita ubicación y lote se aplica sobre una base anterior y es idempotente", async () => {
     await db.query("ALTER TABLE inventario ADD COLUMN ubicacion VARCHAR(80) NULL");
     await db.query("ALTER TABLE produccion ADD COLUMN lote VARCHAR(80) NULL");

@@ -12,3 +12,6 @@ npm-debug.log
 *.log
 coverage/
 .DS_Store
+# Logs diarios y auditoría archivada (CR-016): quedan en el servidor, no en el repositorio
+backend/logs/
+backend/archivo-auditoria/

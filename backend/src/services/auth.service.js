@@ -229,13 +229,7 @@ async function login(usuario, password) {
     expiresIn: process.env.JWT_EXPIRES_IN || "8h",
   });
 
-  await registrarAuditoria({
-    usuarioId: registro.id,
-    accion: "LOGIN",
-    tabla: "usuarios",
-    detalle: `Inicio de sesión de ${registro.usuario}`,
-  });
-
+  // El inicio de sesión ya no se guarda en auditoría (CR-016): el controlador lo escribe en el archivo de accesos
   return {
     ok: true,
     token,

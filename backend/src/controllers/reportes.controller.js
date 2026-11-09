@@ -69,9 +69,10 @@ async function inventario(req, res) {
 
 async function auditoria(req, res) {
   try {
-    const limite = Number(req.query.limite) || 100;
-    res.json(await reportesService.bitacoraAuditoria(limite));
+    const { desde, hasta, usuario_id, accion, tabla, texto, pagina, porPagina } = req.query;
+    res.json(await reportesService.bitacoraAuditoria({ desde, hasta, usuario_id, accion, tabla, texto, pagina, porPagina }));
   } catch (error) {
+    if (error.statusCode === 400) return res.status(400).json({ mensaje: error.message });
     log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al consultar la bitacora" });
   }

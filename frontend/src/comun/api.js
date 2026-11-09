@@ -7,7 +7,8 @@ export async function api(url, token, options = {}) {
       ...(options.headers || {}),
     },
   });
-  const data = response.status === 204 ? null : await response.json().catch(() => ({}));
+  // null si el cuerpo no se pudo leer (respuesta cortada o una navegación que la interrumpió)
+  const data = response.status === 204 ? null : await response.json().catch(() => null);
 
   if (response.status === 401) {
     localStorage.removeItem("meviplastToken");
@@ -20,6 +21,10 @@ export async function api(url, token, options = {}) {
   }
   if (!response.ok) {
     throw new Error(data?.mensaje || "No fue posible completar la operación.");
+  }
+  // Una respuesta correcta sin datos legibles es un error, no una lista vacía: la vista muestra el aviso
+  if (response.status !== 204 && data === null) {
+    throw new Error("No se pudo leer la respuesta del servidor. Intenta de nuevo.");
   }
   return data;
 }
@@ -110,7 +115,8 @@ export async function loadView(view, role, token) {
     return {};
   }
   if (view === "auditoria") {
-    return { events: await api("/api/reportes/auditoria?limite=500", token) };
+    // La vista consulta con sus filtros (CR-016); no se precarga nada
+    return {};
   }
   return null;
 }

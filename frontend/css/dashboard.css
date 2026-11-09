@@ -1143,3 +1143,27 @@ th {
     grid-template-columns: 1fr;
   }
 }
+
+/* Auditoría con filtros (CR-016) */
+.audit-filter-actions {
+  display: flex;
+  gap: 10px;
+}
+.audit-filter-actions .primary-action {
+  flex: 1;
+}
+.audit-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 18px 4px;
+}
+.audit-pages .primary-action {
+  width: auto;
+  min-width: 120px;
+}
+.audit-pages .primary-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

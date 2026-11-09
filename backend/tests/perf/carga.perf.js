@@ -123,7 +123,7 @@ async function prepararBase() {
 async function levantarApi() {
   const proceso = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, "..", ".."),
-    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "perf-only-secret", CORS_ORIGINS: "" },
+    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "perf-only-secret", CORS_ORIGINS: "", LOG_DIR: "off" },
     stdio: "ignore",
   });
   for (let i = 0; i < 60; i += 1) {

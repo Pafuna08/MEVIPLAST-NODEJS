@@ -34,3 +34,21 @@ Get-Content $file -Raw -Encoding utf8 | & $mysql -u root --default-character-set
 ```
 
 El 2026-10-27 se ensayó el respaldo y la restauración completos: 11 tablas sin diferencias de conteo (evidencia en [`../evidence/EV-2026-10-27.md`](../evidence/EV-2026-10-27.md)). Falta acordar el RPO y el RTO con el cliente.
+
+## Registros del servidor y archivo de la auditoría (CR-016)
+
+El servidor escribe archivos planos diarios en `backend/logs` (o en `LOG_DIR`):
+
+- `servidor-AAAA-MM-DD.log`: una línea JSON por evento (peticiones a la API sin su cuerpo, avisos y errores).
+- `accesos-AAAA-MM-DD.log`: inicios de sesión, intentos fallidos y accesos rechazados por bloqueo, con usuario e IP. Los inicios de sesión ya no se guardan en la tabla `auditoria`; los bloqueos, desbloqueos y cambios de contraseña sí.
+
+Los archivos con más de `LOG_RETENTION_DAYS` días (90 por defecto) se borran solos. Los campos sensibles (contraseñas, tokens, correos) se ocultan igual que en la consola. `LOG_DIR=off` desactiva los archivos.
+
+La tabla `auditoria` conserva `AUDIT_RETENTION_MONTHS` meses (12 por defecto). Lo anterior se archiva con:
+
+```powershell
+npm run auditoria:archivar --prefix backend -- --simular   # solo informa cuántos registros se archivarían
+npm run auditoria:archivar --prefix backend                # los pasa a auditoria-AAAA.csv y los borra de la tabla
+```
+
+El comando escribe primero `auditoria-AAAA.csv` (punto y coma, UTF-8, se abre en Excel) en `backend/archivo-auditoria` (o `AUDIT_ARCHIVE_DIR`), lo guarda en disco y solo entonces borra esas filas, en una transacción: si falla la escritura, no se borra nada. Deja un evento `ARCHIVAR_AUDITORIA` en la tabla. Córrelo después del respaldo diario y guarda los CSV junto con los respaldos.
