@@ -32,7 +32,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | HU-012 | Vendedor | Consultar inventario disponible | RF-019 | Implementado | El vendedor consulta existencias sin poder modificarlas. |
 | HU-024 | Vendedor | Visualizar historial de ventas | RF-022 | Implementado | El vendedor ve solo sus ventas; sin filtros por fecha o cliente. |
 | HU-016 | Todos los roles | Iniciar sesión | RF-001 | Implementado | JWT con expiración de 8 h; contraseñas con bcrypt; mensaje de error genérico. El token deja de servir si el usuario se desactiva o cambia de rol (CP-053, CP-054). |
-| HU-018 | Todos los roles | Recuperar contraseña | RF-003 | Implementado | Enlace por correo de un solo uso, vigente 30 min. Requiere SMTP configurado. Probado con un servidor SMTP local (CP-061); falta probar con el correo real de MEVIPLAST (CP-030). |
+| HU-018 | Todos los roles | Recuperar contraseña | RF-003 | Implementado | Enlace por correo de un solo uso, vigente 30 min. Requiere SMTP configurado. Probado con un servidor SMTP local (CP-061) y con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04). |
 | HU-019 | Todos los roles | Bloquear intentos fallidos | RF-004 | Implementado | 5 intentos seguidos bloquean 15 minutos (configurable); el administrador desbloquea. Probado con MySQL real (CP-051). |
 | HU-020 | Todos los roles | Cerrar sesión | RF-005 | Parcial | Elimina la sesión del navegador. El token no se revoca al cerrar sesión, pero el servidor lo rechaza si el usuario se desactiva o cambia de rol (DEF-011) y vence a las 8 h. |
 
@@ -42,7 +42,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 |---|---|---|---|---|---|
 | RF-001 | Autenticar usuario | Implementado | MVP | API-01 | CP-027 (pendiente), CP-046 |
 | RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054 |
-| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030 (pendiente), CP-061 |
+| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061 |
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051 |
 | RF-005 | Cerrar sesión | Parcial | MVP | — | — |
 | RF-006 | Registrar auditoría | Implementado | MVP | — | — |
@@ -72,7 +72,6 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 
 ## Brechas abiertas
 
-- CP-030: probar la recuperación de contraseña con el SMTP real de MEVIPLAST (con un servidor local ya está probada, CP-061).
 - Usabilidad con usuarios de MEVIPLAST (RNF-006): la sesión de aceptación por rol no se realizó.
 - Etiqueta `v1.0.0`. La instalación limpia por Carlos Herrera Sibaja (RNF-009) ya se hizo (EV-2026-11-08-04).
 
