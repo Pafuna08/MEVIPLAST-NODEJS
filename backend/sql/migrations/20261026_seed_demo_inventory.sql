@@ -65,7 +65,7 @@ WHERE tipo = 'PP'
   AND proveedor IS NULL;
 
 INSERT INTO inventario
-  (producto, familia, medida, calibre, color, cantidad, ubicacion)
+  (producto, familia, medida, calibre, color, cantidad)
 SELECT CONCAT(
          muestras.familia,
          ' · ',
@@ -79,21 +79,20 @@ SELECT CONCAT(
        muestras.medida,
        muestras.calibre,
        muestras.color,
-       muestras.cantidad,
-       muestras.ubicacion
+       muestras.cantidad
 FROM (
   SELECT 'Adhesivo PP' AS familia, '10 x 15' AS medida, '2' AS calibre,
-         'Transparente' AS color, 1200 AS cantidad, 'DEMO - Bodega A' AS ubicacion
+         'Transparente' AS color, 1200 AS cantidad
   UNION ALL
-  SELECT 'Adhesivo Seguridad', '10 x 15', '2', 'Blanco', 900, 'DEMO - Bodega A'
+  SELECT 'Adhesivo Seguridad', '10 x 15', '2', 'Blanco', 900
   UNION ALL
-  SELECT 'Sencilla PP', '6 x 9', '1', 'Natural', 1500, 'DEMO - Bodega A'
+  SELECT 'Sencilla PP', '6 x 9', '1', 'Natural', 1500
   UNION ALL
-  SELECT 'Bolsas para la basura', '20 x 30', '2', 'Negro', 750, 'DEMO - Bodega B'
+  SELECT 'Bolsas para la basura', '20 x 30', '2', 'Negro', 750
   UNION ALL
-  SELECT 'Cargadera', '15 x 20', '2', 'Blanco', 1100, 'DEMO - Bodega B'
+  SELECT 'Cargadera', '15 x 20', '2', 'Blanco', 1100
   UNION ALL
-  SELECT 'Troquel riñón', '12 x 18', '2', 'Transparente', 600, 'DEMO - Bodega B'
+  SELECT 'Troquel riñón', '12 x 18', '2', 'Transparente', 600
 ) AS muestras
 WHERE NOT EXISTS (
   SELECT 1
