@@ -721,6 +721,25 @@ th {
   height: 100%;
   background: var(--navy);
 }
+.performance-cell {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+}
+.panel-note {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  color: var(--steel);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.performance-none {
+  color: var(--steel);
+  font-size: 0.85rem;
+}
 .task-actions {
   display: flex;
   justify-content: flex-end;

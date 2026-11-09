@@ -175,6 +175,7 @@ const currencyFormat = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 const number = (value) => numberFormat.format(Number(value || 0));
+const percentFormat = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 });
 const money = (value) => currencyFormat.format(Number(value || 0));
 const dateTimeFormat = new Intl.DateTimeFormat("es-CO", { dateStyle: "long", timeStyle: "short" });
 const roleName = (value) =>
@@ -217,6 +218,9 @@ async function loadView(view, role, token) {
     const params = new URLSearchParams(window.location.search);
     const tipo = params.get("reporte");
     const periodo = params.get("periodo");
+    if (tipo === "rendimiento") {
+      return api(`/api/reportes/rendimiento?periodo=${encodeURIComponent(periodo)}`, token);
+    }
     const recurso = tipo === "produccion" ? "produccion" : "ventas";
     return api(`/api/reportes/${recurso}/detalle?periodo=${encodeURIComponent(periodo)}`, token);
   }
@@ -630,7 +634,7 @@ export default function DashboardApp() {
   const requestedReport = reportParams.get("reporte");
   const requestedPeriod = reportParams.get("periodo");
   const isReportDetail =
-    ["produccion", "ventas"].includes(requestedReport) &&
+    ["produccion", "ventas", "rendimiento"].includes(requestedReport) &&
     ["diario", "semanal", "mensual", "anual"].includes(requestedPeriod) &&
     ["Administrador", "Supervisor"].includes(role);
   const requestedView = window.location.hash.slice(1) || "inicio";
@@ -716,7 +720,8 @@ export default function DashboardApp() {
   // Descarga el reporte detallado del periodo en Excel (RF-028)
   async function downloadReportExcel() {
     try {
-      const response = await fetch(`/api/reportes/${requestedReport}/detalle/excel?periodo=${requestedPeriod}`, {
+      const ruta = requestedReport === "rendimiento" ? "rendimiento/excel" : `${requestedReport}/detalle/excel`;
+      const response = await fetch(`/api/reportes/${ruta}?periodo=${requestedPeriod}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 401) {
@@ -2002,11 +2007,12 @@ function Reports() {
   }
   return (
     <>
-      <Intro title="Reportes" description="Consulta el seguimiento de producción y las ventas por periodo." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
+      <Intro title="Reportes" description="Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
       <section className="report-categories">
         {[
           ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
           ["ventas", "Ventas", "Consulta ventas, unidades, clientes y valores registrados."],
+          ["rendimiento", "Rendimiento de operarios", "Consulta el % de cumplimiento de la meta de cada operario."],
         ].map(([tipo, titulo, descripcion]) => (
           <Panel key={tipo} title={`Reporte de ${titulo.toLowerCase()}`} className="report-category">
             <p>{descripcion}</p>
@@ -2031,14 +2037,14 @@ function Reports() {
 
 function ReportDetail({ data, onExportExcel }) {
   const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
-  const titulo = reporteTipo === "produccion" ? "Producción" : "Ventas";
+  const titulo = { produccion: "producción", ventas: "ventas", rendimiento: "rendimiento de operarios" }[reporteTipo];
   const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
   const fechas = `${data.desde} - ${data.hastaInclusivo}`;
   return (
     <>
       <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
       <Intro
-        title={`Reporte de ${titulo.toLowerCase()} ${data.periodo}`}
+        title={`Reporte de ${titulo} ${data.periodo}`}
         description={`${periodoNombre} · ${fechas}`}
         action={
           <div className="report-actions">
@@ -2047,6 +2053,7 @@ function ReportDetail({ data, onExportExcel }) {
           </div>
         }
       />
+      {reporteTipo === "rendimiento" ? <PerformanceReport data={data} /> : <>
       <section className="stats-grid">
         {reporteTipo === "produccion" ? (
           <>
@@ -2084,6 +2091,45 @@ function ReportDetail({ data, onExportExcel }) {
           }))} />
         )}
         {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
+      </Panel>
+      </>}
+    </>
+  );
+}
+
+// HU-022: % de cumplimiento de la meta por operario
+function PerformanceBar({ value, label }) {
+  if (value === null || value === undefined) return <span className="performance-none">Sin órdenes</span>;
+  const width = Math.min(Math.max(Number(value), 0), 100);
+  return (
+    <div className="performance-cell">
+      <div className="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={width} aria-label={label}>
+        <span style={{ width: `${width}%` }} />
+      </div>
+      <strong>{percentFormat.format(value)} %</strong>
+    </div>
+  );
+}
+
+function PerformanceReport({ data }) {
+  const { resumen } = data;
+  return (
+    <>
+      <section className="stats-grid">
+        <article className="stat-card"><div className="stat-head"><span>Cumplimiento general</span></div><strong>{resumen.cumplimiento === null ? "—" : `${percentFormat.format(resumen.cumplimiento)} %`}</strong><small>{number(resumen.producido)} de {number(resumen.meta)} unidades de la meta</small></article>
+        <article className="stat-card"><div className="stat-head"><span>Operarios con órdenes</span></div><strong>{number(resumen.con_ordenes)}</strong><small>De {number(resumen.operarios)} operarios activos · {number(resumen.ordenes)} {resumen.ordenes === 1 ? "orden" : "órdenes"}</small></article>
+        <article className="stat-card"><div className="stat-head"><span>Unidades registradas</span></div><strong>{number(resumen.unidades_periodo)}</strong><small>Avances de los operarios en el periodo</small></article>
+      </section>
+      <Panel title="Cumplimiento por operario">
+        <p className="panel-note">Cumplimiento = unidades producidas ÷ meta de las órdenes asignadas al operario que se crearon en el periodo, sin las canceladas. «Unidades registradas» suma todos sus avances del periodo, incluidos los de órdenes anteriores.</p>
+        <DataTable
+          columns={["Operario", "Órdenes", "Finalizadas", "Meta", "Producido", "Cumplimiento", "Unidades registradas"]}
+          empty="No hay operarios activos."
+          rows={data.operarios.map((item) => ({
+            key: item.id,
+            cells: <><td>{sanitizeText(item.nombre)}</td><td>{number(item.ordenes)}</td><td>{number(item.finalizadas)}</td><td>{number(item.meta)}</td><td>{number(item.producido)}</td><td><PerformanceBar value={item.cumplimiento} label={`Cumplimiento de ${sanitizeText(item.nombre)}`} /></td><td>{number(item.unidades_periodo)}</td></>,
+          }))}
+        />
       </Panel>
     </>
   );
