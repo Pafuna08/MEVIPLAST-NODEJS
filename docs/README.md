@@ -4,7 +4,7 @@
 - [Trazabilidad y estado por historia](requirements/traceability.md)
 - [Decisiones del equipo por delegación del cliente](requirements/decisiones-por-delegacion.md)
 - [Manual de usuario](user-guide.md)
-- [Arquitectura](architecture/overview.md)
+- [Arquitectura](architecture/overview.md) y [diagramas DIA-001 a DIA-005](architecture/diagramas.md)
 - [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json)
 - [Esquema de datos](data/schema.md) y [diagrama entidad-relación](data/er.md)
 - [Estrategia de pruebas](testing/strategy.md)
