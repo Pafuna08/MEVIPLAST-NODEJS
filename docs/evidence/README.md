@@ -19,3 +19,5 @@ Usa identificadores `EV-AAAA-MM-DD-NN`. Cada registro debe indicar requisito o c
 | EV-2026-10-27-08 | DEF-013 formulario de materia prima | E2E + navegadores | 9 de 9 E2E; 39 de 39 flujos | [`EV-2026-10-27-rnf.md`](EV-2026-10-27-rnf.md) |
 | EV-2026-10-27-09 | PROD-04 instalación limpia; DEF-014, DEF-015 | Clon nuevo + README | Instala y arranca; 2 hallazgos corregidos | [`EV-2026-10-27-instalacion.md`](EV-2026-10-27-instalacion.md) |
 | EV-2026-11-08-01 | PROD-04 / RNF-009 instalación limpia; DEF-016, DEF-017 | Clon nuevo de `4bb3c70` + README | Instala y arranca; 72 unitarias y 14 E2E; 2 hallazgos corregidos | [`EV-2026-11-08-instalacion.md`](EV-2026-11-08-instalacion.md) |
+| EV-2026-11-08-02 | HU-022 / RF-027 rendimiento por operario (CP-079) | E2E con MariaDB | 15 de 15 E2E; 77 unitarias | [`EV-2026-11-08-rendimiento.md`](EV-2026-11-08-rendimiento.md) |
+| EV-2026-11-08-03 | RNF-007 con el reporte de rendimiento (CP-080) | Edge 156, Chrome 156, Firefox 157 | 42 de 42 flujos sin bloqueo | [`EV-2026-11-08-rendimiento.md`](EV-2026-11-08-rendimiento.md) |

@@ -35,6 +35,19 @@ async function detalleVentas(req, res) {
   }
 }
 
+// HU-022 / RF-027: cumplimiento de la meta por operario en el periodo
+async function rendimiento(req, res) {
+  try {
+    res.json(await reportesService.rendimientoOperarios(req.query.periodo));
+  } catch (error) {
+    if (error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el reporte de rendimiento" });
+  }
+}
+
 async function ventas(req, res) {
   try {
     const { desde, hasta } = req.query;
@@ -90,6 +103,8 @@ module.exports = {
   detalleVentas,
   excelProduccion: exportarExcel("produccion"),
   excelVentas: exportarExcel("ventas"),
+  rendimiento,
+  excelRendimiento: exportarExcel("rendimiento"),
   ventas,
   inventario,
   auditoria,

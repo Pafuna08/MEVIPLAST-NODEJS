@@ -56,3 +56,31 @@ test("el Excel de ventas trae resumen, totales por producto y detalle con númer
 test("el Excel rechaza un periodo inválido", async () => {
   await assert.rejects(libroDetalle("ventas", "quincenal"), /El periodo/);
 });
+
+test("HU-022: el Excel de rendimiento trae el resumen y una fila por operario", async (t) => {
+  const originalQuery = pool.query;
+  pool.query = async (sql) => {
+    if (sql.includes("FROM usuarios u")) {
+      return [[
+        { id: 3, nombre: "Operario", ordenes: 2, finalizadas: 1, meta: "1000.00", producido: "750.00" },
+        { id: 9, nombre: "Nuevo", ordenes: 0, finalizadas: 0, meta: 0, producido: 0 },
+      ], []];
+    }
+    return [[{ usuario_id: 3, unidades: "400.00" }], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  const { buffer, nombreArchivo } = await libroDetalle("rendimiento", "mensual", new Date(2026, 10, 8));
+  assert.equal(nombreArchivo, "reporte-rendimiento-mensual-2026-11-01.xlsx");
+  const libro = await leer(buffer);
+  assert.deepEqual(libro.worksheets.map((h) => h.name), ["Resumen", "Por operario"]);
+  const resumen = libro.getWorksheet("Resumen");
+  assert.equal(resumen.getCell("A1").value, "Reporte de rendimiento mensual");
+  assert.equal(resumen.getCell("B10").value, 75, "cumplimiento total en %");
+  const hoja = libro.getWorksheet("Por operario");
+  assert.deepEqual(hoja.getRow(1).values.slice(1), ["Operario", "Órdenes", "Finalizadas", "Meta", "Producido", "Cumplimiento (%)", "Unidades registradas en el periodo"]);
+  assert.deepEqual(hoja.getRow(2).values.slice(1), ["Operario", 2, 1, 1000, 750, 75, 400]);
+  assert.equal(hoja.getCell("F3").value, null, "sin órdenes no hay porcentaje");
+});

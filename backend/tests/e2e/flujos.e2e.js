@@ -388,6 +388,49 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.operario, { responsable_id: ids.operario })).status, 403);
   });
 
+  await t.test("HU-022: cumplimiento de la meta por operario en el periodo", async () => {
+    const reporte = async (token, periodo = "anual") => llamar("GET", `/reportes/rendimiento?periodo=${periodo}`, token);
+    const fila = (cuerpo) => cuerpo.operarios.find((o) => o.id === ids.operario);
+    const antes = await reporte(tokens.supervisor);
+    assert.equal(antes.status, 200, JSON.stringify(antes.body));
+    const previo = fila(antes.body);
+    assert.ok(previo, "el operario activo aparece aunque no tenga órdenes");
+
+    const variante = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media" };
+    const orden = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 200 });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/estado`, tokens.operario, { estado: "en_proceso" })).status, 200);
+    assert.equal((await llamar("POST", `/produccion/${orden.body.id}/avance`, tokens.operario, { cantidad: 50 })).status, 200);
+
+    // Una orden cancelada no cuenta para la meta
+    const cancelada = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 999 });
+    assert.equal((await llamar("PUT", `/produccion/${cancelada.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
+    assert.equal((await llamar("PUT", `/produccion/${cancelada.body.id}/estado`, tokens.admin, { estado: "cancelado" })).status, 200);
+
+    const despues = await reporte(tokens.admin);
+    assert.equal(despues.status, 200);
+    const actual = fila(despues.body);
+    assert.equal(actual.ordenes, previo.ordenes + 1);
+    assert.equal(actual.meta, previo.meta + 200);
+    assert.equal(actual.producido, previo.producido + 50);
+    assert.equal(actual.unidades_periodo, previo.unidades_periodo + 50);
+    assert.equal(actual.cumplimiento, Math.round((actual.producido / actual.meta) * 1000) / 10);
+    assert.ok(actual.cumplimiento >= 0 && actual.cumplimiento <= 100);
+    assert.ok(despues.body.operarios.every((o) => o.nombre !== "E2E supervisor"), "solo lista operarios");
+
+    assert.equal((await reporte(tokens.operario)).status, 403);
+    assert.equal((await reporte(tokens.vendedor)).status, 403);
+    assert.equal((await reporte(tokens.admin, "quincenal")).status, 400);
+    const excel = await fetch(`${base}/reportes/rendimiento/excel?periodo=anual`, { headers: { Authorization: `Bearer ${tokens.supervisor}` } });
+    assert.equal(excel.status, 200);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(Buffer.from(await excel.arrayBuffer()));
+    const nombres = [];
+    libro.getWorksheet("Por operario").eachRow((r) => nombres.push(r.getCell(1).value));
+    assert.ok(nombres.includes("E2E operario"), "el Excel trae la fila del operario");
+  });
+
   await t.test("plantillas: una por variante, con la variante obligatoria", async () => {
     const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300 };
     assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300 })).status, 400);
