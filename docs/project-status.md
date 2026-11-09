@@ -4,6 +4,7 @@ Corte: 08/11/2026, rama `develop` con los PR #1 a #57 fusionados. Sin etiqueta d
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
 - Pruebas: [`testing/strategy.md`](testing/strategy.md). 77 unitarias, 15 E2E con MySQL, prueba de carga y 14 flujos en Edge, Chrome y Firefox; cobertura medida en CI.
+- Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versión 2.0, más la Rúbrica Integral de Evaluación); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json).
 - Datos: [`data/schema.md`](data/schema.md) y diagrama entidad-relación [`data/er.md`](data/er.md).

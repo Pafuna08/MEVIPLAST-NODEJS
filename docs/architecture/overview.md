@@ -20,6 +20,8 @@ La API también genera los comprobantes de venta (datos que el panel imprime) y 
 
 En desarrollo, Vite sirve el panel y proxifica `/api` al puerto `PORT` de `backend/.env` (por defecto 3000). En ejecución compilada, Vite genera `frontend/dist` y Express sirve primero el build y luego el resto de archivos estáticos.
 
+Los diagramas de contexto, contenedores, componentes, secuencia de una venta y despliegue están en [`diagramas.md`](diagramas.md).
+
 ## Capas
 
 - `backend/src/routes`: endpoints y middleware de rol.
