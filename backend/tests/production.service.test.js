@@ -77,7 +77,7 @@ test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async ()
   );
 });
 
-test("crear plantilla exige la variante y la guarda", async (t) => {
+test("crear plantilla exige la variante y la materia prima, y la guarda", async (t) => {
   await assert.rejects(
     productionService.crearPlantilla({ producto: "Cargadera", cantidad: 20, medida: "15 x 20" }, 1),
     /calibre es obligatorio/,
@@ -95,11 +95,16 @@ test("crear plantilla exige la variante y la guarda", async (t) => {
   t.after(() => {
     pool.query = originalQuery;
   });
+  // RN-026: sin materia prima no se guarda
+  await assert.rejects(
+    productionService.crearPlantilla({ producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300 }, 1),
+    /Selecciona la materia prima/,
+  );
   await productionService.crearPlantilla(
-    { producto: "Cargadera", medida: " 15 x 20 ", calibre: "2", color: "Blanco", cantidad: 300 },
+    { producto: "Cargadera", medida: " 15 x 20 ", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: "4" },
     1,
   );
-  assert.deepEqual(insert.slice(0, 5), ["Cargadera", "15 x 20", "2", "Blanco", 300]);
+  assert.deepEqual(insert.slice(0, 6), ["Cargadera", "15 x 20", "2", "Blanco", 300, 4]);
 });
 
 test("el administrador y el supervisor solo cancelan; nadie finaliza a mano (CR-013)", async (t) => {

@@ -1317,7 +1317,8 @@
                     ]
                   },
                   "materia_prima_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Bobina con la que se produce (RN-026); obligatoria y debe existir"
                   }
                 },
                 "required": [
@@ -1325,7 +1326,8 @@
                   "medida",
                   "calibre",
                   "color",
-                  "cantidad"
+                  "cantidad",
+                  "materia_prima_id"
                 ]
               }
             }

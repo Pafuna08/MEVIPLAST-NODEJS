@@ -451,9 +451,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.ok(nombres.includes("E2E operario"), "el Excel trae la fila del operario");
   });
 
-  await t.test("plantillas: una por variante, con la variante obligatoria", async () => {
-    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300 };
-    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300 })).status, 400);
+  await t.test("plantillas: una por variante, con la variante y la materia prima obligatorias", async () => {
+    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: bobina };
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300, materia_prima_id: bobina })).status, 400);
+    const sinMateria = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, materia_prima_id: undefined });
+    assert.equal(sinMateria.status, 400, "RN-026: la plantilla exige materia prima");
+    assert.match(sinMateria.body.mensaje, /materia prima/);
     const creada = await llamar("POST", "/produccion/plantillas", tokens.admin, base);
     assert.equal(creada.status, 201, JSON.stringify(creada.body));
     assert.equal(creada.body.medida, "15 x 20");

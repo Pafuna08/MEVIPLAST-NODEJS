@@ -142,7 +142,7 @@ export function Production({
           </FormPanel>
           <FormPanel
             title="Guardar plantilla frecuente"
-            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad"]}
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id"]}
             onSubmit={async (event) => {
               event.preventDefault();
               const payload = sanitizePayload(
@@ -162,7 +162,7 @@ export function Production({
             </Field>
             <Field label="Materia prima">
               <select name="materia_prima_id" defaultValue="">
-                <option value="">Sin asociar</option>
+                <option value="" disabled>Selecciona la materia prima</option>
                 {data.materials.map((material) => (
                   <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
                 ))}
