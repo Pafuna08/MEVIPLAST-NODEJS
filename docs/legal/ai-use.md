@@ -9,7 +9,7 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | Herramienta | Modalidad | Periodo | Quién la usó |
 |---|---|---|---|
 | Claude Code (Anthropic) | Asistente en Visual Studio Code con acceso al repositorio, la terminal y GitHub, siempre con permiso del usuario | Octubre y noviembre de 2026 (PR #13 a #60) | Pablo E. Fuenmayor Osuna |
-| GitHub Copilot | Asistente de código en Visual Studio Code (sugerencias y autocompletado) | Sobre todo al inicio del desarrollo (sprints 1 a 3, agosto a octubre de 2026) | Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja |
+| GitHub Copilot | Asistente de código en Visual Studio Code (sugerencias y autocompletado) | Sobre todo al inicio del desarrollo (sprints 1 a 7, agosto a octubre de 2026) | Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja |
 
 ## 2. Uso realizado con Claude Code
 
@@ -77,7 +77,7 @@ Además, operaciones sobre la base de datos local, siempre con autorización exp
 ### Uso anterior al PR #13
 
 - PR #11 y `docs/adso-review-2026-10-20.md` (alineación del repositorio con la guía): el borrador anterior de esta declaración ya mencionaba asistencia de IA en la documentación del repositorio. El equipo confirma que usó IA antes del PR #13; ese apoyo corresponde al uso de GitHub Copilot descrito en la sección 1.
-- Código de los sprints 1 a 3: sí se usó IA. GitHub Copilot en Visual Studio Code, sobre todo al inicio del desarrollo, por los dos integrantes.
+- Código de los sprints 1 a 7: sí se usó IA. GitHub Copilot en Visual Studio Code, sobre todo al inicio del desarrollo, por los dos integrantes.
 
 ## 3. Validación humana
 
