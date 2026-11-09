@@ -43,3 +43,35 @@ test("migracionesPendientes devuelve solo los .sql sin registrar, en orden", () 
   );
   assert.deepEqual(migracionesPendientes(archivos, archivos), []);
 });
+
+// DEF-020: db:init carga esta semilla sobre el esquema final de schema.sql,
+// así que cada columna que inserta o actualiza debe existir en la tabla.
+test("la semilla DEMO solo usa columnas que existen en schema.sql", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const esquema = leerEsquema();
+  const columnasDe = (tabla) => {
+    const bloque = esquema.split("CREATE TABLE IF NOT EXISTS ").find((parte) => parte.startsWith(`${tabla} (`));
+    assert.ok(bloque, `schema.sql no define la tabla ${tabla}`);
+    const definicion = bloque.split(/\r?\n\);/)[0];
+    return new Set([...definicion.matchAll(/^\s*([a-z_]+)\s+[A-Z]/gm)].map((m) => m[1]));
+  };
+  const semilla = fs.readFileSync(
+    path.join(__dirname, "..", "sql", "migrations", "20261026_seed_demo_inventory.sql"),
+    "utf8",
+  );
+  const inserciones = [...semilla.matchAll(/INSERT INTO (\w+)\s*\(([^)]*)\)/g)];
+  assert.ok(inserciones.length > 0);
+  for (const [, tabla, lista] of inserciones) {
+    const columnas = columnasDe(tabla);
+    for (const columna of lista.split(",").map((c) => c.trim())) {
+      assert.ok(columnas.has(columna), `${tabla}.${columna} no existe en schema.sql`);
+    }
+  }
+  for (const [, tabla, asignaciones] of semilla.matchAll(/UPDATE (\w+)\s+SET([\s\S]*?)WHERE/g)) {
+    const columnas = columnasDe(tabla);
+    for (const [, columna] of asignaciones.matchAll(/(\w+)\s*=/g)) {
+      assert.ok(columnas.has(columna), `${tabla}.${columna} no existe en schema.sql`);
+    }
+  }
+});

@@ -79,6 +79,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- `npm run db:init` vuelve a crear una base nueva: la semilla DEMO del inventario todavía escribía la columna `ubicacion`, quitada con CR-015, y la instalación se detenía con «Unknown column 'ubicacion'». Una prueba compara las columnas de la semilla con `schema.sql` (DEF-020, EV-2026-11-09-05).
 - El panel valida el color contra la misma lista fija del servidor (RN-025) y avisa «Selecciona un color de la lista»; antes conservaba la regla anterior de «solo letras y espacios».
 - Usuarios: los botones «Cambiar» del correo quedan alineados en una misma columna; antes se corrían según el largo de cada correo.
 - Ventas: debajo de las tarjetas aparece la lista de referencias con existencias de la línea elegida (medida, calibre, color y unidades), para escoger la correcta con un clic; la tarjeta cuenta solo las referencias con unidades, igual que la lista, y un registro sin variante se muestra como «Sin variante (registro anterior)».
