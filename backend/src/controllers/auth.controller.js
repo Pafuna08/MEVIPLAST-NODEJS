@@ -1,5 +1,6 @@
 const authService = require("../services/auth.service");
-const log = require("../utils/logger").crearLogger("auth");
+const { crearLogger, registrarAcceso } = require("../utils/logger");
+const log = crearLogger("auth");
 
 async function iniciarSesion(req, res) {
   try {
@@ -10,11 +11,15 @@ async function iniciarSesion(req, res) {
     }
 
     const resultado = await authService.login(usuario, password);
+    // CR-016: los accesos van al archivo accesos-AAAA-MM-DD.log; el bloqueo de cuenta sigue en auditoría
+    const acceso = { usuario: String(usuario).slice(0, 60), ip: req.ip };
 
     if (!resultado.ok) {
+      registrarAcceso(resultado.bloqueado ? "Acceso rechazado: cuenta bloqueada" : "Intento de inicio de sesión fallido", acceso, "warn");
       return res.status(resultado.bloqueado ? 423 : 401).json({ mensaje: resultado.mensaje });
     }
 
+    registrarAcceso("Inicio de sesión", { ...acceso, usuario_id: resultado.usuario.id, rol: resultado.usuario.rol });
     return res.json({ token: resultado.token, usuario: resultado.usuario });
   } catch (error) {
     log.error("Error al atender la petición", { error });

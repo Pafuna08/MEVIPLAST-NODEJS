@@ -3,6 +3,7 @@ import { api, loadView, readSession } from "./comun/api.js";
 import { orderVariant } from "./comun/componentes.jsx";
 import { movementTypeNames, roleViews, viewTitles } from "./comun/constantes.js";
 import { money, number, packagesLabel, safeProductName, sanitizePayload, sanitizeText } from "./comun/formato.js";
+import { blockNonNumericKeys, blockNonNumericPaste } from "./comun/validacion.js";
 import { Advance } from "./vistas/Advance.jsx";
 import { Assign } from "./vistas/Assign.jsx";
 import { Audit } from "./vistas/Audit.jsx";
@@ -51,7 +52,6 @@ function irreversibleSummary(view, payload, data) {
       lines: [
         ["Producto", sanitizeText(`${payload.familia} · ${payload.medida} · calibre ${payload.calibre} · ${payload.color}`)],
         ["Cantidad", `${units(payload.cantidad)} unidades`],
-        ["Ubicación", sanitizeText(payload.ubicacion || "Sin ubicación")],
       ],
     };
   }
@@ -126,6 +126,16 @@ export default function DashboardApp() {
     document.body.dataset.role = role;
     document.title = `${role} | MEVIPLAST`;
   }, [config, role, token]);
+
+  // En todos los campos numéricos del panel: sin «e», «+» ni «-» al escribir o pegar
+  useEffect(() => {
+    document.addEventListener("keydown", blockNonNumericKeys);
+    document.addEventListener("paste", blockNonNumericPaste);
+    return () => {
+      document.removeEventListener("keydown", blockNonNumericKeys);
+      document.removeEventListener("paste", blockNonNumericPaste);
+    };
+  }, []);
 
   useEffect(() => {
     if (!config || !token) return undefined;
@@ -613,6 +623,6 @@ function renderView({
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports />;
-  if (view === "auditoria") return <Audit data={data} />;
+  if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }

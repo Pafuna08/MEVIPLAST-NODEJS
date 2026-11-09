@@ -14,8 +14,8 @@ function validarProducto(producto) {
 
 // Medida, calibre y color de la orden: la variante del inventario que recibirá el avance
 function varianteOrden(producto, { medida, calibre, color }) {
-  const etiqueta = validarVariante({ familia: producto, medida, calibre, color });
-  return { medida: medida.trim(), calibre: calibre.trim(), color: color.trim(), etiqueta };
+  const { producto: etiqueta, ...variante } = validarVariante({ familia: producto, medida, calibre, color });
+  return { ...variante, etiqueta };
 }
 
 async function listar(usuario) {
@@ -459,14 +459,14 @@ async function registrarAvance(id, { cantidad, observaciones }, actor) {
     } else if (conVariante) {
       const etiqueta = `${producto} · ${orden.medida} · calibre ${orden.calibre} · ${orden.color}`;
       const [creado] = await connection.query(
-        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [etiqueta, producto, orden.medida, orden.calibre, orden.color, cantidadNumerica, "Por ubicar"],
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, ?, ?, ?, ?)",
+        [etiqueta, producto, orden.medida, orden.calibre, orden.color, cantidadNumerica],
       );
       inventarioId = creado.insertId;
     } else {
       const [creado] = await connection.query(
-        "INSERT INTO inventario (producto, familia, cantidad, ubicacion) VALUES (?, ?, ?, ?)",
-        [producto, producto, cantidadNumerica, "Produccion"],
+        "INSERT INTO inventario (producto, familia, cantidad) VALUES (?, ?, ?)",
+        [producto, producto, cantidadNumerica],
       );
       inventarioId = creado.insertId;
     }

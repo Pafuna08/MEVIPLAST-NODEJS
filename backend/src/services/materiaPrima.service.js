@@ -1,5 +1,6 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
+const { normalizarMedida, normalizarCalibre, normalizarColor } = require("../utils/variantes");
 
 const tiposEntrada = new Set(["compra", "ajuste_entrada"]);
 const tiposPermitidos = new Set([
@@ -52,9 +53,10 @@ async function crear(datos, actorId) {
     error.statusCode = 400;
     throw error;
   }
-  const medida = validarCampoMaterial(datos.medida, "La medida", 80);
-  const calibre = validarCampoMaterial(datos.calibre, "El calibre", 40);
-  const color = validarCampoMaterial(datos.color, "El color", 80);
+  // Obligatorios y dentro del largo de la columna; luego el formato de RN-025
+  const medida = normalizarMedida(validarCampoMaterial(datos.medida, "La medida", 80));
+  const calibre = normalizarCalibre(validarCampoMaterial(datos.calibre, "El calibre", 40));
+  const color = normalizarColor(validarCampoMaterial(datos.color, "El color", 80));
   const nombreCompleto = nombreMaterial(tipo, medida, calibre, color);
   if (nombreCompleto.length > 120) {
     const error = new Error("Las especificaciones exceden el largo permitido");

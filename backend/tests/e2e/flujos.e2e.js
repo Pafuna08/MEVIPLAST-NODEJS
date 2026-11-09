@@ -100,7 +100,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       cantidad: 1000, prioridad: "alta",
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
-    assert.equal(orden.body.medida, "40x60 cm");
+    // RN-025: la medida se guarda normalizada y un dato sin formato se rechaza en el servidor
+    assert.equal(orden.body.medida, "40 x 60 cm");
+    const invalida = await llamar("POST", "/inventario", tokens.admin, {
+      familia: "Cargadera", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
+    });
+    assert.equal(invalida.status, 400, "medida y calibre sin formato se rechazan");
     // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor fijo
     assert.equal(orden.body.supervisor_id, null);
     const ordenId = orden.body.id;
@@ -120,11 +125,11 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(avance.status, 200, JSON.stringify(avance.body));
     assert.equal(avance.body.estado, "finalizado");
 
-    // El avance entra a la variante exacta de la orden, creada con ubicación por asignar
-    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad, ubicacion FROM inventario WHERE familia = 'Cargadera'");
+    // El avance entra a la variante exacta de la orden
+    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad FROM inventario WHERE familia = 'Cargadera'");
     assert.equal(variantes.length, 1);
     const [stock] = variantes;
-    assert.deepEqual([stock.medida, stock.calibre, stock.color, stock.ubicacion], ["40x60 cm", "2", "Negro", "Por ubicar"]);
+    assert.deepEqual([stock.medida, stock.calibre, stock.color], ["40 x 60 cm", "2", "Negro"]);
     assert.equal(Number(stock.cantidad), 1000);
     const [[mov]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE produccion_id = ? AND tipo = 'produccion'", [ordenId]);
     assert.equal(Number(mov.n), 1);
@@ -215,7 +220,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       familia: "Adhesivo PP", medida: "10x15", calibre: "2", color: "Transparente", cantidad: 1500,
     });
     assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
-    const [[variante]] = await db.query("SELECT id FROM inventario WHERE familia = 'Adhesivo PP' AND medida = '10x15'");
+    const [[variante]] = await db.query("SELECT id FROM inventario WHERE familia = 'Adhesivo PP' AND medida = '10 x 15'");
     const ventas = await Promise.all(
       Array.from({ length: 5 }, (_, i) =>
         llamar("POST", "/ventas", tokens.vendedor, {
@@ -458,5 +463,65 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.deepEqual(indices.map((i) => i.nombre).sort(), ["PRIMARY", "uq_plantilla_variante"]);
     const [[anterior]] = await db.query("SELECT producto, medida FROM plantillas_produccion");
     assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
+  });
+
+  await t.test("CR-016: inicios de sesión fuera de la tabla, auditoría filtrada y archivo de lo antiguo", async () => {
+    // 1. Ya hubo inicios de sesión de los cinco roles en esta prueba y ninguno quedó en la tabla
+    const [[logins]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'LOGIN'");
+    assert.equal(Number(logins.n), 0, "los inicios de sesión van al archivo de accesos");
+
+    // 3. El administrador filtra en el servidor y recibe una página con el total
+    const bloqueos = await llamar("GET", "/reportes/auditoria?accion=BLOQUEO_CUENTA&porPagina=5", tokens.admin);
+    assert.equal(bloqueos.status, 200, JSON.stringify(bloqueos.body));
+    assert.ok(bloqueos.body.total >= 1);
+    assert.ok(bloqueos.body.registros.every((evento) => evento.accion === "BLOQUEO_CUENTA"));
+    assert.ok(bloqueos.body.opciones.acciones.includes("BLOQUEO_CUENTA"));
+    const vacio = await llamar("GET", "/reportes/auditoria?desde=2000-01-01&hasta=2000-01-31", tokens.admin);
+    assert.deepEqual([vacio.body.total, vacio.body.registros.length], [0, 0]);
+    assert.equal((await llamar("GET", "/reportes/auditoria?desde=09/11/2026", tokens.admin)).status, 400);
+
+    // 4. Lo que tiene más de 12 meses pasa a auditoria-AAAA.csv y sale de la tabla; lo reciente se queda
+    await db.query(
+      `INSERT INTO auditoria (usuario_id, accion, tabla_afectada, detalle, fecha) VALUES
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 1; con punto y coma', DATE_SUB(NOW(), INTERVAL 25 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 2', DATE_SUB(NOW(), INTERVAL 13 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'reciente', DATE_SUB(NOW(), INTERVAL 2 MONTH))`,
+    );
+    const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "meviplast-archivo-"));
+    try {
+      const { archivarAuditoria } = require("../../src/services/archivoAuditoria.service");
+      const simulado = await archivarAuditoria({ meses: 12, directorio: dir, simular: true });
+      assert.equal(simulado.archivados, 2);
+      assert.equal(fs.readdirSync(dir).length, 0, "--simular no escribe ni borra");
+      const resultado = await archivarAuditoria({ meses: 12, directorio: dir });
+      assert.equal(resultado.archivados, 2);
+      const contenido = fs.readdirSync(dir).map((nombre) => fs.readFileSync(path.join(dir, nombre), "utf8")).join("");
+      assert.match(contenido, /^\uFEFFid;fecha;usuario_id;usuario;accion;tabla;detalle/);
+      assert.match(contenido, /"antiguo 1; con punto y coma"/);
+      assert.match(contenido, /antiguo 2/);
+      const [quedan] = await db.query("SELECT detalle FROM auditoria WHERE accion = 'PRUEBA_ARCHIVO'");
+      assert.deepEqual(quedan.map((fila) => fila.detalle), ["reciente"]);
+      const [[registro]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'ARCHIVAR_AUDITORIA'");
+      assert.equal(Number(registro.n), 1, "el archivo queda registrado en la auditoría");
+      assert.equal((await archivarAuditoria({ meses: 12, directorio: dir })).archivados, 0, "una segunda corrida no repite");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  await t.test("CR-015: la migración que quita ubicación y lote se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("ALTER TABLE inventario ADD COLUMN ubicacion VARCHAR(80) NULL");
+    await db.query("ALTER TABLE produccion ADD COLUMN lote VARCHAR(80) NULL");
+    const [[antes]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261109_drop_unused_columns.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [columnas] = await db.query(
+      "SELECT column_name AS nombre FROM information_schema.columns WHERE table_schema = ? AND ((table_name = 'inventario' AND column_name = 'ubicacion') OR (table_name = 'produccion' AND column_name = 'lote'))",
+      [DB],
+    );
+    assert.equal(columnas.length, 0, "las dos columnas se eliminan");
+    const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    assert.deepEqual([Number(despues.inventario), Number(despues.produccion)], [Number(antes.inventario), Number(antes.produccion)], "no se pierden filas");
   });
 });

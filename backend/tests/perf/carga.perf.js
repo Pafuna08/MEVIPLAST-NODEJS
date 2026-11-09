@@ -66,7 +66,7 @@ async function prepararBase() {
     for (let i = 1; i <= 10; i += 1) {
       const medida = `${10 + i} x ${15 + i}`;
       const [r] = await raiz.query(
-        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, '2', 'Transparente', 10000000, 'Bodega perf')",
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, ?, '2', 'Transparente', 10000000)",
         [`${familia} · ${medida} · calibre 2 · Transparente`, familia, medida],
       );
       variantes.push({ id: r.insertId, producto: `${familia} · ${medida} · calibre 2 · Transparente` });
@@ -123,7 +123,7 @@ async function prepararBase() {
 async function levantarApi() {
   const proceso = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, "..", ".."),
-    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "perf-only-secret", CORS_ORIGINS: "" },
+    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "perf-only-secret", CORS_ORIGINS: "", LOG_DIR: "off" },
     stdio: "ignore",
   });
   for (let i = 0; i < 60; i += 1) {

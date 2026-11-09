@@ -61,7 +61,7 @@ async function prepararBase() {
   const [bobina] = await raiz.query("INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD 10 x 15', 'PEBD', '10 x 15', '2', 'Transparente', 500, 50)");
   for (const familia of productosTerminados) {
     await raiz.query(
-      "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000, 'Bodega')",
+      "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000)",
       [`${familia} · 10 x 15 · calibre 2 · Transparente`, familia],
     );
   }
@@ -82,7 +82,7 @@ async function levantarApi() {
   const log = fs.openSync(LOG_API, "w");
   const proceso = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, "..", ".."),
-    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "browser-only-secret", CORS_ORIGINS: "" },
+    env: { ...process.env, DB_NAME: DB, PORT: String(PUERTO), JWT_SECRET: "browser-only-secret", CORS_ORIGINS: "", LOG_DIR: "off" },
     stdio: ["ignore", log, log],
   });
   proceso.on("exit", (codigo) => {

@@ -38,7 +38,7 @@ export function sanitizePayload(value) {
       if (typeof item !== "string") return [key, sanitizePayload(item)];
       const clean = sanitizeText(
         item,
-        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|ubicacion|motivo|detalle)/i.test(
+        /(password|observaciones|cliente|producto|nombre|usuario|correo|tipo|proveedor|motivo|detalle)/i.test(
           lowerKey,
         )
           ? 255

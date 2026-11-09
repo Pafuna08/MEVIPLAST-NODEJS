@@ -8,7 +8,6 @@ const LIMITES = {
   medida: 80,
   calibre: 40,
   color: 80,
-  ubicacion: 80,
   proveedor: 120,
   tipo: 60,
   detalle: 200,

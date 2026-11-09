@@ -624,13 +624,16 @@
                     ]
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "peso_rollo": {
                     "type": "number",
@@ -1066,14 +1069,16 @@
                     "description": "Línea del catálogo (RN-012)"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
                     "type": "string",
-                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance"
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number",
@@ -1242,13 +1247,16 @@
                     "type": "string"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number"
@@ -1429,13 +1437,15 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Medida, calibre y color van juntos"
+                    "description": "Medida, calibre y color van juntos. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number"
@@ -1780,20 +1790,20 @@
                     "description": "Línea del catálogo (RN-012)"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "integer",
                     "minimum": 1
-                  },
-                  "ubicacion": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -2549,16 +2559,91 @@
         "tags": [
           "Reportes"
         ],
-        "summary": "Bitácora de auditoría",
-        "x-requisitos": "RF-029",
+        "summary": "Bitácora de auditoría con filtros y páginas",
+        "x-requisitos": "RF-029, CR-016",
         "parameters": [
           {
-            "name": "limite",
+            "name": "desde",
             "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Fecha inicial AAAA-MM-DD (incluida)"
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Fecha final AAAA-MM-DD (incluida)"
+          },
+          {
+            "name": "usuario_id",
+            "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
-              "default": 100
-            }
+              "minimum": 1
+            },
+            "description": "Usuario que hizo la acción"
+          },
+          {
+            "name": "accion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z_]{1,100}$"
+            },
+            "description": "Acción exacta, p. ej. REGISTRAR_VENTA"
+          },
+          {
+            "name": "tabla",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z_]{1,60}$"
+            },
+            "description": "Módulo (tabla afectada)"
+          },
+          {
+            "name": "texto",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Texto contenido en el detalle"
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Página"
+          },
+          {
+            "name": "porPagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Registros por página"
           }
         ],
         "responses": {
@@ -2567,7 +2652,39 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "registros",
+                    "total",
+                    "pagina",
+                    "porPagina",
+                    "paginas",
+                    "opciones"
+                  ],
+                  "properties": {
+                    "registros": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "pagina": {
+                      "type": "integer"
+                    },
+                    "porPagina": {
+                      "type": "integer"
+                    },
+                    "paginas": {
+                      "type": "integer"
+                    },
+                    "opciones": {
+                      "type": "object",
+                      "description": "Acciones, módulos y usuarios que existen en la bitácora, para las listas de los filtros"
+                    }
+                  }
                 }
               }
             }
@@ -2577,11 +2694,15 @@
           },
           "403": {
             "$ref": "#/components/responses/SinPermiso"
+          },
+          "400": {
+            "description": "Un filtro tiene un formato inválido"
           }
         },
         "x-roles": [
           "admin"
-        ]
+        ],
+        "description": "Filtra toda la tabla en el servidor. Los inicios de sesión no están aquí: van al archivo accesos-AAAA-MM-DD.log del servidor (CR-016)."
       }
     }
   },

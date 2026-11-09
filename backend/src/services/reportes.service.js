@@ -194,21 +194,87 @@ async function resumenVentas({ desde, hasta } = {}) {
 }
 
 async function resumenInventario() {
-  const [filas] = await pool.query("SELECT producto, cantidad, ubicacion FROM inventario ORDER BY cantidad ASC");
+  const [filas] = await pool.query("SELECT producto, cantidad FROM inventario ORDER BY cantidad ASC");
   return filas;
 }
 
-// Entre 1 y 1 000 registros, del más reciente al más antiguo (el id desempata eventos del mismo segundo)
-async function bitacoraAuditoria(limite = 100) {
-  const cantidad = Math.min(Math.max(Math.trunc(Number(limite)) || 100, 1), 1000);
-  const [filas] = await pool.query(
+function filtroInvalido(mensaje) {
+  const error = new Error(mensaje);
+  error.statusCode = 400;
+  return error;
+}
+
+// RF-029 con CR-016: el administrador elige qué buscar (fechas, usuario, acción, módulo y texto del
+// detalle) y el servidor filtra toda la tabla y devuelve una página (20 por defecto, máximo 100).
+async function bitacoraAuditoria(filtros = {}) {
+  const condiciones = [];
+  const valores = [];
+  const fecha = /^\d{4}-\d{2}-\d{2}$/;
+  const { desde, hasta, usuario_id, accion, tabla, texto } = filtros;
+  if (desde !== undefined && desde !== "") {
+    if (!fecha.test(desde)) throw filtroInvalido("La fecha inicial debe tener el formato AAAA-MM-DD");
+    condiciones.push("a.fecha >= ?");
+    valores.push(`${desde} 00:00:00`);
+  }
+  if (hasta !== undefined && hasta !== "") {
+    if (!fecha.test(hasta)) throw filtroInvalido("La fecha final debe tener el formato AAAA-MM-DD");
+    if (desde && desde > hasta) throw filtroInvalido("La fecha inicial no puede ser posterior a la final");
+    condiciones.push("a.fecha < DATE_ADD(?, INTERVAL 1 DAY)");
+    valores.push(hasta);
+  }
+  if (usuario_id !== undefined && usuario_id !== "") {
+    const id = Number(usuario_id);
+    if (!Number.isInteger(id) || id <= 0) throw filtroInvalido("El usuario del filtro no es válido");
+    condiciones.push("a.usuario_id = ?");
+    valores.push(id);
+  }
+  if (accion !== undefined && accion !== "") {
+    if (!/^[A-Z_]{1,100}$/.test(accion)) throw filtroInvalido("La acción del filtro no es válida");
+    condiciones.push("a.accion = ?");
+    valores.push(accion);
+  }
+  if (tabla !== undefined && tabla !== "") {
+    if (!/^[a-z_]{1,60}$/.test(tabla)) throw filtroInvalido("El módulo del filtro no es válido");
+    condiciones.push("a.tabla_afectada = ?");
+    valores.push(tabla);
+  }
+  if (texto !== undefined && String(texto).trim() !== "") {
+    const buscado = String(texto).trim();
+    if (buscado.length > 100) throw filtroInvalido("El texto a buscar admite máximo 100 caracteres");
+    condiciones.push("a.detalle LIKE ?");
+    valores.push(`%${buscado.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
+  }
+  const porPagina = Math.min(Math.max(Math.trunc(Number(filtros.porPagina)) || 20, 1), 100);
+  const pagina = Math.max(Math.trunc(Number(filtros.pagina)) || 1, 1);
+  const donde = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+
+  const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM auditoria a ${donde}`, valores);
+  const [registros] = await pool.query(
     `SELECT a.*, u.usuario AS realizado_por
      FROM auditoria a
      LEFT JOIN usuarios u ON u.id = a.usuario_id
-     ORDER BY a.fecha DESC, a.id DESC LIMIT ?`,
-    [cantidad]
+     ${donde}
+     ORDER BY a.fecha DESC, a.id DESC LIMIT ? OFFSET ?`,
+    [...valores, porPagina, (pagina - 1) * porPagina],
   );
-  return filas;
+  // Valores para las listas de los filtros: solo lo que existe en la bitácora
+  const [acciones] = await pool.query("SELECT DISTINCT accion FROM auditoria ORDER BY accion");
+  const [tablas] = await pool.query("SELECT DISTINCT tabla_afectada FROM auditoria ORDER BY tabla_afectada");
+  const [usuarios] = await pool.query(
+    "SELECT DISTINCT u.id, u.usuario FROM auditoria a JOIN usuarios u ON u.id = a.usuario_id ORDER BY u.usuario",
+  );
+  return {
+    registros,
+    total: Number(total),
+    pagina,
+    porPagina,
+    paginas: Math.max(Math.ceil(Number(total) / porPagina), 1),
+    opciones: {
+      acciones: acciones.map((fila) => fila.accion),
+      tablas: tablas.map((fila) => fila.tabla_afectada),
+      usuarios: usuarios.map((fila) => ({ id: fila.id, usuario: fila.usuario })),
+    },
+  };
 }
 
 module.exports = {

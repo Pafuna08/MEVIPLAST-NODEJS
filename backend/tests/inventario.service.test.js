@@ -40,21 +40,20 @@ test("ingresar inventario crea una variante de una línea permitida con sus espe
       calibre: "2",
       color: "Transparente",
       cantidad: 500,
-      ubicacion: "Bodega A",
     },
     4,
   );
 
   assert.equal(committed, true);
   const insert = statements.find(({ sql }) => sql.startsWith("INSERT INTO inventario"));
+  // RN-025: «6*12» se guarda como «6 x 12»
   assert.deepEqual(insert.params, [
-    "Adhesivo PP · 6*12 · calibre 2 · Transparente",
+    "Adhesivo PP · 6 x 12 · calibre 2 · Transparente",
     "Adhesivo PP",
-    "6*12",
+    "6 x 12",
     "2",
     "Transparente",
     500,
-    "Bodega A",
   ]);
   const movement = statements.find(({ sql }) =>
     sql.startsWith("INSERT INTO movimientos_inventario"),

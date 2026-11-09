@@ -39,7 +39,7 @@ test("la variante de inventario y producción respeta el largo de sus columnas",
     (error) => error.statusCode === 400 && /medida admite máximo 40/.test(error.message),
   );
   assert.equal(
-    inventarioService.validarVariante({ familia: "Cargadera", medida: "15 x 20", calibre: "2", color: "Negro" }),
+    inventarioService.validarVariante({ familia: "Cargadera", medida: "15 x 20", calibre: "2", color: "Negro" }).producto,
     "Cargadera · 15 x 20 · calibre 2 · Negro",
   );
 });

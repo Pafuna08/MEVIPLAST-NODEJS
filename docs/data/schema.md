@@ -9,7 +9,7 @@ La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schem
 | `auditoria`     | Acciones registradas                      | Usuario opcional; conserva el registro al eliminar usuario            |
 | `materia_prima` | Existencia y especificaciones de bobinas PEBD, PEAD y PP | Medida, calibre, color y peso por rollo |
 | `movimientos_materia_prima` | Ledger de materia prima | Compras, ajustes de entrada/salida y consumos asociados a una orden; no se puede borrar una materia prima con movimientos (ADR-003) |
-| `produccion`    | Orden y avance acumulado                  | Supervisor asignado y operario responsable; línea con medida, calibre y color (variante que recibe el avance); registra observaciones (la columna `lote` se conserva por historial, pero el sistema ya no la usa) |
+| `produccion`    | Orden y avance acumulado                  | Supervisor asignado y operario responsable; línea con medida, calibre y color (variante que recibe el avance); registra observaciones (la columna `lote`, sin uso, se eliminó con la migración `20261109_drop_unused_columns.sql`) |
 | `plantillas_produccion` | Recetas/órdenes frecuentes reutilizables | El administrador mantiene plantillas para crear órdenes con datos sugeridos; una por variante (línea, medida, calibre y color) |
 | `inventario`    | Existencia agregada de producto terminado | Una fila por variante (familia, medida, calibre, color) |
 | `movimientos_inventario` | Ledger de producto terminado | Saldos iniciales, ingresos, producción, salidas y ventas, enlazados a la orden o la venta (ADR-003) |
@@ -30,3 +30,5 @@ La migración `backend/sql/migrations/20261026_finished_product_sales_catalog.sq
 La migración `backend/sql/migrations/20261027_login_lockout.sql` agrega a `usuarios` los campos `intentos_fallidos` y `bloqueado_hasta` para el bloqueo temporal por intentos fallidos (HU-019). Solo agrega columnas; no modifica datos existentes.
 
 La migración `backend/sql/migrations/20261026_seed_demo_inventory.sql` agrega existencias DEMO de ejemplo a las seis materias primas y a las seis líneas de producto terminado. No registra ventas ni movimientos y solo actualiza materias primas de ejemplo que todavía están en cero y sin proveedor; las variantes de producto terminado solo se insertan si no existen. En las ubicaciones y proveedores se indica DEMO para distinguirlas de existencias reales.
+
+La migración `backend/sql/migrations/20261109_drop_unused_columns.sql` elimina dos columnas que ningún requisito usa: `inventario.ubicacion` (todo el producto terminado se guarda en el mismo lugar) y `produccion.lote` (sin uso desde el PR #45). Es la decisión CR-015 del equipo por delegación de MEVIPLAST. Cada borrado se hace solo si la columna existe; no modifica filas.

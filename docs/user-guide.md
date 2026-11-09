@@ -13,7 +13,7 @@
 3. El panel abre en `/dashboard.html` con navegación según el rol de la cuenta. En el centro de la barra superior aparece la bienvenida con tu nombre y lo que hace tu rol.
 4. Usa **Cerrar sesión** para retirar la sesión del navegador; el panel pide confirmarlo. La sesión vence a las 8 horas; si vence, o si el administrador desactiva tu cuenta o cambia tu rol, el panel te devuelve al inicio de sesión.
 
-Si falta un campo o un dato no cumple su regla (largo máximo, número mayor que cero, correo válido), el formulario lo avisa debajo de los campos y marca el campo en rojo; el servidor vuelve a validar todo.
+Si falta un campo o un dato no cumple su regla (largo máximo, número mayor que cero, correo válido, o medida, calibre y color con su formato: medida como «10 x 15» o «40 x 60 cm», calibre como «0.95» o «2» y color solo con letras), el formulario lo avisa debajo de los campos y marca el campo en rojo; el servidor vuelve a validar todo.
 
 Los registros que mueven inventario o dinero (venta, salida manual, ingreso de inventario, movimiento de materia prima y avance de producción) muestran un resumen y piden confirmación antes de guardar, porque no se pueden deshacer desde el panel: **Revisar** vuelve al formulario sin guardar. Los demás formularios guardan directo.
 
@@ -29,7 +29,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Órdenes frecuentes (plantillas):** cada plantilla guarda línea, medida, calibre, color, meta, materia prima y prioridad; puede haber varias de la misma línea si cambia la variante. **Usar plantilla** llena el formulario de la nueva orden, incluida la variante. Las plantillas creadas antes de este cambio no tienen variante: al usarlas hay que escribirla.
 - **Ventas:** registrar cliente, línea, variante, paquetes, unidades por paquete y precio por paquete. El total se calcula, el stock disminuye si hay existencias y se abre el comprobante.
 - **Reportes:** el reporte del periodo se abre en la misma pestaña; **← Volver a reportes** regresa al listado y el menú lleva a cualquier otra sección. «Imprimir/guardar PDF» usa la impresión del navegador y **Descargar Excel** baja el detalle del periodo en un archivo `.xlsx` con las hojas Resumen, Por producto y Detalle. **Rendimiento de operarios** muestra, para cada operario activo, el % de cumplimiento de la meta del periodo: unidades producidas ÷ meta de las órdenes que se le asignaron y se crearon en ese periodo, sin las canceladas. «Sin órdenes» indica que no tuvo órdenes en el periodo; «Unidades registradas» suma todos sus avances del periodo, incluidos los de órdenes anteriores.
-- **Auditoría:** bitácora de acciones (inicios de sesión, cambios de usuarios, órdenes, movimientos y ventas) con fecha, usuario, acción y detalle; muestra los últimos 500 eventos y tiene un buscador.
+- **Auditoría:** bitácora de acciones (cambios de usuarios, bloqueos de cuenta, órdenes, movimientos y ventas) con fecha, usuario, acción, módulo y detalle. Se elige qué buscar: rango de fechas, usuario, acción, módulo y un texto del detalle; por defecto muestra los últimos 7 días, en páginas de 20, con el total encontrado. **Ver todo** quita los filtros. Los inicios de sesión no aparecen aquí: quedan en el archivo de accesos del servidor (ver `docs/operations/backup-restore.md`).
 
 ## Supervisor
 

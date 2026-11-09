@@ -48,7 +48,6 @@ async function main() {
   await connection.query(`ALTER TABLE produccion
     ADD COLUMN IF NOT EXISTS prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
     ADD COLUMN IF NOT EXISTS cantidad_producida DECIMAL(10,2) NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS lote VARCHAR(80) NULL,
     ADD COLUMN IF NOT EXISTS observaciones VARCHAR(500) NULL`);
 
   const usuariosDemo = [
