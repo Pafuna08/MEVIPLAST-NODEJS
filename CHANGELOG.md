@@ -28,6 +28,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Security
 
+- El supervisor ya no puede registrar ventas por la API (`POST /ventas` responde 403); sigue consultando ventas, comprobantes y reportes. Antes la API se lo permitía aunque su menú no tenía la vista Ventas (DEF-007, decisión del equipo con la delegación de MEVIPLAST).
 - `npm audit` vuelve a 0 vulnerabilidades en backend y frontend (había 3 moderadas en herramientas de desarrollo, halladas en la instalación limpia del 2026-11-08): `vite` 6.4.4 → 6.4.5 y `minimatch` 10 → 11.0.5 dentro de `nodemon`, mediante un `override` porque `nodemon` 3.1.14 todavía pide la versión 10. Ninguna llegaba a producción (`npm audit --omit=dev` ya daba 0).
 - Los formularios ya no usan atributos de validación en el HTML (`required`, `maxlength`, `minlength`, `min`, `max`, `step`, `type="email"`), por indicación del instructor. El panel valida con su propio código (campo obligatorio, largo, número positivo, correo) y muestra «Completa el campo …»; el servidor sigue validando todo y ahora rechaza con 400 los textos más largos que su columna (`validarLongitudes`, y medida, calibre y color de las variantes), en lugar de fallar al guardarlos.
 - La API solo acepta llamadas de otros dominios listados en `CORS_ORIGINS`.

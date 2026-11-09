@@ -36,7 +36,7 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | POST        | `/inventario`                                                        | Admin, supervisor, almacenista         | Registrar ingreso manual              |
 | POST        | `/inventario/{id}/salida`                                            | Admin, supervisor, almacenista         | Registrar salida manual con `cantidad`, `motivo` (de la lista) y `detalle` (obligatorio si el motivo es «Otro») |
 | GET         | `/ventas`                                                            | Admin, supervisor; vendedor (solo propias) | Consultar ventas                  |
-| POST        | `/ventas`                                                            | Admin, supervisor, vendedor             | Registrar venta y descontar inventario |
+| POST        | `/ventas`                                                            | Admin, vendedor                         | Registrar venta y descontar inventario (el supervisor solo consulta, DEF-007) |
 | GET         | `/ventas/:id/comprobante`                                            | Admin, supervisor; vendedor (solo propias, 404 si no) | Datos del comprobante imprimible con número `V-000123` (RF-023) |
 | GET         | `/reportes/produccion`, `/reportes/ventas`, `/reportes/inventario`   | Admin, supervisor                      | Consultar resúmenes                    |
 | GET         | `/reportes/produccion/detalle?periodo={diario\|semanal\|mensual\|anual}` | Admin, supervisor                   | Ver producción registrada y agregados del periodo calendario actual |

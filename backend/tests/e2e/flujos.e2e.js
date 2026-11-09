@@ -196,6 +196,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       ["GET", "/inventario", ["admin", "supervisor", "almacenista", "vendedor"]],
       ["GET", "/inventario/movimientos", ["admin", "supervisor", "almacenista"]],
       ["GET", "/ventas", ["admin", "supervisor", "vendedor"]],
+      ["POST", "/ventas", ["admin", "vendedor"]],
       ["GET", "/reportes/produccion", ["admin", "supervisor"]],
       ["GET", "/reportes/auditoria", ["admin"]],
     ];
