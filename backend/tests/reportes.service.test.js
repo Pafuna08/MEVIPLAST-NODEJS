@@ -79,7 +79,7 @@ test("la bitácora pagina entre 1 y 100 registros y ordena del más reciente al 
   });
 
   for (const porPagina of [50, 5000, 0, -3, "abc", undefined]) await reportesService.bitacoraAuditoria({ porPagina });
-  assert.deepEqual(paginas.map((l) => l.params.at(-2)), [50, 100, 50, 1, 50, 50]);
+  assert.deepEqual(paginas.map((l) => l.params.at(-2)), [50, 100, 20, 1, 20, 20]);
   assert.match(paginas[0].sql, /ORDER BY a\.fecha DESC, a\.id DESC/);
 });
 

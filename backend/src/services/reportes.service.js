@@ -205,7 +205,7 @@ function filtroInvalido(mensaje) {
 }
 
 // RF-029 con CR-016: el administrador elige qué buscar (fechas, usuario, acción, módulo y texto del
-// detalle) y el servidor filtra toda la tabla y devuelve una página (50 por defecto, máximo 100).
+// detalle) y el servidor filtra toda la tabla y devuelve una página (20 por defecto, máximo 100).
 async function bitacoraAuditoria(filtros = {}) {
   const condiciones = [];
   const valores = [];
@@ -244,7 +244,7 @@ async function bitacoraAuditoria(filtros = {}) {
     condiciones.push("a.detalle LIKE ?");
     valores.push(`%${buscado.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
   }
-  const porPagina = Math.min(Math.max(Math.trunc(Number(filtros.porPagina)) || 50, 1), 100);
+  const porPagina = Math.min(Math.max(Math.trunc(Number(filtros.porPagina)) || 20, 1), 100);
   const pagina = Math.max(Math.trunc(Number(filtros.pagina)) || 1, 1);
   const donde = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
 
