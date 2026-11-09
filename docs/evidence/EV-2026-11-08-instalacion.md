@@ -46,5 +46,5 @@ El README ahora lista las cinco cuentas de demostración con su contraseña (ant
 
 ## Pendiente
 
-- Las 3 vulnerabilidades moderadas de `npm audit` (`minimatch`, que llega por `nodemon` en el backend, y `vite` en el frontend) son de herramientas de desarrollo y no se instalan en producción. Se actualizan en un PR de mantenimiento aparte.
+- Las 3 vulnerabilidades moderadas de `npm audit` (`minimatch`, que llega por `nodemon` en el backend, y `vite` en el frontend) son de herramientas de desarrollo y no se instalan en producción (`npm audit --omit=dev` da 0). Corregidas en la rama `chore/MEVI-52-npm-audit`: `vite` 6.4.5 y `minimatch` 11.0.5 para `nodemon` (con un `override`); `npm audit` da 0 en ambos y `nodemon` sigue reiniciando al detectar cambios.
 - Repetición por Carlos Herrera Sibaja en su equipo para cerrar RNF-009.
