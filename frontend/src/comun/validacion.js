@@ -68,6 +68,27 @@ function invalidField(form, limits = {}) {
   return null;
 }
 
+// Un campo numérico con texto que no es número («43e», «-») le llega vacío al formulario;
+// se detecta aparte para no pedir «Completa el campo» cuando sí se escribió algo
+function notANumberField(form) {
+  for (const field of form.elements) {
+    if (field.type === "number" && field.validity?.badInput) return field;
+  }
+  return null;
+}
+
+// Teclas que el navegador acepta en un campo numérico por la notación científica (4e3) o el signo
+const NON_NUMERIC_KEYS = new Set(["e", "E", "+", "-"]);
+
+export function blockNonNumericKeys(event) {
+  if (event.target?.type === "number" && NON_NUMERIC_KEYS.has(event.key)) event.preventDefault();
+}
+
+export function blockNonNumericPaste(event) {
+  const text = event.clipboardData?.getData("text") ?? "";
+  if (event.target?.type === "number" && !/^\s*\d*(?:[.,]\d*)?\s*$/.test(text)) event.preventDefault();
+}
+
 function missingField(form, names) {
   for (const name of names) {
     const field = form.elements.namedItem(name);
@@ -86,10 +107,13 @@ function fieldLabel(field) {
 export function useObligatorios() {
   const [warning, setWarning] = useState({ key: null, text: "" });
   function check(event, names, key = "form", limits = {}) {
-    const missing = missingField(event.currentTarget, names);
-    const invalid = missing
-      ? { field: missing, message: `Completa el campo «${fieldLabel(missing)}».` }
-      : invalidField(event.currentTarget, limits);
+    const notANumber = notANumberField(event.currentTarget);
+    const missing = notANumber ? null : missingField(event.currentTarget, names);
+    const invalid = notANumber
+      ? { field: notANumber, message: `«${fieldLabel(notANumber)}» debe ser un número, sin letras ni signos.` }
+      : missing
+        ? { field: missing, message: `Completa el campo «${fieldLabel(missing)}».` }
+        : invalidField(event.currentTarget, limits);
     if (!invalid) {
       setWarning({ key: null, text: "" });
       return true;
