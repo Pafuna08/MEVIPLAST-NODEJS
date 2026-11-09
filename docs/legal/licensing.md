@@ -23,7 +23,7 @@ Las licencias de las dependencias son permisivas y compatibles con el uso propie
 | exceljs | 4.4.0 | MIT |
 | uuid (de exceljs, forzada con `overrides`) | 11.1.1 | MIT |
 | react, react-dom | 19.3.1 | MIT |
-| vite (desarrollo) | 6.4.4 | MIT |
+| vite (desarrollo) | 6.4.5 | MIT |
 | nodemon (desarrollo) | 3.1.14 | MIT |
 | playwright-core (desarrollo, pruebas de navegadores) | 1.64.0 | Apache-2.0 |
 
