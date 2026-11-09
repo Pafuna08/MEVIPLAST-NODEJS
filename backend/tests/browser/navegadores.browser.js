@@ -308,6 +308,27 @@ const FLUJOS = [
     if (problemas.length) throw new Error(problemas.join("; "));
     return `${nombre} (${tam} bytes)`;
   }],
+  ["Supervisor: rendimiento de operarios (HU-022)", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "supervisor");
+    await pagina.goto(`${URL_BASE}/dashboard.html#reportes`);
+    await pagina.waitForLoadState("networkidle");
+    const tarjeta = pagina.locator(".report-category", { hasText: "rendimiento de operarios" });
+    await Promise.all([
+      pagina.waitForURL(/reporte=rendimiento&periodo=mensual/),
+      tarjeta.locator("button", { hasText: "Mensual" }).click(),
+    ]);
+    const filaOperario = pagina.locator("tr", { hasText: "Navegador operario" });
+    await filaOperario.waitFor({ timeout: 10000 });
+    const cumplimiento = (await filaOperario.locator(".performance-cell strong").textContent()).trim();
+    if (!/^\d+(,\d)? %$/.test(cumplimiento)) throw new Error(`cumplimiento «${cumplimiento}»`);
+    const [descarga] = await Promise.all([pagina.waitForEvent("download"), pagina.click("text=Descargar Excel")]);
+    const nombre = descarga.suggestedFilename();
+    await contexto.close();
+    if (!/^reporte-rendimiento-mensual-\d{4}-\d{2}-\d{2}\.xlsx$/.test(nombre)) throw new Error(`descarga ${nombre}`);
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `operario al ${cumplimiento}; ${nombre}`;
+  }],
 ];
 
 async function main() {
