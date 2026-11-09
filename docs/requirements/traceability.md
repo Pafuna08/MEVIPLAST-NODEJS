@@ -41,7 +41,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF | Nombre | Estado | Versión | API | Casos de prueba |
 |---|---|---|---|---|---|
 | RF-001 | Autenticar usuario | Implementado | MVP | API-01 | CP-027 (pendiente), CP-046 |
-| RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054 |
+| RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054, CP-089 (siempre queda un administrador activo, DEF-021) |
 | RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061 |
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051 |
 | RF-005 | Cerrar sesión | Parcial | MVP | — | — |

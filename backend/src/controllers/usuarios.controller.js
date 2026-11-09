@@ -98,6 +98,7 @@ async function actualizar(req, res) {
         .status(409)
         .json({ mensaje: "El correo electrónico ya está registrado" });
     }
+    if (error.statusCode) return res.status(error.statusCode).json({ mensaje: error.message });
     res.status(500).json({ mensaje: "Error al actualizar usuario" });
   }
 }
@@ -119,6 +120,7 @@ async function eliminar(req, res) {
     res.status(204).send();
   } catch (error) {
     log.error("Error al atender la petición", { error });
+    if (error.statusCode) return res.status(error.statusCode).json({ mensaje: error.message });
     res.status(500).json({ mensaje: "Error al eliminar usuario" });
   }
 }
