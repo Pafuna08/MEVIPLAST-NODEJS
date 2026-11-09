@@ -8,7 +8,7 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 
 - La sesión de aceptación por rol del Acta MEV-ACT-01 **no se realizó**. El acta no lleva firma del cliente y este registro no la reemplaza ni la simula.
 - Las preguntas abiertas del acta (numeral 7) y los cambios y reglas que esperaban ratificación se resuelven aquí como **decisiones del equipo por delegación**, tomando la propuesta que el equipo ya había hecho en el acta.
-- La usabilidad con usuarios reales (RNF-006), la recuperación de contraseña con el SMTP de la empresa (CP-030) y las pruebas en su servidor y equipos quedan como limitaciones conocidas de la entrega.
+- La usabilidad con usuarios reales (RNF-006) y las pruebas en el servidor y los equipos de la empresa quedan como limitaciones conocidas de la entrega. La recuperación por correo sí se probó con un buzón real: la cuenta Gmail del proyecto (CP-030, EV-2026-11-08-04).
 
 ## Preguntas abiertas del acta
 
