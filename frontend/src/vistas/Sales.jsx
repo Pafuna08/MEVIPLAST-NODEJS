@@ -3,6 +3,12 @@ import { DataTable, Field, FormPanel, Intro, Panel } from "../comun/componentes.
 import { finishedProductFamilies } from "../comun/constantes.js";
 import { money, number, packagesLabel, sanitizeText } from "../comun/formato.js";
 
+// «10 x 15 · calibre 2 · Transparente»; los registros anteriores a la variante no la tienen
+function variantLabel(item) {
+  if (!item.medida && !item.calibre && !item.color) return "Sin variante (registro anterior)";
+  return `${sanitizeText(item.medida || "Sin medida")} · calibre ${sanitizeText(item.calibre || "—")} · ${sanitizeText(item.color || "Sin color")}`;
+}
+
 export function Sales({ data, onSubmit, saving, onReceipt }) {
   const [selectedInventoryId, setSelectedInventoryId] = useState("");
   const [selectedFamily, setSelectedFamily] = useState(finishedProductFamilies[0]);
@@ -11,6 +17,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
     products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily) ||
     products.find((item) => item.familia === selectedFamily && Number(item.cantidad) > 0);
   const availableProducts = products.filter((item) => Number(item.cantidad) > 0);
+  const lineReferences = availableProducts.filter((item) => item.familia === selectedFamily);
 
   return (
     <>
@@ -19,6 +26,8 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
         {finishedProductFamilies.map((family) => {
           const variants = products.filter((item) => item.familia === family);
           const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
+          // Solo cuentan las referencias con unidades: son las que se pueden vender
+          const withStock = variants.filter((item) => Number(item.cantidad) > 0).length;
           return (
             <button
               className={`product-family-card${selectedFamily === family ? " selected" : ""}`}
@@ -32,13 +41,31 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
             >
               <span className="product-family-initial">{family.slice(0, 1)}</span>
               <strong>{family}</strong>
-              <span>{variants.length} {variants.length === 1 ? "referencia disponible" : "referencias disponibles"}</span>
+              <span>{withStock} {withStock === 1 ? "referencia disponible" : "referencias disponibles"}</span>
               <b>{number(stock)} unidades en stock</b>
               <span className="product-family-link">Ver existencias</span>
             </button>
           );
         })}
       </div>
+      <Panel title={`Existencias de ${selectedFamily}`} className="reference-panel">
+        {lineReferences.length ? (
+          <div className="reference-list" role="group" aria-label={`Referencias de ${selectedFamily}`}>
+            {lineReferences.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`reference-option${String(selectedProduct?.id) === String(item.id) ? " selected" : ""}`}
+                aria-pressed={String(selectedProduct?.id) === String(item.id)}
+                onClick={() => setSelectedInventoryId(String(item.id))}
+              >
+                <strong>{variantLabel(item)}</strong>
+                <span>{number(item.cantidad)} unidades</span>
+              </button>
+            ))}
+          </div>
+        ) : <p className="empty">No hay referencias de esta línea con existencias.</p>}
+      </Panel>
       <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving} obligatorios={["cliente", "inventario_id", "unidades_paquete", "cantidad_paquetes", "precio_paquete"]}>
         <Field label="Cliente"><input name="cliente" /></Field>
         <Field label="Línea de producto">
@@ -58,7 +85,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
             setSelectedInventoryId(event.target.value);
           }}>
             {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
-              <option key={item.id} value={item.id}>{item.medida || "Sin medida"} · calibre {item.calibre || "Sin especificar"} · {item.color || "Sin especificar"} · {number(item.cantidad)} unidades</option>
+              <option key={item.id} value={item.id}>{variantLabel(item)} · {number(item.cantidad)} unidades</option>
             ))}
             {!availableProducts.some((item) => item.familia === selectedFamily) && <option value="" disabled>No hay variantes con existencias</option>}
           </select>
