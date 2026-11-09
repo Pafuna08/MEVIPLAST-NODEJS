@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { productColors } from "./constantes.js";
 
 // Campos obligatorios: se revisan aquí, sin atributos de validación ni otras marcas en el HTML.
 // El servidor vuelve a validar cada dato; esto solo evita enviar formularios incompletos.
@@ -22,11 +23,10 @@ const FIELD_RULES = {
     pattern: /^\d{1,3}(?:[.,]\d{1,2})?$/,
     message: "El calibre debe ser un número mayor que cero, por ejemplo 0.95 o 2.",
   },
+  // RN-025: el color se elige de la lista fija (la misma del servidor)
   color: {
-    min: 3,
-    max: 40,
-    pattern: /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?: +[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/,
-    message: "El color solo admite letras y espacios, por ejemplo Transparente o Blanco hueso.",
+    oneOf: productColors,
+    message: "Selecciona un color de la lista.",
   },
   detalle: { max: 200 },
   observaciones: { max: 255 },
@@ -45,6 +45,7 @@ function ruleError(field, rule) {
   if (rule.min && value.length < rule.min) return `«${label}» debe tener al menos ${rule.min} caracteres.`;
   if (rule.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return `«${label}» no es un correo válido.`;
   // Los números de la medida y el calibre también deben ser mayores que cero (0 x 15 o 0 no son válidos)
+  if (rule.oneOf && !rule.oneOf.includes(value)) return rule.message;
   if (rule.pattern && (!rule.pattern.test(value) || (value.match(/\d+(?:[.,]\d+)?/g) || []).some((n) => Number(n.replace(",", ".")) <= 0))) {
     return rule.message;
   }
