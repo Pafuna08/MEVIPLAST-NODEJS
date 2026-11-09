@@ -76,6 +76,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 ### Fixed
 
 - Usuarios: los botones «Cambiar» del correo quedan alineados en una misma columna; antes se corrían según el largo de cada correo.
+- Ventas: debajo de las tarjetas aparece la lista de referencias con existencias de la línea elegida (medida, calibre, color y unidades), para escoger la correcta con un clic; la tarjeta cuenta solo las referencias con unidades, igual que la lista, y un registro sin variante se muestra como «Sin variante (registro anterior)».
 - `db:init` explica por qué falla cuando MySQL está apagado, no existe el servidor o se rechaza el usuario; antes mostraba el error vacío (DEF-016). En una base nueva ya no avisa de migraciones pendientes: las registra como aplicadas porque `schema.sql` trae el esquema final; en una base existente lista solo las que faltan (DEF-017). Hallados en la instalación limpia del 2026-11-08 (EV-2026-11-08-01); el README lista ahora las cuentas de demostración.
 - `db:init` crea una cuenta de demostración por rol (antes faltaban vendedor y almacenista) y carga las existencias DEMO de producto terminado, que antes quedaban en cero (DEF-014). Hallado en la prueba de instalación limpia.
 - `db:init` buscaba las migraciones en una ruta inexistente, así que `DB_APPLY_MIGRATIONS=true` no aplicaba nada ni mostraba aviso (DEF-015).
