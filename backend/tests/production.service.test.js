@@ -14,7 +14,7 @@ test("actualizarOrden exige campos y no permite campos desconocidos", async () =
   );
 });
 
-test("actualizarOrden preserva relaciones omitidas y permite limpiar materia prima", async (t) => {
+test("actualizarOrden preserva relaciones omitidas y no deja quitar la materia prima (RN-026)", async (t) => {
   const originalGetConnection = pool.getConnection;
   const originalQuery = pool.query;
   const queries = [];
@@ -32,6 +32,9 @@ test("actualizarOrden preserva relaciones omitidas y permite limpiar materia pri
       }
       if (sql.startsWith("UPDATE produccion")) {
         updatedOrder = { sql, params };
+      }
+      if (sql.startsWith("SELECT id FROM materia_prima")) {
+        return [Number(params[0]) === 4 ? [{ id: 4 }] : []];
       }
       return [[], []];
     },
@@ -52,11 +55,16 @@ test("actualizarOrden preserva relaciones omitidas y permite limpiar materia pri
   assert.doesNotMatch(updatedOrder.sql, /materia_prima_id/);
   assert.deepEqual(updatedOrder.params, ["Adhesivo PP", 7]);
 
+  // La materia prima se puede cambiar por otra que exista, pero no quitar ni cambiar por una inexistente
+  for (const valor of [null, "", 0]) {
+    await assert.rejects(productionService.actualizarOrden(7, { materia_prima_id: valor }, 2), /Selecciona la materia prima/);
+  }
+  await assert.rejects(productionService.actualizarOrden(7, { materia_prima_id: 99 }, 2), /Materia prima no encontrada/);
   queries.length = 0;
-  await productionService.actualizarOrden(7, { materia_prima_id: null }, 2);
+  await productionService.actualizarOrden(7, { materia_prima_id: "4" }, 2);
   updatedOrder = queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
   assert.match(updatedOrder.sql, /materia_prima_id = \?/);
-  assert.deepEqual(updatedOrder.params, [null, 7]);
+  assert.deepEqual(updatedOrder.params, [4, 7]);
 });
 
 test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async () => {

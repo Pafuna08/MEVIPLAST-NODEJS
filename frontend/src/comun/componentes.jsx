@@ -1,4 +1,5 @@
 import React from "react";
+import { productColors } from "./constantes.js";
 import { number, safeProductName, sanitizeText } from "./formato.js";
 import { clearInvalid, useObligatorios } from "./validacion.js";
 
@@ -94,16 +95,24 @@ export function VariantFields({ idPrefix, order }) {
   const suggestions = [
     ["medida", "Medida", ["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"]],
     ["calibre", "Calibre", ["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"]],
-    ["color", "Color", ["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"]],
   ];
-  return suggestions.map(([name, label, values]) => (
+  // RN-025: el color se elige de la lista fija; un color anterior fuera de la lista obliga a elegir uno válido
+  const color = productColors.includes(order?.color) ? order.color : "";
+  return [...suggestions.map(([name, label, values]) => (
     <Field key={name} label={label}>
       <input name={name} list={`${idPrefix}-${name}`} defaultValue={order?.[name] || ""} />
       <datalist id={`${idPrefix}-${name}`}>
         {values.map((value) => <option key={value} value={value} />)}
       </datalist>
     </Field>
-  ));
+  )), (
+    <Field key="color" label="Color">
+      <select name="color" defaultValue={color}>
+        <option value="" disabled>Selecciona un color</option>
+        {productColors.map((value) => <option key={value} value={value}>{value}</option>)}
+      </select>
+    </Field>
+  )];
 }
 
 export function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing = false, aligned = false }) {

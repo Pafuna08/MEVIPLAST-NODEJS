@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DataTable, Field, FormPanel, Intro, Panel, orderVariant } from "../comun/componentes.jsx";
+import { productColors } from "../comun/constantes.js";
 import { number, safeProductName, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS } from "../comun/validacion.js";
 
@@ -70,10 +71,10 @@ export function Materials({ data, role, onSubmit, saving }) {
           </datalist>
         </Field>
         <Field label="Color">
-          <input name="color" list="materia-colores" />
-          <datalist id="materia-colores">
-            {["Transparente", "Natural", "Blanco", "Negro", "Azul", "Rojo", "Amarillo", "Verde"].map((value) => <option key={value} value={value} />)}
-          </datalist>
+          <select name="color" defaultValue="">
+            <option value="" disabled>Selecciona un color</option>
+            {productColors.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
         </Field>
         <Field label="Peso del rollo (kg)">
           <input name="peso_rollo" type="number" />

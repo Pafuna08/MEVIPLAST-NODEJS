@@ -1,4 +1,5 @@
-// RN-025: formato de medida, calibre y color (inventario, órdenes, plantillas y materias primas).
+// RN-025: formato de medida y calibre y color de una lista fija (inventario, órdenes, plantillas y materias primas).
+const { colores } = require("../constants/colores");
 // Devuelve el valor normalizado para que «10x15», «10 X 15» y «10 x 15» sean la misma variante.
 
 const NUMERO = String.raw`\d{1,4}(?:[.,]\d{1,2})?`;
@@ -35,12 +36,15 @@ function normalizarCalibre(valor) {
   return numeroTexto(texto);
 }
 
+// Sin tildes ni mayúsculas, para comparar «cafe», «CAFÉ» o «Café» con la lista
+const clave = (texto) => texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+// El color debe ser uno de la lista fija (RN-025); se guarda con el nombre exacto de la lista
 function normalizarColor(valor) {
   const texto = typeof valor === "string" ? valor.trim().replace(/\s+/g, " ") : "";
-  if (texto.length < 3 || texto.length > 40 || !COLOR.test(texto)) {
-    throw errorDeDato("El color solo admite letras y espacios (3 a 40), por ejemplo Transparente o Blanco hueso");
-  }
-  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  const color = COLOR.test(texto) ? colores.find((opcion) => clave(opcion) === clave(texto)) : undefined;
+  if (!color) throw errorDeDato(`El color debe ser uno de la lista: ${colores.join(", ")}`);
+  return color;
 }
 
 function normalizarVariante({ medida, calibre, color }) {

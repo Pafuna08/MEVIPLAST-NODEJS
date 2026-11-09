@@ -633,7 +633,22 @@
                   },
                   "color": {
                     "type": "string",
-                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
+                    "description": "Color de la lista fija (RN-025); se aceptan mayúsculas y tildes distintas («cafe» → «Café»)",
+                    "enum": [
+                      "Amarillo",
+                      "Azul",
+                      "Blanco",
+                      "Café",
+                      "Gris",
+                      "Morado",
+                      "Naranja",
+                      "Natural",
+                      "Negro",
+                      "Rojo",
+                      "Rosado",
+                      "Transparente",
+                      "Verde"
+                    ]
                   },
                   "peso_rollo": {
                     "type": "number",
@@ -1078,7 +1093,22 @@
                   },
                   "color": {
                     "type": "string",
-                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
+                    "description": "Color de la lista fija (RN-025); se aceptan mayúsculas y tildes distintas («cafe» → «Café»)",
+                    "enum": [
+                      "Amarillo",
+                      "Azul",
+                      "Blanco",
+                      "Café",
+                      "Gris",
+                      "Morado",
+                      "Naranja",
+                      "Natural",
+                      "Negro",
+                      "Rojo",
+                      "Rosado",
+                      "Transparente",
+                      "Verde"
+                    ]
                   },
                   "cantidad": {
                     "type": "number",
@@ -1098,7 +1128,8 @@
                     "description": "Obligatorio si crea el supervisor; se ignora si crea el administrador"
                   },
                   "materia_prima_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Bobina con la que se produce (RN-026); obligatoria y debe existir"
                   }
                 },
                 "required": [
@@ -1106,7 +1137,8 @@
                   "medida",
                   "calibre",
                   "color",
-                  "cantidad"
+                  "cantidad",
+                  "materia_prima_id"
                 ]
               }
             }
@@ -1256,7 +1288,22 @@
                   },
                   "color": {
                     "type": "string",
-                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
+                    "description": "Color de la lista fija (RN-025); se aceptan mayúsculas y tildes distintas («cafe» → «Café»)",
+                    "enum": [
+                      "Amarillo",
+                      "Azul",
+                      "Blanco",
+                      "Café",
+                      "Gris",
+                      "Morado",
+                      "Naranja",
+                      "Natural",
+                      "Negro",
+                      "Rojo",
+                      "Rosado",
+                      "Transparente",
+                      "Verde"
+                    ]
                   },
                   "cantidad": {
                     "type": "number"
@@ -1445,7 +1492,22 @@
                   },
                   "color": {
                     "type": "string",
-                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
+                    "description": "Color de la lista fija (RN-025); se aceptan mayúsculas y tildes distintas («cafe» → «Café»)",
+                    "enum": [
+                      "Amarillo",
+                      "Azul",
+                      "Blanco",
+                      "Café",
+                      "Gris",
+                      "Morado",
+                      "Naranja",
+                      "Natural",
+                      "Negro",
+                      "Rojo",
+                      "Rosado",
+                      "Transparente",
+                      "Verde"
+                    ]
                   },
                   "cantidad": {
                     "type": "number"
@@ -1455,7 +1517,8 @@
                   },
                   "materia_prima_id": {
                     "type": "integer",
-                    "nullable": true
+                    "description": "Se puede cambiar por otra bobina existente, pero no quitar (RN-026)",
+                    "minimum": 1
                   },
                   "prioridad": {
                     "type": "string",
@@ -1799,7 +1862,22 @@
                   },
                   "color": {
                     "type": "string",
-                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
+                    "description": "Color de la lista fija (RN-025); se aceptan mayúsculas y tildes distintas («cafe» → «Café»)",
+                    "enum": [
+                      "Amarillo",
+                      "Azul",
+                      "Blanco",
+                      "Café",
+                      "Gris",
+                      "Morado",
+                      "Naranja",
+                      "Natural",
+                      "Negro",
+                      "Rojo",
+                      "Rosado",
+                      "Transparente",
+                      "Verde"
+                    ]
                   },
                   "cantidad": {
                     "type": "integer",

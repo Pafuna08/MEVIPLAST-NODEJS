@@ -84,7 +84,7 @@ export function Production({
           </Panel>
           <FormPanel
             title="Nueva orden de producción"
-            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad"]}
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id"]}
             onSubmit={(event) => {
               setSelectedTemplateId("");
               onSubmit(event);
@@ -122,7 +122,7 @@ export function Production({
                 name="materia_prima_id"
                 defaultValue={selectedTemplate?.materia_prima_id || ""}
               >
-                <option value="">Sin asociar</option>
+                <option value="" disabled>Selecciona la materia prima</option>
                 {data.materials.map((material) => (
                   <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
                 ))}
@@ -197,7 +197,7 @@ export function Production({
                 noValidate
                 onInput={clearInvalid}
                 onSubmit={async (event) => {
-                  if (!checkInline(event, ["producto", ...VARIANT_FIELDS, "cantidad"], `editar-${order.id}`)) return;
+                  if (!checkInline(event, ["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id"], `editar-${order.id}`)) return;
                   event.preventDefault();
                   const payload = sanitizePayload(Object.fromEntries(new FormData(event.currentTarget)));
                   // Se cierra solo si se guardó; si falla, el formulario conserva lo escrito
@@ -207,7 +207,7 @@ export function Production({
                 <Field label="Producto"><select name="producto" defaultValue={order.producto}>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
                 <VariantFields idPrefix={`orden-${order.id}`} order={order} />
                 <Field label="Meta"><input name="cantidad" type="number" defaultValue={order.cantidad} /></Field>
-                <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="">Sin asociar</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
+                <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="" disabled>Selecciona la materia prima</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
                 <Field label="Prioridad"><select name="prioridad" defaultValue={order.prioridad}><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></Field>
                 {inlineWarning.key === `editar-${order.id}` && <p className="form-error" role="alert">{inlineWarning.text}</p>}
                 <button className="primary-action secondary" type="button" onClick={() => setEditingOrder(null)}>Descartar cambios</button>
