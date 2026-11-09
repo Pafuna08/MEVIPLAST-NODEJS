@@ -39,7 +39,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
-- Declaración de uso de IA completada con las respuestas del equipo: GitHub Copilot en Visual Studio Code al inicio del desarrollo (ambos integrantes), uso de IA antes del PR #13 y revisión de los documentos por los dos integrantes. Faltan las firmas.
+- Declaración de uso de IA completada con las respuestas del equipo: GitHub Copilot en Visual Studio Code al inicio del desarrollo (ambos integrantes), uso de IA antes del PR #13 y revisión de los documentos por los dos integrantes. Firmada por el equipo el 09/11/2026.
 - Paquete documental ADSO reconstruido sobre las 18 plantillas institucionales que envió el instructor (versión 2.0 de los documentos, Índice Maestro, Matriz de Trazabilidad y Lista de Chequeo con su formato, y Rúbrica Integral de Evaluación nueva con la evidencia por criterio). Nuevo `docs/architecture/diagramas.md` con las fuentes Mermaid de los diagramas de contexto, contenedores, componentes, secuencia y despliegue. `docs/legal/licensing.md` registra vite 6.4.5.
 - Carlos Herrera Sibaja repitió la instalación limpia en su equipo desde un clon nuevo de `develop` (`62ed8d3`) siguiendo solo el README: instala y arranca, 77 unitarias y 15 E2E aprobadas, sin hallazgos. RNF-009 cumple (EV-2026-11-08-05).
 - Recuperación de contraseña y de usuario probada con un buzón real, la cuenta Gmail del proyecto (CP-030, EV-2026-11-08-04): el correo llega, el enlace es de un solo uso y vence a los 30 minutos. El README y `.env.example` explican cómo configurar Gmail con una contraseña de aplicación.

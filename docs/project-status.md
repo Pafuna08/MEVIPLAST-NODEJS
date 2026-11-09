@@ -18,7 +18,6 @@ Las 25 historias tienen código: 20 implementadas y 5 parciales. MEVIPLAST aprob
 ## Pendiente antes de `v1.0.0`
 
 - Que Carlos Herrera revise los PR posteriores al #50; los PR #12 a #50 los aprobó el 03/11/2026. La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
-- Completar y firmar la declaración de uso de IA ([`legal/ai-use.md`](legal/ai-use.md)).
 - Decisión del equipo de crear la etiqueta `v1.0.0` y el PR de `develop` a `main`.
 
 ## Limitaciones conocidas de la entrega
