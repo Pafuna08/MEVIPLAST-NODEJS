@@ -19,10 +19,7 @@ router.get(
   verificarRol("admin", "supervisor", "vendedor"),
   controller.comprobante,
 );
-router.post(
-  "/",
-  verificarRol("admin", "supervisor", "vendedor"),
-  controller.registrar,
-);
+// El supervisor consulta ventas y comprobantes, pero no las registra (DEF-007).
+router.post("/", verificarRol("admin", "vendedor"), controller.registrar);
 
 module.exports = router;
