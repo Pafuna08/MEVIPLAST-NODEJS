@@ -63,6 +63,11 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 | #49 | Evidencia de las migraciones de variante en `meviplast_db` (autorizadas por el equipo) y corrección del aviso sobre `schema_migrations` |
 | #52 | Registro de la revisión de Carlos (PR #12 a #50) en la documentación |
 | #51 | Validación sin atributos en el HTML por indicación del instructor: validación propia en el panel y control de largo en el servidor; la IA propuso mantener una validación propia y cubrir el largo en el servidor, y el equipo eligió |
+| #53 | Instalación limpia desde un clon nuevo y corrección de dos mensajes de `db:init` (DEF-016, DEF-017); el equipo pidió hacer la instalación sin esperar a Carlos, que la repetirá después |
+| #54 | Actualización de `vite` y `minimatch` por 3 alertas moderadas de `npm audit` en herramientas de desarrollo |
+| #55 | El supervisor ya no registra ventas (DEF-007); la IA propuso las opciones y el equipo eligió retirar el permiso |
+| #56 | Reporte de rendimiento de operarios (HU-022); la IA propuso dos indicadores y el equipo eligió el % de cumplimiento de la meta |
+| #57 | Registro de las decisiones tomadas por el equipo con la delegación de MEVIPLAST; el equipo informó que la empresa aprobó el alcance en la reunión inicial y que no habrá otra reunión |
 | #50 | Ajustes de la segunda ronda de pruebas manuales del equipo: menú desde los reportes, confirmaciones, bienvenida por rol, Mis tareas y Mi historial, tarjetas de Inicio, botones y dos cambios de reglas decididos por el equipo (CR-013 y CR-014); la IA propuso el diseño de Mis tareas y Mi historial y limitar la confirmación a los registros irreversibles, y el equipo eligió |
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de las migraciones `20261027_login_lockout.sql`, `20261027_production_variant.sql` y `20261027_template_variant.sql` (EV-2026-10-27-04 y EV-2026-10-27-06).
@@ -74,7 +79,7 @@ Además, operaciones sobre la base de datos local, siempre con autorización exp
 
 ## 3. Validación humana
 
-- Cada cambio de código pasó por un pull request con lint, pruebas unitarias y pruebas E2E en GitHub Actions antes de fusionarse (al PR #51: 72 unitarias y 14 E2E, más la prueba en Edge, Chrome y Firefox).
+- Cada cambio de código pasó por un pull request con lint, pruebas unitarias y pruebas E2E en GitHub Actions antes de fusionarse (al PR #56: 77 unitarias y 15 E2E, más 14 flujos en Edge, Chrome y Firefox).
 - Revisión de los PR #12 a #50 por Carlos Herrera Sibaja: aprobados en GitHub el 03/11/2026. Los PR posteriores quedan pendientes de su revisión.
 - Los documentos se contrastaron con el código, las pruebas y las capturas. Revisión del equipo: ____.
 
@@ -82,7 +87,7 @@ Además, operaciones sobre la base de datos local, siempre con autorización exp
 
 - No se pudo abrir Word de forma automática, así que la estructura de los documentos se validó con scripts. El equipo debe revisarlos visualmente en Word (tabla de contenido, firmas).
 - La IA no conoce decisiones que no están escritas (por ejemplo, por qué se cambió Django por Node.js). Esas respuestas las dio el equipo.
-- Hay que confirmar la aceptación del cliente por rol, que solo puede dar MEVIPLAST.
+- La IA no registró la aceptación del cliente como firmada: MEVIPLAST aprobó el alcance en la reunión inicial y delegó las decisiones en el equipo, y así se documentó ([`../requirements/decisiones-por-delegacion.md`](../requirements/decisiones-por-delegacion.md)).
 - Otras: ____
 
 ## 5. Responsables

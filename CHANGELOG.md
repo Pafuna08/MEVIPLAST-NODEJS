@@ -39,6 +39,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Decisiones del equipo por delegación de MEVIPLAST (`docs/requirements/decisiones-por-delegacion.md`): la empresa aprobó el alcance en la reunión inicial y no habrá sesión de aceptación por rol, así que las preguntas abiertas del Acta MEV-ACT-01 se resuelven con las propuestas del equipo (DEF-007, RN-024, catálogos, umbrales, conservación de datos, consumo manual, costo y factura en v1.1, HU-022 y CR-010) y se ratifican CR-002, CR-004, CR-005, CR-006, CR-010, CR-013 y CR-014. El acta no lleva firma del cliente. README, trazabilidad y estado del proyecto al día con los PR #53 a #57.
 - La documentación registra la aprobación de los PR #12 a #50 por Carlos Herrera Sibaja (03/11/2026): GIT-04 pasa a «Cumple» en la lista de chequeo y se cierra el bloqueo BLQ-004.
 - Segunda ronda de pruebas manuales del equipo (PR #50):
   - Reglas (CR-013): el administrador y el supervisor ya no cambian el estado de una orden con un selector; solo pueden **Cancelar** (con confirmación). El operario la inicia desde «Mis tareas» y la orden se finaliza sola al registrar el avance que completa la meta. La regla también se aplica en la API.

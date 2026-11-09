@@ -101,6 +101,6 @@ Los controladores se cubren sobre todo con la suite E2E, por eso suben al combin
 - Rendimiento medido en el servidor y la red de la empresa.
 - Compatibilidad con el Firefox oficial y con la penúltima versión de cada navegador.
 - Usabilidad (RNF-006) y accesibilidad (RNF-012) con usuarios de MEVIPLAST.
-- Aceptación del cliente por rol.
+- Sesión de aceptación por rol con usuarios de MEVIPLAST: no se realizó; las decisiones pendientes las tomó el equipo por delegación ([`../requirements/decisiones-por-delegacion.md`](../requirements/decisiones-por-delegacion.md)).
 
 Los resultados del smoke test con base aislada están en [`../evidence/EV-2026-10-21.md`](../evidence/EV-2026-10-21.md), los de instalación por lockfile en [`../evidence/EV-2026-10-20.md`](../evidence/EV-2026-10-20.md) y la evidencia histórica de navegación en [`../evidence/EV-2026-10-19.md`](../evidence/EV-2026-10-19.md).
