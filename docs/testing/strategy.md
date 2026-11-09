@@ -59,7 +59,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-91 pruebas unitarias y de rutas con `node:test` (91 aprobadas el 2026-11-09), en 20 archivos:
+92 pruebas unitarias y de rutas con `node:test` (92 aprobadas el 2026-11-09), en 20 archivos:
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -79,7 +79,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
 - `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» no se convierten en número.
-- `schema.test.js` (4): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016) y calcula las migraciones pendientes (DEF-017).
+- `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
 - `variantes.test.js` (7): medida «ancho x largo» normalizada, calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
 - `ventas.service.test.js` (5): límite de 500 unidades por paquete, descuento por paquetes, aislamiento del vendedor y comprobante.
 
