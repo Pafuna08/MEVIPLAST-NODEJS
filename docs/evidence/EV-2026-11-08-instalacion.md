@@ -27,6 +27,8 @@ Se siguieron los pasos del README en orden, sin usar nada de la carpeta de traba
 
 Resultado: el README permite instalar, probar y ejecutar el sistema sin pasos adicionales. Esta prueba la hizo el autor; RNF-009 sigue **parcial** hasta que Carlos Herrera Sibaja la repita en su equipo (rama `docs/MEVI-48-instalacion-limpia-carlos`).
 
+Actualización: Carlos Herrera Sibaja repitió la instalación en su equipo el mismo día, sin hallazgos (EV-2026-11-08-05). RNF-009 cumple.
+
 ## Hallazgos corregidos (rama `fix/MEVI-51-instalacion-limpia`)
 
 - **DEF-016:** con MySQL apagado, `db:init` mostraba `Error al inicializar la base de datos:` sin texto, porque `mysql2` lanza un `AggregateError` con el mensaje vacío. Ahora explica la causa: «No se pudo conectar a MySQL en localhost:3306. Inicia MySQL (por ejemplo desde el panel de XAMPP) y revisa DB_HOST y DB_PORT en backend/.env.» También da un mensaje propio si el servidor no existe o si el usuario o la contraseña son incorrectos, sin mostrar la contraseña.

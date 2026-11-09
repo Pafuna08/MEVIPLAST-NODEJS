@@ -5,7 +5,7 @@
 - Base: `meviplast_e2e_instalacion_carlos` (desechable, eliminada al terminar). Puerto 3995. Las bases existentes del equipo no se tocaron.
 - Responsable de la ejecución: Carlos Herrera Sibaja, con asistencia de IA.
 
-## EV-2026-11-08-04 · PROD-04 / RNF-009 / CP-063: instalar siguiendo el README
+## EV-2026-11-08-05 · PROD-04 / RNF-009 / CP-063: instalar siguiendo el README
 
 Se siguió la sección «Instalación local» del README en orden, sin usar nada de la copia de trabajo. Las únicas variaciones fueron los valores de `backend/.env`: `DB_NAME=meviplast_e2e_instalacion_carlos`, `PORT=3995`, un `JWT_SECRET` aleatorio y las credenciales del MySQL local.
 

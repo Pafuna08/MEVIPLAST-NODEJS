@@ -73,6 +73,6 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 ## Brechas abiertas
 
 - Usabilidad con usuarios de MEVIPLAST (RNF-006): la sesión de aceptación por rol no se realizó.
-- Etiqueta `v1.0.0`. La instalación limpia por Carlos Herrera Sibaja (RNF-009) ya se hizo (EV-2026-11-08-04).
+- Etiqueta `v1.0.0`. La instalación limpia por Carlos Herrera Sibaja (RNF-009) ya se hizo (EV-2026-11-08-05).
 
 Las evidencias de cada prueba están en [`../evidence/README.md`](../evidence/README.md).
