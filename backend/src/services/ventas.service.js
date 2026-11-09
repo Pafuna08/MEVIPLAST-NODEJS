@@ -1,6 +1,7 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
+const { LIMITES, entero, decimal, leerNumero, errorDeDato, miles } = require("../utils/numeros");
 
 async function listar(actor) {
   const condicion = actor?.rol === "vendedor" ? "WHERE v.usuario_id = ?" : "";
@@ -42,17 +43,15 @@ async function registrar(
   { cliente, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete },
   actorId,
 ) {
-  const cantidadPaquetes = Number(cantidad_paquetes);
-  const unidadesPaquete = Number(unidades_paquete);
-  const precioPaquete = Number(precio_paquete);
-  if (!Number.isInteger(cantidadPaquetes) || cantidadPaquetes <= 0) {
-    throw new Error("La cantidad de paquetes debe ser un entero mayor que cero");
+  // CR-018: paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y hasta 100 millones de pesos por venta
+  const cantidadPaquetes = entero(cantidad_paquetes, "La cantidad de paquetes", LIMITES.PAQUETES_MAX);
+  const unidadesPaquete = leerNumero(unidades_paquete);
+  if (!LIMITES.UNIDADES_POR_PAQUETE.includes(unidadesPaquete)) {
+    throw errorDeDato("El paquete debe ser de 50, 100 o 500 unidades");
   }
-  if (!Number.isInteger(unidadesPaquete) || unidadesPaquete < 1 || unidadesPaquete > 500) {
-    throw new Error("El paquete debe contener entre 1 y 500 unidades");
-  }
-  if (!Number.isFinite(precioPaquete) || precioPaquete <= 0) {
-    throw new Error("El precio por paquete debe ser mayor que cero");
+  const precioPaquete = decimal(precio_paquete, "El precio por paquete", LIMITES.VENTA_MAX, { prefijo: "$" });
+  if (cantidadPaquetes * precioPaquete > LIMITES.VENTA_MAX) {
+    throw errorDeDato("El total de la venta admite como máximo $" + miles(LIMITES.VENTA_MAX));
   }
   const cantidadUnidades = cantidadPaquetes * unidadesPaquete;
   const precioUnitario = precioPaquete / unidadesPaquete;

@@ -82,7 +82,7 @@ test("crear rechaza un material no permitido o un peso de rollo inválido", asyn
       { tipo: "PP", medida: "6 x 12", calibre: "1", color: "Negro", peso_rollo: 0 },
       2,
     ),
-    { statusCode: 400, message: "El peso del rollo debe ser mayor que cero" },
+    { statusCode: 400, message: "El peso del rollo debe ser un número mayor que cero" },
   );
 });
 

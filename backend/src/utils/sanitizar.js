@@ -34,8 +34,11 @@ function sanitizarNumero(
 ) {
   if (valor === null || valor === undefined || valor === "") return 0;
 
-  const numero = Number(String(valor).replace(/[^0-9.-]/g, ""));
-  if (!Number.isFinite(numero)) return 0;
+  // Solo un número limpio se convierte; «2abc» o «1e5» siguen como texto para que el servicio los rechace
+  // con 400 (DEF-022), en lugar de quitarles las letras y guardar otro valor
+  const texto = String(valor).trim();
+  if (!/^-?\d+(?:\.\d+)?$/.test(texto)) return sanitizarTexto(texto, 50);
+  const numero = Number(texto);
 
   if (numero < minimo) return 0;
   if (numero > maximo) return maximo;

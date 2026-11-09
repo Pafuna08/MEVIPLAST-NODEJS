@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { pool } = require("../src/config/database");
 const salesService = require("../src/services/ventas.service");
 
-test("registrar venta rechaza paquetes superiores a 500 unidades", async () => {
+test("registrar venta solo acepta paquetes de 50, 100 o 500 unidades (CR-018)", async () => {
   await assert.rejects(
     salesService.registrar(
       {
@@ -15,7 +15,7 @@ test("registrar venta rechaza paquetes superiores a 500 unidades", async () => {
       },
       3,
     ),
-    /entre 1 y 500 unidades/,
+    /50, 100 o 500 unidades/,
   );
 });
 

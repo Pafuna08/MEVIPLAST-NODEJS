@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DataTable, Field, FormPanel, Intro, Panel } from "../comun/componentes.jsx";
-import { finishedProductFamilies } from "../comun/constantes.js";
+import { finishedProductFamilies, packageSizes } from "../comun/constantes.js";
 import { money, number, packagesLabel, sanitizeText } from "../comun/formato.js";
 
 // «10 x 15 · calibre 2 · Transparente»; los registros anteriores a la variante no la tienen
@@ -96,7 +96,11 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
           <div><small>COLOR</small><span>{sanitizeText(selectedProduct.color || "Sin especificar")}</span></div>
           <div><small>DISPONIBLE</small><span>{number(selectedProduct.cantidad)} unidades</span></div>
         </div>}
-        <Field label="Unidades por paquete (máximo 500)"><input name="unidades_paquete" type="number" defaultValue="50" /></Field>
+        <Field label="Unidades por paquete">
+          <select name="unidades_paquete" defaultValue="50">
+            {packageSizes.map((size) => <option key={size} value={size}>{size} unidades</option>)}
+          </select>
+        </Field>
         <Field label="Cantidad de paquetes"><input name="cantidad_paquetes" type="number" /></Field>
         <Field label="Precio por paquete"><input name="precio_paquete" type="number" /></Field>
       </FormPanel>

@@ -31,7 +31,7 @@ export function Materials({ data, role, onSubmit, saving }) {
   return (
     <>
       <Intro title="Materias primas" description="Registra bobinas, compras, ajustes y consumos, y consulta existencias por material, medida, calibre y color." />
-      {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving} obligatorios={["materia_prima_id", "tipo", "produccion_id", "cantidad"]}>
+      {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving} obligatorios={["materia_prima_id", "tipo", "produccion_id", "cantidad"]} limites={{ cantidad: { integer: false, decimals: 2, maxValue: 100000 } }}>
         <Field label="Materia prima">
           <select name="materia_prima_id" value={selectedMaterialId} onChange={(event) => setMaterialId(event.target.value)}>
             {data.materials.map((item) => <option key={item.id} value={item.id}>{materialLabel(item)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}

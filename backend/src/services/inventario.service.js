@@ -3,6 +3,7 @@ const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
 const { motivosSalida } = require("../constants/motivosSalida");
 const { normalizarVariante } = require("../utils/variantes");
+const { entero } = require("../utils/numeros");
 
 // Motivo obligatorio de la salida manual; «Otro» exige detalle. Devuelve el texto que se guarda
 function validarMotivo(motivo, detalle) {
@@ -81,12 +82,7 @@ async function ingresar(
   },
   actorId,
 ) {
-  const cantidadNumerica = Number(cantidad);
-  if (!Number.isInteger(cantidadNumerica) || cantidadNumerica <= 0) {
-    const error = new Error("Las unidades deben ser un entero mayor que cero");
-    error.statusCode = 400;
-    throw error;
-  }
+  const cantidadNumerica = entero(cantidad, "Las unidades");
   if (tipo !== "ingreso_manual") {
     const error = new Error("Tipo de ingreso no válido");
     error.statusCode = 400;
@@ -148,10 +144,7 @@ async function registrarSalida(
   actorId,
   { motivo, detalle } = {},
 ) {
-  const cantidadNumerica = Number(cantidad);
-  if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
-    throw new Error("La cantidad debe ser mayor que cero");
-  }
+  const cantidadNumerica = entero(cantidad, "La cantidad");
   const observacion = validarMotivo(motivo, detalle);
 
   const connection = await pool.getConnection();
