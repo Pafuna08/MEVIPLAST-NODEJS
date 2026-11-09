@@ -4,7 +4,7 @@ Estado del código en `develop`, commit `08f10bf` (04/11/2026). Coincide con la 
 
 «Implementado» describe el código y las pruebas, no la aceptación: ninguna historia está aceptada por el cliente todavía.
 
-Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcionales: 26 implementados, 2 parciales y 1 pendiente de 29.
+Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 implementados y 2 parciales de 29.
 
 ## Historias de usuario (por rol)
 
@@ -15,7 +15,7 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | HU-009 | Administrador | Consultar disponibilidad de insumos | RF-017 | Implementado | Listado y alerta de bajo stock (cantidad ≤ stock mínimo). El stock mínimo inicia en 0 y debe configurarse. |
 | HU-010 | Administrador | Registrar compras de materiales | RF-015 | Parcial | Movimiento tipo compra con fecha y usuario; no registra costo ni número de factura. |
 | HU-011 | Administrador | Registrar productos terminados | RF-018 | Implementado | Catálogo de 6 líneas con variantes (medida, calibre, color); ingresos y salidas manuales con ledger; la salida exige motivo. |
-| HU-022 | Administrador | Consultar rendimiento de operarios | RF-027 | Pendiente | No implementado. Acordar indicador y fórmula con el cliente. |
+| HU-022 | Administrador | Consultar rendimiento de operarios | RF-027 | Implementado | % de cumplimiento de la meta por operario y periodo (diario, semanal, mensual, anual), para administrador y supervisor, con Excel. Indicador elegido por el equipo con la delegación de MEVIPLAST: producido ÷ meta de las órdenes asignadas y creadas en el periodo, sin las canceladas. |
 | HU-023 | Administrador | Generar reporte de inventario | RF-026 | Parcial | Lista existencias de producto terminado; no incluye materias primas en el mismo reporte. |
 | HU-015 | Administrador | Generar reportes de ventas | RF-025 | Implementado | Resumen y detalle por periodo diario, semanal, mensual y anual. |
 | HU-025 | Administrador | Exportar reportes | RF-028 | Implementado | PDF con la impresión del navegador y Excel con «Descargar Excel» (PR #28). |
@@ -66,13 +66,12 @@ Historias: 19 implementadas, 5 parciales y 1 pendiente de 25. Requisitos funcion
 | RF-024 | Reporte de producción por periodo | Implementado | MVP | API-10 | CP-017, CP-018, CP-028 |
 | RF-025 | Reporte de ventas por periodo | Implementado | MVP | API-10 | CP-019, CP-028 |
 | RF-026 | Reporte de inventario | Parcial | MVP | API-10 | — |
-| RF-027 | Rendimiento por operario | Pendiente | V1.1 | — | — |
+| RF-027 | Rendimiento por operario | Implementado | MVP | API-10 | CP-079, CP-080 |
 | RF-028 | Exportar reportes | Implementado | MVP | API-10 | CP-058, CP-059, CP-060 |
 | RF-029 | Consultar bitácora de auditoría | Implementado | MVP | API-11 | CP-068 |
 
 ## Brechas abiertas
 
-- HU-022 / RF-027: falta que el cliente defina el indicador de rendimiento por operario.
 - CP-030: probar la recuperación de contraseña con el SMTP real de MEVIPLAST (con un servidor local ya está probada, CP-061).
 - Aceptación del cliente por rol y etiqueta `v1.0.0`.
 
