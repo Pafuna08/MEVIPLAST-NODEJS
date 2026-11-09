@@ -2,7 +2,7 @@
 
 Sistema web interno para apoyar la gestión de producción, materias primas, inventario terminado, ventas y reportes de MEVIPLAST.
 
-**Estado:** en desarrollo académico. La rama `develop` integra los PR #1 a #31; todavía no hay etiqueta de liberación ni aceptación del cliente. Se verificaron el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
+**Estado:** proyecto académico. La rama `develop` integra los PR #1 a #57; todavía no hay etiqueta de liberación. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`docs/requirements/decisiones-por-delegacion.md`](docs/requirements/decisiones-por-delegacion.md)); no hubo sesión de aceptación por rol con usuarios de la empresa. Se verificaron la instalación desde un clon nuevo, el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
 
 ## Funcionalidad presente en `develop`
 
@@ -11,16 +11,18 @@ Sistema web interno para apoyar la gestión de producción, materias primas, inv
 - Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable); el administrador puede desbloquearla.
 - Panel React/Vite con vistas para Administrador, Supervisor, Operario, Vendedor y Almacenista.
 - Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes.
-- Órdenes de producción dirigidas por el administrador a un supervisor, quien las asigna a un operario; plantillas de órdenes frecuentes.
+- Órdenes de producción con línea, medida, calibre, color y prioridad: la del administrador queda pendiente para los supervisores y la toma el que asigna el operario (si falta el supervisor, asigna el administrador); el operario la inicia y se finaliza sola al completar la meta; administrador y supervisor solo la cancelan. Plantillas de órdenes frecuentes.
+- «Mis tareas» y «Mi historial» por día, semana, mes o año para el operario.
 - Catálogo de materias primas (bobinas PEBD, PEAD y PP con medida, calibre, color y peso de rollo) y de seis líneas de producto terminado con variantes.
 - Movimientos de materias primas e inventario terminado registrados junto con sus saldos en transacciones.
 - Edición de órdenes de producción restringida a órdenes pendientes sin avances registrados.
-- Ventas por paquetes (hasta 500 unidades por paquete); el vendedor solo consulta sus ventas y el registro descuenta existencias en la transacción.
+- Ventas por paquetes (hasta 500 unidades por paquete), registradas por el administrador o el vendedor; el vendedor solo consulta sus ventas y el registro descuenta existencias en la transacción.
 - Comprobante de venta imprimible, con número consecutivo.
-- Reportes de producción y ventas por periodo diario, semanal, mensual o anual, imprimibles y descargables en Excel.
+- Reportes de producción, ventas y rendimiento de operarios (% de cumplimiento de la meta) por periodo diario, semanal, mensual o anual, imprimibles y descargables en Excel.
+- Bitácora de auditoría consultable por el administrador.
 - API REST con autenticación y controles de acceso por rol.
 
-La presencia en código no equivale a aceptación del requisito. La suite E2E con MySQL cubre los flujos principales, pero falta la aceptación del cliente por rol. Los indicadores de rendimiento por operario no están implementados. El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y el PDF de los reportes usan la impresión del navegador; los reportes detallados también se descargan en Excel. Cerrar sesión elimina el token del navegador; el servidor lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+La presencia en código no equivale a aceptación del requisito por usuarios de la empresa: la suite E2E con MySQL cubre los flujos principales, pero la usabilidad no se midió con ellos. El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y el PDF de los reportes usan la impresión del navegador; los reportes detallados también se descargan en Excel. Cerrar sesión elimina el token del navegador; el servidor lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
 
 ## Tecnologías
 
@@ -98,7 +100,7 @@ npm run test:perf --prefix backend     # prueba de carga; base desechable mevipl
 npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
 ```
 
-Hay 60 pruebas unitarias y de rutas (60 aprobadas el 2026-10-27), incluidas las que verifican que el contrato OpenAPI coincide con las rutas de Express y el diagrama entidad-relación con `schema.sql`. Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo y en Excel, permisos por rol y sanitización. La suite E2E contra MySQL (8 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 13 endpoints, ventas concurrentes, el bloqueo de cuentas y la invalidación de sesiones. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 30 de 30 flujos. La cobertura combinada de unitarias y E2E es del 78,5 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades. Nada de esto sustituye la aceptación del cliente por rol.
+Hay 77 pruebas unitarias y de rutas (77 aprobadas el 2026-11-08), incluidas las que verifican que el contrato OpenAPI coincide con las rutas de Express y el diagrama entidad-relación con `schema.sql`. Cubren sesión, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes y comprobante, reportes por periodo, de rendimiento y en Excel, permisos por rol, validación de largo y sanitización. La suite E2E contra MySQL (15 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 14 operaciones, ventas concurrentes, el bloqueo de cuentas, la invalidación de sesiones, las reglas de las órdenes y el reporte de rendimiento. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 42 de 42 flujos (14 por navegador). La cobertura combinada de unitarias y E2E es del 83,1 % de las líneas de `backend/src`, y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades en backend y frontend (2026-11-08). Nada de esto sustituye una sesión de aceptación con usuarios de la empresa.
 
 ## Estructura
 

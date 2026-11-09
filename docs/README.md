@@ -2,6 +2,7 @@
 
 - [Estado del proyecto y brechas](project-status.md)
 - [Trazabilidad y estado por historia](requirements/traceability.md)
+- [Decisiones del equipo por delegación del cliente](requirements/decisiones-por-delegacion.md)
 - [Manual de usuario](user-guide.md)
 - [Arquitectura](architecture/overview.md)
 - [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json)

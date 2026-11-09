@@ -1,8 +1,8 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop`, commit `08f10bf` (04/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop`, commit `d86f1e0` (08/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
-«Implementado» describe el código y las pruebas, no la aceptación: ninguna historia está aceptada por el cliente todavía.
+«Implementado» describe el código y las pruebas. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`decisiones-por-delegacion.md`](decisiones-por-delegacion.md)); la sesión de aceptación por rol con usuarios de la empresa no se realizó.
 
 Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 implementados y 2 parciales de 29.
 
@@ -73,6 +73,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 ## Brechas abiertas
 
 - CP-030: probar la recuperación de contraseña con el SMTP real de MEVIPLAST (con un servidor local ya está probada, CP-061).
-- Aceptación del cliente por rol y etiqueta `v1.0.0`.
+- Usabilidad con usuarios de MEVIPLAST (RNF-006): la sesión de aceptación por rol no se realizó.
+- Repetición de la instalación limpia por Carlos Herrera Sibaja (RNF-009) y etiqueta `v1.0.0`.
 
 Las evidencias de cada prueba están en [`../evidence/README.md`](../evidence/README.md).
