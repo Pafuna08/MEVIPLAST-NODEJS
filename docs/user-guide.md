@@ -13,7 +13,7 @@
 3. El panel abre en `/dashboard.html` con navegación según el rol de la cuenta. En el centro de la barra superior aparece la bienvenida con tu nombre y lo que hace tu rol.
 4. Usa **Cerrar sesión** para retirar la sesión del navegador; el panel pide confirmarlo. La sesión vence a las 8 horas; si vence, o si el administrador desactiva tu cuenta o cambia tu rol, el panel te devuelve al inicio de sesión.
 
-Si falta un campo o un dato no cumple su regla (largo máximo, número mayor que cero, correo válido), el formulario lo avisa debajo de los campos y marca el campo en rojo; el servidor vuelve a validar todo.
+Si falta un campo o un dato no cumple su regla (largo máximo, número mayor que cero, correo válido, o medida, calibre y color con su formato: medida como «10 x 15» o «40 x 60 cm», calibre como «0.95» o «2» y color solo con letras), el formulario lo avisa debajo de los campos y marca el campo en rojo; el servidor vuelve a validar todo.
 
 Los registros que mueven inventario o dinero (venta, salida manual, ingreso de inventario, movimiento de materia prima y avance de producción) muestran un resumen y piden confirmación antes de guardar, porque no se pueden deshacer desde el panel: **Revisar** vuelve al formulario sin guardar. Los demás formularios guardan directo.
 

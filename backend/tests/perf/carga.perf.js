@@ -66,7 +66,7 @@ async function prepararBase() {
     for (let i = 1; i <= 10; i += 1) {
       const medida = `${10 + i} x ${15 + i}`;
       const [r] = await raiz.query(
-        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, '2', 'Transparente', 10000000, 'Bodega perf')",
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, ?, '2', 'Transparente', 10000000)",
         [`${familia} · ${medida} · calibre 2 · Transparente`, familia, medida],
       );
       variantes.push({ id: r.insertId, producto: `${familia} · ${medida} · calibre 2 · Transparente` });

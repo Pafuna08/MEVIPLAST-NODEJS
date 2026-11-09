@@ -35,10 +35,12 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 | CR-010 | Comprobante de venta y exportación a Excel en el MVP | Ratificado |
 | CR-013 | El operario inicia la orden; administrador y supervisor solo cancelan; se finaliza al completar la meta | Ratificado |
 | CR-014 | La orden del administrador queda pendiente para todos los supervisores; si falta el supervisor, el administrador asigna | Ratificado |
+| CR-015 | Se quita la ubicación del inventario terminado (todo el producto se guarda en el mismo lugar y ningún requisito la pide) y se elimina la columna `lote`, sin uso; medida, calibre y color pasan a tener formato (RN-025). Origen: pruebas del equipo del 09/11/2026 | Decisión del equipo por delegación |
 | RN-005 | Ruta de la orden de producción (según CR-014) | Aprobada |
 | RN-012 | Catálogo de producto terminado (6 líneas) | Aprobada |
 | RN-013 | Catálogo de materias primas (PEBD, PEAD, PP con medida, calibre, color y peso) | Aprobada |
 | RN-018 | Venta por paquetes de 1 a 500 unidades | Aprobada |
+| RN-025 | Formato de la variante: medida «ancho x largo» con unidad opcional (cm, mm, m, in, pulg), calibre numérico mayor que cero con hasta 2 decimales y color solo con letras y espacios (3 a 40); se guardan normalizados («10x15» → «10 x 15») | Decisión del equipo por delegación |
 
 ## Hallazgos registrados en lugar de los de la sesión
 

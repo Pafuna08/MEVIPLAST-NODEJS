@@ -51,7 +51,6 @@ function irreversibleSummary(view, payload, data) {
       lines: [
         ["Producto", sanitizeText(`${payload.familia} · ${payload.medida} · calibre ${payload.calibre} · ${payload.color}`)],
         ["Cantidad", `${units(payload.cantidad)} unidades`],
-        ["Ubicación", sanitizeText(payload.ubicacion || "Sin ubicación")],
       ],
     };
   }

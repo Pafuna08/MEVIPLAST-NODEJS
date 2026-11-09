@@ -83,7 +83,6 @@ CREATE TABLE IF NOT EXISTS produccion (
   estado ENUM('pendiente', 'en_proceso', 'finalizado', 'cancelado') NOT NULL DEFAULT 'pendiente',
   prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
   cantidad_producida DECIMAL(10,2) NOT NULL DEFAULT 0,
-  lote VARCHAR(80) NULL,
   observaciones VARCHAR(500) NULL,
   fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_fin DATETIME NULL,
@@ -119,7 +118,6 @@ CREATE TABLE IF NOT EXISTS inventario (
   calibre VARCHAR(40) NULL,
   color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
-  ubicacion VARCHAR(80) NULL,
   UNIQUE KEY uq_inventario_variante (familia, medida, calibre, color),
   actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

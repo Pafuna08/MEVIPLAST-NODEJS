@@ -100,7 +100,12 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       cantidad: 1000, prioridad: "alta",
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
-    assert.equal(orden.body.medida, "40x60 cm");
+    // RN-025: la medida se guarda normalizada y un dato sin formato se rechaza en el servidor
+    assert.equal(orden.body.medida, "40 x 60 cm");
+    const invalida = await llamar("POST", "/inventario", tokens.admin, {
+      familia: "Cargadera", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
+    });
+    assert.equal(invalida.status, 400, "medida y calibre sin formato se rechazan");
     // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor fijo
     assert.equal(orden.body.supervisor_id, null);
     const ordenId = orden.body.id;
@@ -120,11 +125,11 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(avance.status, 200, JSON.stringify(avance.body));
     assert.equal(avance.body.estado, "finalizado");
 
-    // El avance entra a la variante exacta de la orden, creada con ubicación por asignar
-    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad, ubicacion FROM inventario WHERE familia = 'Cargadera'");
+    // El avance entra a la variante exacta de la orden
+    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad FROM inventario WHERE familia = 'Cargadera'");
     assert.equal(variantes.length, 1);
     const [stock] = variantes;
-    assert.deepEqual([stock.medida, stock.calibre, stock.color, stock.ubicacion], ["40x60 cm", "2", "Negro", "Por ubicar"]);
+    assert.deepEqual([stock.medida, stock.calibre, stock.color], ["40 x 60 cm", "2", "Negro"]);
     assert.equal(Number(stock.cantidad), 1000);
     const [[mov]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE produccion_id = ? AND tipo = 'produccion'", [ordenId]);
     assert.equal(Number(mov.n), 1);
@@ -215,7 +220,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       familia: "Adhesivo PP", medida: "10x15", calibre: "2", color: "Transparente", cantidad: 1500,
     });
     assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
-    const [[variante]] = await db.query("SELECT id FROM inventario WHERE familia = 'Adhesivo PP' AND medida = '10x15'");
+    const [[variante]] = await db.query("SELECT id FROM inventario WHERE familia = 'Adhesivo PP' AND medida = '10 x 15'");
     const ventas = await Promise.all(
       Array.from({ length: 5 }, (_, i) =>
         llamar("POST", "/ventas", tokens.vendedor, {
@@ -458,5 +463,21 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.deepEqual(indices.map((i) => i.nombre).sort(), ["PRIMARY", "uq_plantilla_variante"]);
     const [[anterior]] = await db.query("SELECT producto, medida FROM plantillas_produccion");
     assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
+  });
+
+  await t.test("CR-015: la migración que quita ubicación y lote se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("ALTER TABLE inventario ADD COLUMN ubicacion VARCHAR(80) NULL");
+    await db.query("ALTER TABLE produccion ADD COLUMN lote VARCHAR(80) NULL");
+    const [[antes]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261109_drop_unused_columns.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [columnas] = await db.query(
+      "SELECT column_name AS nombre FROM information_schema.columns WHERE table_schema = ? AND ((table_name = 'inventario' AND column_name = 'ubicacion') OR (table_name = 'produccion' AND column_name = 'lote'))",
+      [DB],
+    );
+    assert.equal(columnas.length, 0, "las dos columnas se eliminan");
+    const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    assert.deepEqual([Number(despues.inventario), Number(despues.produccion)], [Number(antes.inventario), Number(antes.produccion)], "no se pierden filas");
   });
 });

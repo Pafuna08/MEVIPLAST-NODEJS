@@ -2,6 +2,7 @@ const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
 const { motivosSalida } = require("../constants/motivosSalida");
+const { normalizarVariante } = require("../utils/variantes");
 
 // Motivo obligatorio de la salida manual; «Otro» exige detalle. Devuelve el texto que se guarda
 function validarMotivo(motivo, detalle) {
@@ -24,6 +25,7 @@ function validarMotivo(motivo, detalle) {
   return texto ? `${motivo}: ${texto}` : motivo;
 }
 
+// Línea del catálogo (RN-012) y variante con formato válido (RN-025); devuelve los valores normalizados
 function validarVariante({ familia, medida, calibre, color }) {
   if (!productosTerminados.includes(familia)) {
     const error = new Error("Selecciona una línea de producto válida");
@@ -45,13 +47,9 @@ function validarVariante({ familia, medida, calibre, color }) {
       throw error;
     }
   }
-  const producto = `${familia} · ${medida.trim()} · calibre ${calibre.trim()} · ${color.trim()}`;
-  if (producto.length > 255) {
-    const error = new Error("Las especificaciones son demasiado largas");
-    error.statusCode = 400;
-    throw error;
-  }
-  return producto;
+  const variante = normalizarVariante({ medida, calibre, color });
+  const producto = `${familia} · ${variante.medida} · calibre ${variante.calibre} · ${variante.color}`;
+  return { producto, ...variante };
 }
 
 async function listar() {
@@ -78,7 +76,6 @@ async function ingresar(
     calibre,
     color,
     cantidad,
-    ubicacion,
     tipo = "ingreso_manual",
     produccion_id = null,
   },
@@ -95,7 +92,8 @@ async function ingresar(
     error.statusCode = 400;
     throw error;
   }
-  const producto = validarVariante({ familia, medida, calibre, color });
+  const variante = validarVariante({ familia, medida, calibre, color });
+  const { producto } = variante;
 
   const connection = await pool.getConnection();
   let id;
@@ -105,19 +103,19 @@ async function ingresar(
     transactionStarted = true;
     const [existente] = await connection.query(
       "SELECT id FROM inventario WHERE familia = ? AND medida = ? AND calibre = ? AND color = ? FOR UPDATE",
-      [familia, medida.trim(), calibre.trim(), color.trim()],
+      [familia, variante.medida, variante.calibre, variante.color],
     );
 
     if (existente.length > 0) {
       id = existente[0].id;
       await connection.query(
-        "UPDATE inventario SET cantidad = cantidad + ?, ubicacion = COALESCE(?, ubicacion) WHERE id = ?",
-        [cantidadNumerica, ubicacion, id],
+        "UPDATE inventario SET cantidad = cantidad + ? WHERE id = ?",
+        [cantidadNumerica, id],
       );
     } else {
       const [resultado] = await connection.query(
-        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [producto, familia, medida.trim(), calibre.trim(), color.trim(), cantidadNumerica, ubicacion || null],
+        "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, ?, ?, ?, ?)",
+        [producto, familia, variante.medida, variante.calibre, variante.color, cantidadNumerica],
       );
       id = resultado.insertId;
     }

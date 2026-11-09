@@ -61,7 +61,7 @@ async function prepararBase() {
   const [bobina] = await raiz.query("INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD 10 x 15', 'PEBD', '10 x 15', '2', 'Transparente', 500, 50)");
   for (const familia of productosTerminados) {
     await raiz.query(
-      "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad, ubicacion) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000, 'Bodega')",
+      "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000)",
       [`${familia} · 10 x 15 · calibre 2 · Transparente`, familia],
     );
   }

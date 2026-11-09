@@ -11,10 +11,23 @@ const FIELD_RULES = {
   correo: { max: 254, email: true },
   password: { min: 6 },
   cliente: { max: 120 },
-  medida: { max: 40 },
-  calibre: { max: 40 },
-  color: { max: 80 },
-  ubicacion: { max: 80 },
+  // Formato de RN-025, igual que backend/src/utils/variantes.js
+  medida: {
+    max: 40,
+    pattern: /^\d{1,4}(?:[.,]\d{1,2})?\s*[xX×*]\s*\d{1,4}(?:[.,]\d{1,2})?\s*(?:cm|mm|m|in|pulg)?$/i,
+    message: "La medida debe ser ancho x largo, por ejemplo 10 x 15 o 40 x 60 cm.",
+  },
+  calibre: {
+    max: 40,
+    pattern: /^\d{1,3}(?:[.,]\d{1,2})?$/,
+    message: "El calibre debe ser un número mayor que cero, por ejemplo 0.95 o 2.",
+  },
+  color: {
+    min: 3,
+    max: 40,
+    pattern: /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?: +[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/,
+    message: "El color solo admite letras y espacios, por ejemplo Transparente o Blanco hueso.",
+  },
   detalle: { max: 200 },
   observaciones: { max: 255 },
   cantidad: { positive: true },
@@ -31,6 +44,10 @@ function ruleError(field, rule) {
   if (rule.max && value.length > rule.max) return `«${label}» admite máximo ${rule.max} caracteres.`;
   if (rule.min && value.length < rule.min) return `«${label}» debe tener al menos ${rule.min} caracteres.`;
   if (rule.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return `«${label}» no es un correo válido.`;
+  // Los números de la medida y el calibre también deben ser mayores que cero (0 x 15 o 0 no son válidos)
+  if (rule.pattern && (!rule.pattern.test(value) || (value.match(/\d+(?:[.,]\d+)?/g) || []).some((n) => Number(n.replace(",", ".")) <= 0))) {
+    return rule.message;
+  }
   if (rule.positive) {
     const number = Number(value);
     if (!Number.isFinite(number) || number <= 0) return `«${label}» debe ser un número mayor que cero.`;

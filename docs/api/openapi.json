@@ -624,13 +624,16 @@
                     ]
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "peso_rollo": {
                     "type": "number",
@@ -1066,14 +1069,16 @@
                     "description": "Línea del catálogo (RN-012)"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
                     "type": "string",
-                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance"
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number",
@@ -1242,13 +1247,16 @@
                     "type": "string"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number"
@@ -1429,13 +1437,15 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Medida, calibre y color van juntos"
+                    "description": "Medida, calibre y color van juntos. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "number"
@@ -1780,20 +1790,20 @@
                     "description": "Línea del catálogo (RN-012)"
                   },
                   "medida": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
                   },
                   "calibre": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Número mayor que cero con hasta 2 decimales (RN-025), p. ej. 0.95 o 2"
                   },
                   "color": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Solo letras y espacios, 3 a 40 caracteres (RN-025), p. ej. Transparente"
                   },
                   "cantidad": {
                     "type": "integer",
                     "minimum": 1
-                  },
-                  "ubicacion": {
-                    "type": "string"
                   }
                 },
                 "required": [

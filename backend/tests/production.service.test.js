@@ -228,7 +228,7 @@ test("registrar avance crea la existencia del producto si todavía no existe", a
   const orden = estado.queries.find(({ sql }) => sql.startsWith("UPDATE produccion"));
   assert.deepEqual(orden.params.slice(0, 2), [20, "en_proceso"]);
   const creado = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO inventario"));
-  assert.deepEqual(creado.params, ["Sencilla PP", "Sencilla PP", 20, "Produccion"]);
+  assert.deepEqual(creado.params, ["Sencilla PP", "Sencilla PP", 20]);
   const movimiento = estado.queries.find(({ sql }) => sql.startsWith("INSERT INTO movimientos_inventario"));
   assert.equal(movimiento.params[0], 77);
   assert.equal(estado.committed, true);
@@ -256,7 +256,7 @@ test("registrar avance de una orden con variante suma a esa variante del inventa
   assert.deepEqual(inventario.params, [30, 40]);
 });
 
-test("registrar avance crea la variante de la orden con ubicación por asignar si no existe", async (t) => {
+test("registrar avance crea la variante de la orden si no existe", async (t) => {
   const estado = simularAvance(
     t,
     { id: 9, producto: "Sencilla PP", medida: "20x30 cm", calibre: "1.5", color: "Transparente", cantidad: 50, cantidad_producida: 0, responsable_id: 3, estado: "pendiente" },
@@ -273,7 +273,6 @@ test("registrar avance crea la variante de la orden con ubicación por asignar s
     "1.5",
     "Transparente",
     20,
-    "Por ubicar",
   ]);
 });
 

@@ -194,7 +194,7 @@ async function resumenVentas({ desde, hasta } = {}) {
 }
 
 async function resumenInventario() {
-  const [filas] = await pool.query("SELECT producto, cantidad, ubicacion FROM inventario ORDER BY cantidad ASC");
+  const [filas] = await pool.query("SELECT producto, cantidad FROM inventario ORDER BY cantidad ASC");
   return filas;
 }
 
