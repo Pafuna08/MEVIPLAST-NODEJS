@@ -40,7 +40,7 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 - **Reportes:** consultar resúmenes, imprimirlos o descargarlos en Excel.
 - **Materias primas:** consultar existencias y movimientos, y registrar el consumo de una bobina en una orden activa que la usa (**Registrar movimiento → Consumo en una orden**). Asociar la materia prima a la orden no consume stock automáticamente.
 
-El supervisor tiene permiso de venta en la API, pero no la vista Ventas en el menú (DEF-007, por decidir con el cliente).
+El supervisor no registra ventas: las consulta en los reportes. Antes la API se lo permitía aunque el menú no tenía la vista; el equipo decidió quitar ese permiso (DEF-007).
 
 ## Operario
 

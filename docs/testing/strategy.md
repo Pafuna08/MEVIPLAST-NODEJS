@@ -19,7 +19,7 @@ npm run test:e2e --prefix backend
 
 - Health check con base real.
 - CP-028: orden del administrador (rechazada sin medida, calibre y color; queda sin supervisor fijo, CR-014) → asignación del supervisor, que toma la orden → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea «Por ubicar») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
-- CP-029: acceso directo a 13 endpoints con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
+- CP-029: acceso directo a 14 operaciones (incluido `POST /ventas`, que el supervisor ya no puede usar, DEF-007) con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
