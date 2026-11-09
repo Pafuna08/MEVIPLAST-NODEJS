@@ -78,6 +78,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- El panel valida el color contra la misma lista fija del servidor (RN-025) y avisa «Selecciona un color de la lista»; antes conservaba la regla anterior de «solo letras y espacios».
 - Usuarios: los botones «Cambiar» del correo quedan alineados en una misma columna; antes se corrían según el largo de cada correo.
 - Ventas: debajo de las tarjetas aparece la lista de referencias con existencias de la línea elegida (medida, calibre, color y unidades), para escoger la correcta con un clic; la tarjeta cuenta solo las referencias con unidades, igual que la lista, y un registro sin variante se muestra como «Sin variante (registro anterior)».
 - `db:init` explica por qué falla cuando MySQL está apagado, no existe el servidor o se rechaza el usuario; antes mostraba el error vacío (DEF-016). En una base nueva ya no avisa de migraciones pendientes: las registra como aplicadas porque `schema.sql` trae el esquema final; en una base existente lista solo las que faltan (DEF-017). Hallados en la instalación limpia del 2026-11-08 (EV-2026-11-08-01); el README lista ahora las cuentas de demostración.
