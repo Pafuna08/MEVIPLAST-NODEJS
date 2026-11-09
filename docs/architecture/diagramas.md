@@ -92,7 +92,7 @@ sequenceDiagram
   A->>A: Sanitiza y valida largos
   A->>M: verificarToken y verificarRol(admin, vendedor)
   M->>S: registrar(datos, usuario)
-  S->>S: Valida RN-018 (1 a 500 unidades por paquete)
+  S->>S: Valida RN-018 y CR-018 (paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y $100 000 000)
   S->>D: BEGIN y SELECT inventario FOR UPDATE
   alt Stock suficiente
     S->>D: INSERT ventas, UPDATE inventario, INSERT movimientos_inventario
