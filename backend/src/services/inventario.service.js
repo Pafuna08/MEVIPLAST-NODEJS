@@ -82,7 +82,7 @@ async function ingresar(
   },
   actorId,
 ) {
-  const cantidadNumerica = entero(cantidad, "Las unidades");
+  const cantidadNumerica = entero(cantidad, "La cantidad");
   if (tipo !== "ingreso_manual") {
     const error = new Error("Tipo de ingreso no válido");
     error.statusCode = 400;
