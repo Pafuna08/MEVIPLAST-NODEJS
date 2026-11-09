@@ -28,7 +28,7 @@ Los diagramas de contexto, contenedores, componentes, secuencia de una venta y d
 - `backend/src/controllers`: validación HTTP y respuestas.
 - `backend/src/services`: consultas y reglas del dominio.
 - `backend/src/config`: conexión e inicialización de MySQL.
-- `frontend/src`: aplicación React y vistas por perfil.
+- `frontend/src`: aplicación React. `DashboardApp.jsx` maneja la sesión, el menú por rol, la carga de datos y las confirmaciones; `comun/` reúne las constantes, el formato, el cliente de la API, las validaciones y los componentes compartidos; `vistas/` tiene un archivo por pantalla.
 - `frontend/js`: scripts del login y del sitio público estático.
 
 ## Decisiones relacionadas
