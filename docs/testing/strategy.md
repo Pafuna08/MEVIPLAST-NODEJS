@@ -18,7 +18,7 @@ npm run test:e2e --prefix backend
 `backend/tests/e2e/flujos.e2e.js` crea una base desechable (`E2E_DB_NAME`, por defecto `meviplast_e2e`), levanta la API, ejecuta los flujos y elimina la base al terminar (`E2E_KEEP_DB=true` la conserva). Se niega a ejecutarse si el nombre no empieza por `meviplast_e2e`, para no tocar `meviplast_db`. En CI corre en un job aparte con un contenedor MariaDB 10.4.
 
 - Health check con base real.
-- CP-028: orden del administrador (rechazada sin medida, calibre y color; queda sin supervisor fijo, CR-014) → asignación del supervisor, que toma la orden → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea «Por ubicar») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
+- CP-028: orden del administrador (rechazada sin medida, calibre y color; queda sin supervisor fijo, CR-014) → asignación del supervisor, que toma la orden → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea si no existe, con la medida normalizada «40 x 60 cm») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
 - CP-029: acceso directo a 14 operaciones (incluido `POST /ventas`, que el supervisor ya no puede usar, DEF-007) con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
@@ -30,7 +30,10 @@ npm run test:e2e --prefix backend
 - Mi historial: el operario ve su avance del día con la observación (`/produccion/mis-registros`); otro rol recibe 403 y un periodo inválido, 400.
 - HU-022 (CP-079): el operario activo aparece en el reporte de rendimiento aunque no tenga órdenes; al crearle una orden de 200 con avance de 50 y otra cancelada de 999, su meta sube 200, lo producido 50 (la cancelada no cuenta) y el cumplimiento es producido ÷ meta. El operario y el vendedor reciben 403, un periodo inválido 400, y el Excel trae su fila en la hoja «Por operario».
 - CR-014: los supervisores ven la orden pendiente del administrador, el administrador puede asignar el operario sin cambiar el supervisor y el operario no puede asignar (403).
-- Plantillas: sin variante se rechaza (400), la misma variante repetida da 409 y otra variante de la misma línea se acepta.
+- Plantillas: sin variante o sin materia prima se rechaza (400, RN-026), la misma variante repetida da 409 y otra variante de la misma línea se acepta.
+- RN-025 y RN-026 (CP-081, CP-086, CP-087): una medida «eddc», un calibre «eew» o un color fuera de la lista («Fdsa») se rechazan con 400; la medida «40x60 cm» se guarda como «40 x 60 cm»; una orden sin materia prima se rechaza.
+- CR-016 (CP-083, CP-084): los inicios de sesión no quedan en la tabla `auditoria`; la bitácora filtra por acción y fechas con total y páginas, rechaza filtros inválidos, y el archivo de lo de más de 12 meses escribe el CSV, borra solo eso, deja un evento ARCHIVAR_AUDITORIA y no repite.
+- Migración `20261109_drop_unused_columns.sql` (CR-015, CP-082) aplicada sobre una base con `inventario.ubicacion` y `produccion.lote`, dos veces: quita las columnas sin perder filas.
 - Migración `20261027_template_variant.sql` aplicada sobre la tabla anterior (clave única por línea) y ejecutada dos veces; conserva la plantilla existente.
 
 ## Rendimiento (RNF-004)
@@ -56,7 +59,9 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-77 pruebas unitarias y de rutas con `node:test` (77 aprobadas el 2026-11-08):
+91 pruebas unitarias y de rutas con `node:test` (91 aprobadas el 2026-11-09), en 20 archivos:
+
+- `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
@@ -69,12 +74,13 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 50 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
-- `production.service.test.js` (17): edición parcial, plantillas del catálogo y con variante, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada «Por ubicar»).
-- `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, límite de la bitácora (1 a 1 000, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
+- `production.service.test.js` (17): edición parcial sin quitar la materia prima (RN-026), plantillas del catálogo con variante y materia prima, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada si no existe).
+- `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
 - `sanitize.test.js` (4): sanitización de texto, números y objetos; los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (4): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016) y calcula las migraciones pendientes (DEF-017).
+- `variantes.test.js` (7): medida «ancho x largo» normalizada, calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
 - `ventas.service.test.js` (5): límite de 500 unidades por paquete, descuento por paquetes, aislamiento del vendedor y comprobante.
 
 CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
@@ -86,12 +92,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-08:
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-09, sobre `develop` tras el PR #68:
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 66,8 % | 74,0 % | 57,4 % |
-| Unitarias + E2E | 83,1 % | 77,2 % | 83,5 % |
+| Unitarias | 68,0 % | 77,6 % | 61,6 % |
+| Unitarias + E2E | 84,7 % | 79,6 % | 85,2 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son `usuarios.service.js` (69 %) y los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 
