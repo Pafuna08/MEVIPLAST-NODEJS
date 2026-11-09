@@ -1,6 +1,6 @@
 # Declaración de uso de herramientas de IA
 
-**Estado: completada con las respuestas del equipo el 09/11/2026. Falta la firma de los dos integrantes (sección 5); hasta entonces no es una declaración firmada.**
+**Estado: firmada por el equipo el 09/11/2026 (sección 5).**
 
 Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar algo que el equipo no comprende ni puede sustentar (guía de repositorio, numeral 13). Las decisiones de alcance, licencia, aceptación y responsabilidad del producto corresponden a los autores humanos.
 
@@ -98,5 +98,5 @@ Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja asumen la autoría del proyecto
 
 | Nombre | Firma | Fecha |
 |---|---|---|
-| Pablo E. Fuenmayor Osuna | ____ | ____ |
-| Carlos Herrera Sibaja | ____ | ____ |
+| Pablo E. Fuenmayor Osuna | Firmado: Pablo E. Fuenmayor Osuna | 09/11/2026 |
+| Carlos Herrera Sibaja | Firmado: Carlos Herrera Sibaja (confirmación transmitida por Pablo E. Fuenmayor Osuna en nombre del equipo) | 09/11/2026 |
