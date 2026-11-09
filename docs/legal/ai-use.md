@@ -1,6 +1,6 @@
 # Declaración de uso de herramientas de IA
 
-**Estado: borrador. El equipo debe revisarlo, completar los campos marcados con `____` y firmarlo antes de la entrega. No es una declaración firmada.**
+**Estado: completada con las respuestas del equipo el 09/11/2026. Falta la firma de los dos integrantes (sección 5); hasta entonces no es una declaración firmada.**
 
 Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar algo que el equipo no comprende ni puede sustentar (guía de repositorio, numeral 13). Las decisiones de alcance, licencia, aceptación y responsabilidad del producto corresponden a los autores humanos.
 
@@ -8,8 +8,8 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 
 | Herramienta | Modalidad | Periodo | Quién la usó |
 |---|---|---|---|
-| Claude Code (Anthropic) | Asistente en Visual Studio Code con acceso al repositorio, la terminal y GitHub, siempre con permiso del usuario | Octubre de 2026; los PR #13 a #23 son del 27/10/2026 | Pablo E. Fuenmayor Osuna |
-| ____ | ____ | ____ | ____ |
+| Claude Code (Anthropic) | Asistente en Visual Studio Code con acceso al repositorio, la terminal y GitHub, siempre con permiso del usuario | Octubre y noviembre de 2026 (PR #13 a #60) | Pablo E. Fuenmayor Osuna |
+| GitHub Copilot | Asistente de código en Visual Studio Code (sugerencias y autocompletado) | Sobre todo al inicio del desarrollo (sprints 1 a 3, agosto a octubre de 2026) | Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja |
 
 ## 2. Uso realizado con Claude Code
 
@@ -74,23 +74,23 @@ Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar
 
 Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de las migraciones `20261027_login_lockout.sql`, `20261027_production_variant.sql` y `20261027_template_variant.sql` (EV-2026-10-27-04 y EV-2026-10-27-06).
 
-### Otros usos por confirmar
+### Uso anterior al PR #13
 
-- PR #11 y `docs/adso-review-2026-10-20.md` (alineación del repositorio con la guía): el borrador anterior de esta declaración ya mencionaba asistencia de IA en la documentación del repositorio. Herramienta y alcance: ____.
-- Código de los sprints 1 a 3: ____ (indicar si se usó IA y para qué).
+- PR #11 y `docs/adso-review-2026-10-20.md` (alineación del repositorio con la guía): el borrador anterior de esta declaración ya mencionaba asistencia de IA en la documentación del repositorio. El equipo confirma que usó IA antes del PR #13; ese apoyo corresponde al uso de GitHub Copilot descrito en la sección 1.
+- Código de los sprints 1 a 3: sí se usó IA. GitHub Copilot en Visual Studio Code, sobre todo al inicio del desarrollo, por los dos integrantes.
 
 ## 3. Validación humana
 
 - Cada cambio de código pasó por un pull request con lint, pruebas unitarias y pruebas E2E en GitHub Actions antes de fusionarse (al PR #56: 77 unitarias y 15 E2E, más 14 flujos en Edge, Chrome y Firefox).
 - Revisión de los PR #12 a #50 por Carlos Herrera Sibaja: aprobados en GitHub el 03/11/2026. Los PR posteriores quedan pendientes de su revisión.
-- Los documentos se contrastaron con el código, las pruebas y las capturas. Revisión del equipo: ____.
+- Los documentos se contrastaron con el código, las pruebas y las capturas. Revisión del equipo: Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja revisaron los documentos (confirmado el 09/11/2026).
 
 ## 4. Limitaciones detectadas
 
-- No se pudo abrir Word de forma automática, así que la estructura de los documentos se validó con scripts. El equipo debe revisarlos visualmente en Word (tabla de contenido, firmas).
+- No se pudo abrir Word de forma automática, así que la estructura de los documentos se validó con scripts; después los revisaron los dos integrantes. En Word falta actualizar la tabla de contenido de cada documento.
 - La IA no conoce decisiones que no están escritas (por ejemplo, por qué se cambió Django por Node.js). Esas respuestas las dio el equipo.
 - La IA no registró la aceptación del cliente como firmada: MEVIPLAST aprobó el alcance en la reunión inicial y delegó las decisiones en el equipo, y así se documentó ([`../requirements/decisiones-por-delegacion.md`](../requirements/decisiones-por-delegacion.md)).
-- Otras: ____
+- Otras: ninguna adicional reportada por el equipo.
 
 ## 5. Responsables
 
