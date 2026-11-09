@@ -303,6 +303,10 @@ const FLUJOS = [
     // Desde el reporte, el menú lleva a otra sección (antes se quedaba en el reporte)
     await Promise.all([pagina.waitForURL(/dashboard\.html#usuarios$/), pagina.click(".sidebar nav >> text=Usuarios")]);
     await pagina.locator(".page-intro h2", { hasText: "Usuarios" }).waitFor({ timeout: 10000 });
+    // DEF-021: en la fila propia no se ofrece desactivar ni eliminar
+    const filaPropia = pagina.locator("tr", { has: pagina.locator(".own-account") });
+    await filaPropia.waitFor({ timeout: 10000 });
+    if (await filaPropia.locator("button", { hasText: /Desactivar|Eliminar/ }).count()) problemas.push("la fila propia ofrece desactivar o eliminar");
     await contexto.close();
     if (!/^reporte-ventas-mensual-\d{4}-\d{2}-\d{2}\.xlsx$/.test(nombre) || tam < 1000) throw new Error(`descarga ${nombre} (${tam} bytes)`);
     if (problemas.length) throw new Error(problemas.join("; "));

@@ -283,6 +283,34 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "vendedor" })).status, 200);
   });
 
+  await t.test("DEF-021: el administrador no se quita el rol, no se desactiva ni se elimina, y siempre queda uno activo", async () => {
+    const propio = `/usuarios/${ids.admin}`;
+    const quitarRol = await llamar("PUT", propio, tokens.admin, { rol: "operario" });
+    assert.equal(quitarRol.status, 400);
+    assert.match(quitarRol.body.mensaje, /No puedes quitarte el rol de administrador/);
+    assert.match((await llamar("PUT", propio, tokens.admin, { activo: 0 })).body.mensaje, /No puedes desactivar tu propia cuenta/);
+    assert.match((await llamar("DELETE", propio, tokens.admin)).body.mensaje, /No puedes eliminar tu propia cuenta/);
+    const [[yo]] = await db.query(`SELECT rol, activo FROM \`${DB}\`.usuarios WHERE id = ?`, [ids.admin]);
+    assert.deepEqual({ rol: yo.rol, activo: Number(yo.activo) }, { rol: "admin", activo: 1 });
+
+    // Un admin sí puede desactivar a otro admin, y cambiar el rol de un admin inactivo; el único admin activo sigue sin poder eliminarse
+    const creado = await llamar("POST", "/usuarios", tokens.admin, { nombre: "Admin dos", usuario: "e2e_admin2", correo: "admin2@e2e.local", password: CLAVE, rol: "admin" });
+    assert.equal(creado.status, 201);
+    const otro = `/usuarios/${creado.body.id}`;
+    assert.equal((await llamar("PUT", otro, tokens.admin, { activo: 0 })).status, 200);
+    const token2 = (await login("e2e_admin2")).body;
+    assert.equal(token2.token, undefined, "el admin desactivado ya no entra");
+    await db.query(`UPDATE \`${DB}\`.usuarios SET activo = 0 WHERE id = ?`, [ids.admin]);
+    await db.query(`UPDATE \`${DB}\`.usuarios SET activo = 1 WHERE id = ?`, [creado.body.id]);
+    const admin2 = (await login("e2e_admin2")).body.token;
+    const ultimo = await llamar("PUT", propio, admin2, { rol: "supervisor" });
+    assert.equal(ultimo.status, 200, "el admin inactivo puede cambiar de rol: no es el último activo");
+    assert.match((await llamar("DELETE", otro, admin2)).body.mensaje, /No puedes eliminar tu propia cuenta/);
+    await db.query(`UPDATE \`${DB}\`.usuarios SET rol = 'admin', activo = 1 WHERE id = ?`, [ids.admin]);
+    const borrar = await llamar("DELETE", otro, tokens.admin);
+    assert.equal(borrar.status, 204);
+  });
+
   await t.test("DEF-013 / RF-015 / RF-016: compras, ajustes y consumo por orden de materia prima", async () => {
     const creada = await llamar("POST", "/materia-prima", tokens.admin, {
       tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Transparente", peso_rollo: 100,

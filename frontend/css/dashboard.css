@@ -1182,6 +1182,13 @@ th {
   flex-shrink: 0;
 }
 
+/* Usuarios: en la fila propia no se ofrece desactivar ni eliminar (la cuenta con la sesión abierta) */
+.own-account {
+  color: var(--steel);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 /* Ventas: referencias de la línea elegida, para escoger con un clic */
 .reference-list {
   display: grid;

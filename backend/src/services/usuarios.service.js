@@ -54,8 +54,53 @@ async function crear({ nombre, usuario, correo, password, rol }, actorId) {
   return obtenerPorId(resultado.insertId);
 }
 
+function errorDeRegla(mensaje) {
+  const error = new Error(mensaje);
+  error.statusCode = 400;
+  return error;
+}
+
+// Nadie se quita su propio rol de administrador, se desactiva ni se elimina, y siempre
+// queda al menos un administrador activo. Se revisa con bloqueo de filas para que dos
+// cambios al mismo tiempo no dejen el sistema sin administrador.
+async function protegerAdministradores(conexion, id, actorId, { rol, activo, eliminar = false }) {
+  const propio = Number(id) === Number(actorId);
+  const quitaRol = rol !== undefined && rol !== null && rol !== "admin";
+  const desactiva = activo !== undefined && activo !== null && !Number(activo);
+  if (propio && eliminar) throw errorDeRegla("No puedes eliminar tu propia cuenta");
+  if (propio && quitaRol) throw errorDeRegla("No puedes quitarte el rol de administrador");
+  if (propio && desactiva) throw errorDeRegla("No puedes desactivar tu propia cuenta");
+  if (!eliminar && !quitaRol && !desactiva) return;
+  const [admins] = await conexion.query(
+    "SELECT id FROM usuarios WHERE rol = 'admin' AND activo = 1 FOR UPDATE"
+  );
+  const esAdminActivo = admins.some((admin) => Number(admin.id) === Number(id));
+  if (esAdminActivo && admins.length <= 1) {
+    throw errorDeRegla("Debe quedar al menos un administrador activo");
+  }
+}
+
+// Ejecuta el cambio dentro de una transacción, después de proteger a los administradores
+async function enTransaccion(id, actorId, cambio, sql, params) {
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+    await protegerAdministradores(conexion, id, actorId, cambio);
+    await conexion.query(sql, params);
+    await conexion.commit();
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
+}
+
 async function actualizar(id, { nombre, correo, rol, activo }, actorId) {
-  await pool.query(
+  await enTransaccion(
+    id,
+    actorId,
+    { rol, activo },
     "UPDATE usuarios SET nombre = COALESCE(?, nombre), correo = COALESCE(?, correo), rol = COALESCE(?, rol), activo = COALESCE(?, activo) WHERE id = ?",
     [nombre ?? null, correo ?? null, rol ?? null, activo ?? null, id]
   );
@@ -71,7 +116,7 @@ async function actualizar(id, { nombre, correo, rol, activo }, actorId) {
 }
 
 async function eliminar(id, actorId) {
-  await pool.query("DELETE FROM usuarios WHERE id = ?", [id]);
+  await enTransaccion(id, actorId, { eliminar: true }, "DELETE FROM usuarios WHERE id = ?", [id]);
 
   await registrarAuditoria({
     usuarioId: actorId,
