@@ -1167,3 +1167,17 @@ th {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Correo y botón «Cambiar» en la tabla de usuarios: el botón queda alineado al borde derecho */
+.email-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.email-cell > span {
+  overflow-wrap: anywhere;
+}
+.email-cell .text-action {
+  flex-shrink: 0;
+}
