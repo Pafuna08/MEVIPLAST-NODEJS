@@ -105,7 +105,10 @@ async function registrarMovimiento(req, res) {
       ajuste_salida: ["admin", "almacenista"],
       consumo_produccion: ["admin", "supervisor"],
     };
-    if (!rolesPorTipo[tipo]?.includes(req.usuario.rol)) {
+    if (!Object.hasOwn(rolesPorTipo, tipo)) {
+      return res.status(400).json({ mensaje: "Tipo de movimiento no válido" });
+    }
+    if (!rolesPorTipo[tipo].includes(req.usuario.rol)) {
       return res
         .status(403)
         .json({ mensaje: "Tu rol no puede registrar este tipo de movimiento" });

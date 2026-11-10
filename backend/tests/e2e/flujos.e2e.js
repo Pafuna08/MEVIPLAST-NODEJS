@@ -541,6 +541,27 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
   });
 
+  await t.test("DEF-023: respuestas 400 y 404 en lugar de 200 o 500; solo se eliminan órdenes pendientes sin avance", async () => {
+    const roto = await fetch(`${base}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{malo" });
+    assert.equal(roto.status, 400);
+    const orden = { producto: "Sencilla PP", medida: "6 x 9", calibre: "1", color: "Natural", cantidad: 20, materia_prima_id: bobina };
+    const pendiente = await llamar("POST", "/produccion", tokens.admin, orden);
+    assert.equal(pendiente.status, 201);
+    assert.equal((await llamar("DELETE", `/produccion/${pendiente.body.id}`, tokens.admin)).status, 204, "pendiente sin avance");
+    assert.equal((await llamar("DELETE", `/produccion/${pendiente.body.id}`, tokens.admin)).status, 404, "ya no existe");
+    const [[conAvance]] = await db.query(`SELECT id FROM \`${DB}\`.produccion WHERE cantidad_producida > 0 LIMIT 1`);
+    const rechazo = await llamar("DELETE", `/produccion/${conAvance.id}`, tokens.admin);
+    assert.equal(rechazo.status, 400);
+    assert.match(rechazo.body.mensaje, /Solo se pueden eliminar órdenes pendientes sin avance/);
+    assert.equal((await db.query(`SELECT COUNT(*) AS n FROM \`${DB}\`.produccion WHERE id = ?`, [conAvance.id]))[0][0].n, 1);
+    assert.equal((await llamar("PUT", "/usuarios/999999", tokens.admin, { nombre: "Nadie" })).status, 404);
+    assert.equal((await llamar("DELETE", "/usuarios/999999", tokens.admin)).status, 404);
+    assert.equal((await llamar("PUT", `/materia-prima/${bobina}`, tokens.admin, { cantidad: 99999 })).status, 400);
+    assert.equal((await llamar("PUT", "/materia-prima/999999", tokens.admin, { proveedor: "Nadie" })).status, 404);
+    assert.equal((await llamar("POST", "/materia-prima/movimientos", tokens.almacenista, { materia_prima_id: bobina, tipo: "regalo", cantidad: 1 })).status, 400);
+    assert.equal((await llamar("GET", "/reportes/auditoria?desde=2026-13-45", tokens.admin)).status, 400);
+  });
+
   await t.test("CR-016: inicios de sesión fuera de la tabla, auditoría filtrada y archivo de lo antiguo", async () => {
     // 1. Ya hubo inicios de sesión de los cinco roles en esta prueba y ninguno quedó en la tabla
     const [[logins]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'LOGIN'");

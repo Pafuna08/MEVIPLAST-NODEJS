@@ -210,14 +210,21 @@ async function bitacoraAuditoria(filtros = {}) {
   const condiciones = [];
   const valores = [];
   const fecha = /^\d{4}-\d{2}-\d{2}$/;
+  // DEF-023: «2026-13-45» o «2026-02-30» tienen el formato pero no existen; antes se ignoraban sin aviso
+  const valida = (texto) => {
+    const dia = new Date(`${texto}T00:00:00Z`);
+    return !Number.isNaN(dia.getTime()) && dia.toISOString().slice(0, 10) === texto;
+  };
   const { desde, hasta, usuario_id, accion, tabla, texto } = filtros;
   if (desde !== undefined && desde !== "") {
     if (!fecha.test(desde)) throw filtroInvalido("La fecha inicial debe tener el formato AAAA-MM-DD");
+    if (!valida(desde)) throw filtroInvalido("La fecha inicial no es una fecha válida");
     condiciones.push("a.fecha >= ?");
     valores.push(`${desde} 00:00:00`);
   }
   if (hasta !== undefined && hasta !== "") {
     if (!fecha.test(hasta)) throw filtroInvalido("La fecha final debe tener el formato AAAA-MM-DD");
+    if (!valida(hasta)) throw filtroInvalido("La fecha final no es una fecha válida");
     if (desde && desde > hasta) throw filtroInvalido("La fecha inicial no puede ser posterior a la final");
     condiciones.push("a.fecha < DATE_ADD(?, INTERVAL 1 DAY)");
     valores.push(hasta);

@@ -86,7 +86,12 @@ async function enTransaccion(id, actorId, cambio, sql, params) {
   try {
     await conexion.beginTransaction();
     await protegerAdministradores(conexion, id, actorId, cambio);
-    await conexion.query(sql, params);
+    const [resultado] = await conexion.query(sql, params);
+    if (!resultado.affectedRows) {
+      const error = new Error("Usuario no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
     await conexion.commit();
   } catch (error) {
     await conexion.rollback();
