@@ -1,5 +1,6 @@
 # Documentación del repositorio
 
+- [Paquete documental ADSO](Documentacion_Proyecto_ADSO/LEEME.md): los Word y Excel de las plantillas del instructor (formulación, requisitos, diseño, calidad, manuales, cierre y evaluación), con su [Índice Maestro](Documentacion_Proyecto_ADSO/00_Gobierno_Documental/Indice_Maestro.xlsx)
 - [Estado del proyecto y brechas](project-status.md)
 - [Trazabilidad y estado por historia](requirements/traceability.md)
 - [Decisiones del equipo por delegación del cliente](requirements/decisiones-por-delegacion.md)

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="707" viewBox="0 0 1400 707" font-family="Helvetica, Arial, sans-serif">
+<rect width="1400" height="707" fill="#fff"/>
+<text x="24" y="36" font-size="20" font-weight="bold" fill="#1F3864">DIA-CU-02 · EP-004 Seguridad y control de acceso</text>
+<rect x="360" y="62" width="680" height="623" rx="6" fill="none" stroke="#1F4E79" stroke-width="2.2"/>
+<text x="700" y="88" font-size="16" font-weight="bold" text-anchor="middle" fill="#1F4E79">Sistema MEVIPLAST</text>
+<line x1="194" y1="369" x2="525" y2="273" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="369" x2="525" y2="381" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="369" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="585" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1160" y1="381" x2="875" y2="381" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="700" y1="199" x2="700" y2="239" stroke="#1F3864" stroke-width="1.6" stroke-dasharray="7,5"/>
+<polyline points="695.3269798922962,227.94726807196537 700,239 704.6730201077038,227.94726807196537" fill="none" stroke="#1F3864" stroke-width="1.8"/>
+<text x="712" y="224" font-size="13" font-style="italic" fill="#1F3864">«extend»</text>
+<line x1="700" y1="347" x2="700" y2="307" stroke="#1F3864" stroke-width="1.6" stroke-dasharray="7,5"/>
+<polyline points="704.6730201077038,318.05273192803463 700,307 695.3269798922962,318.05273192803463" fill="none" stroke="#1F3864" stroke-width="1.8"/>
+<text x="712" y="332" font-size="13" font-style="italic" fill="#1F3864">«extend»</text>
+<ellipse cx="700" cy="165" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="147" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-004</text>
+<text x="700" y="165" font-size="14" text-anchor="middle" fill="#1F3864">Bloquear cuenta por intentos</text>
+<text x="700" y="181" font-size="14" text-anchor="middle" fill="#1F3864">fallidos</text>
+<ellipse cx="700" cy="273" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="263" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-001</text>
+<text x="700" y="281" font-size="14" text-anchor="middle" fill="#1F3864">Iniciar sesión</text>
+<ellipse cx="700" cy="381" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="371" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-003</text>
+<text x="700" y="389" font-size="14" text-anchor="middle" fill="#1F3864">Recuperar contraseña o usuario</text>
+<ellipse cx="700" cy="489" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="479" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-005</text>
+<text x="700" y="497" font-size="14" text-anchor="middle" fill="#1F3864">Cerrar sesión</text>
+<ellipse cx="700" cy="597" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="579" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-002</text>
+<text x="700" y="597" font-size="14" text-anchor="middle" fill="#1F3864">Gestionar usuarios, roles y</text>
+<text x="700" y="613" font-size="14" text-anchor="middle" fill="#1F3864">desbloqueo</text>
+<circle cx="170" cy="343" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="354" x2="170" y2="387" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="364" x2="188" y2="364" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="387" x2="156" y2="411" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="387" x2="184" y2="411" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="431" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Usuario</text>
+<circle cx="170" cy="559" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="570" x2="170" y2="603" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="580" x2="188" y2="580" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="603" x2="156" y2="627" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="603" x2="184" y2="627" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="647" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Administrador</text>
+<rect x="1160" y="353" width="140" height="56" rx="4" fill="#F7F9FC" stroke="#1F4E79" stroke-width="2"/>
+<text x="1230" y="373" font-size="12" text-anchor="middle" fill="#555">«sistema externo»</text>
+<text x="1230" y="393" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Servidor SMTP</text>
+</svg>
