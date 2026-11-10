@@ -14,8 +14,8 @@ export function Materials({ data, role, onSubmit, saving }) {
     ...(canConsume ? [["consumo_produccion", "Consumo en una orden"]] : []),
   ];
   const [materialId, setMaterialId] = useState("");
-  const [movementType, setMovementType] = useState(movementTypes[0]?.[0] || "");
-  const selectedMaterialId = materialId || String(data.materials[0]?.id || "");
+  const [movementType, setMovementType] = useState("");
+  const selectedMaterialId = materialId;
   // Solo las órdenes activas que usan la bobina elegida admiten consumo (RN-016)
   const consumableOrders = (data.orders || []).filter((order) =>
     String(order.materia_prima_id) === selectedMaterialId && ["pendiente", "en_proceso"].includes(order.estado));
@@ -34,18 +34,20 @@ export function Materials({ data, role, onSubmit, saving }) {
       {movementTypes.length > 0 && data.materials.length > 0 && <FormPanel title="Registrar movimiento" onSubmit={onSubmit} saving={saving} obligatorios={["materia_prima_id", "tipo", "produccion_id", "cantidad"]} limites={{ cantidad: { integer: false, decimals: 2, maxValue: 100000 } }}>
         <Field label="Materia prima">
           <select name="materia_prima_id" value={selectedMaterialId} onChange={(event) => setMaterialId(event.target.value)}>
+            <option value="" disabled>Selecciona la materia prima</option>
             {data.materials.map((item) => <option key={item.id} value={item.id}>{materialLabel(item)} ({number(item.cantidad)} {sanitizeText(item.unidad)})</option>)}
           </select>
         </Field>
         <Field label="Movimiento">
           <select name="tipo" value={movementType} onChange={(event) => setMovementType(event.target.value)}>
+            <option value="" disabled>Selecciona el movimiento</option>
             {movementTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </Field>
         {movementType === "consumo_produccion" && <Field label="Orden que usa esta bobina">
-          <select name="produccion_id">
+          <select key={`orden-${selectedMaterialId}`} name="produccion_id" defaultValue="">
+            <option value="" disabled>{consumableOrders.length ? "Selecciona la orden" : "No hay órdenes activas que usen esta bobina"}</option>
             {consumableOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} ({order.estado === "en_proceso" ? "en proceso" : order.estado})</option>)}
-            {!consumableOrders.length && <option value="">No hay órdenes activas que usen esta bobina</option>}
           </select>
         </Field>}
         <Field label="Cantidad (kg)"><input name="cantidad" type="number" /></Field>
