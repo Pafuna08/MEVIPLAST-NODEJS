@@ -1,7 +1,7 @@
 :root {
   --navy: #001f54;
   --navy-deep: #00152f;
-  --red: #e63946;
+  --red: #d02c3a;
   --white: #ffffff;
   --gray-50: #f5f5f5;
   --gray-100: #e8edf2;
@@ -122,7 +122,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .field { margin-bottom: 16px; }
 .field label { display: block; margin-bottom: 5px; color: var(--navy); font-weight: 700; }
 .field input, .field textarea { width: 100%; padding: 12px; border: 1px solid #bdc8d4; border-radius: 4px; background: #fbfcfd; }
-.field input:focus, .field textarea:focus { outline: 3px solid rgba(230,57,70,.18); border-color: var(--red); }
+.field input:focus, .field textarea:focus { outline: 3px solid rgba(208,44,58,.18); border-color: var(--red); }
 .field.invalid input, .field.invalid textarea { border-color: var(--red); }
 .field small { display: block; min-height: 18px; margin-top: 3px; color: #b8202e; }
 .form-status { min-height: 24px; margin-bottom: 0; color: var(--success); font-weight: 700; }

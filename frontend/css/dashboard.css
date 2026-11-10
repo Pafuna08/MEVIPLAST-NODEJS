@@ -1,12 +1,13 @@
 :root {
   --navy: #001f54;
   --deep: #00142e;
-  --red: #e63946;
+  /* AC-003: rojo y gris con contraste WCAG AA (4,5:1); antes #e63946 (4,2:1) y #667588 (4,2:1) */
+  --red: #d02c3a;
   --white: #ffffff;
   --bg: #eef2f5;
   --line: #d8e0e8;
   --ink: #17243a;
-  --steel: #667588;
+  --steel: #5f6e81;
   --success: #23855e;
   --warning: #a96908;
   --sidebar: 250px;
@@ -200,7 +201,8 @@ textarea {
   display: block;
   font-size: 0.88rem;
 }
-.user-menu span {
+/* El avatar también es un span: queda blanco sobre azul (antes heredaba el gris, 3,4:1) */
+.user-menu span:not(.user-avatar) {
   color: var(--steel);
   font-size: 0.76rem;
 }
@@ -472,10 +474,13 @@ th {
   background: var(--navy);
   border-left: 4px solid var(--red);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-  transform: translateY(130%);
-  transition: transform 0.25s ease;
+  /* Oculta del todo mientras no hay aviso: antes asomaban 12 px en la esquina */
+  visibility: hidden;
+  transform: translateY(calc(100% + 40px));
+  transition: transform 0.25s ease, visibility 0.25s;
 }
 .toast.show {
+  visibility: visible;
   transform: none;
 }
 .form-panel {
@@ -1214,10 +1219,10 @@ th {
 }
 .reference-option:hover,
 .reference-option.selected {
-  border-color: #e63946;
-  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(208, 44, 58, 0.15);
 }
 .reference-option.selected strong::after {
   content: " ✓";
-  color: #e63946;
+  color: var(--red);
 }
