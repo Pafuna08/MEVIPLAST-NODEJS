@@ -139,7 +139,8 @@
             }
           }
         },
-        "security": []
+        "security": [],
+        "description": "Un cuerpo que no es JSON válido responde 400, como en cualquier ruta (DEF-023)."
       }
     },
     "/auth/recuperar-password": {
@@ -472,6 +473,9 @@
           "403": {
             "$ref": "#/components/responses/SinPermiso"
           },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          },
           "409": {
             "$ref": "#/components/responses/Conflicto"
           }
@@ -499,15 +503,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Correcto",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+          "204": {
+            "description": "Usuario eliminado"
           },
           "400": {
             "$ref": "#/components/responses/Validacion"
@@ -845,7 +842,8 @@
           "admin",
           "supervisor",
           "almacenista"
-        ]
+        ],
+        "description": "Un tipo que no está en la lista responde 400 (DEF-023)."
       }
     },
     "/materia-prima/{id}": {
@@ -960,12 +958,16 @@
           },
           "403": {
             "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
           }
         },
         "x-roles": [
           "admin",
           "almacenista"
-        ]
+        ],
+        "description": "La cantidad no se edita aquí: enviarla responde 400 (se cambia con compras, consumos o ajustes). Un material distinto de PEBD, PEAD o PP responde 400 (DEF-023)."
       },
       "delete": {
         "tags": [
@@ -1614,6 +1616,9 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
           "401": {
             "$ref": "#/components/responses/SesionInvalida"
           },
@@ -1626,7 +1631,8 @@
         },
         "x-roles": [
           "admin"
-        ]
+        ],
+        "description": "Solo una orden pendiente y sin avance (por ejemplo, creada por error); las demás responden 400 y se cancelan con PUT /produccion/{id}/estado (DEF-023)."
       }
     },
     "/produccion/{id}/asignar": {
@@ -2820,7 +2826,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Filtra toda la tabla en el servidor. Los inicios de sesión no están aquí: van al archivo accesos-AAAA-MM-DD.log del servidor (CR-016)."
+        "description": "Filtra toda la tabla en el servidor. Los inicios de sesión no están aquí: van al archivo accesos-AAAA-MM-DD.log del servidor (CR-016). Una fecha que no existe en el calendario (2026-13-45) responde 400 (DEF-023)."
       }
     }
   },

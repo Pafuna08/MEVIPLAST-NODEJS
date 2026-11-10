@@ -121,14 +121,19 @@ async function crear(datos, actorId) {
 async function actualizar(id, datos, actorId) {
   const { nombre, tipo, cantidad, unidad, proveedor, stock_minimo } = datos;
   if (cantidad !== undefined) {
-    throw new Error(
-      "Actualiza las cantidades mediante una compra, consumo o ajuste de inventario",
-    );
+    const error = new Error("Actualiza las cantidades mediante una compra, consumo o ajuste de inventario");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (tipo !== undefined && !materialesPermitidos[tipo]) {
+    const error = new Error("Selecciona un material válido");
+    error.statusCode = 400;
+    throw error;
   }
   const stockMinimo = stock_minimo === undefined || stock_minimo === null || stock_minimo === ""
     ? null
     : decimal(stock_minimo, "El stock mínimo", LIMITES.KG_MAX, { permitirCero: true });
-  await pool.query(
+  const [resultado] = await pool.query(
     `UPDATE materia_prima SET
       nombre = COALESCE(?, nombre),
       tipo = COALESCE(?, tipo),
@@ -138,6 +143,11 @@ async function actualizar(id, datos, actorId) {
      WHERE id = ?`,
     [nombre, tipo, unidad, proveedor, stockMinimo, id],
   );
+  if (!resultado.affectedRows) {
+    const error = new Error("Materia prima no encontrada");
+    error.statusCode = 404;
+    throw error;
+  }
 
   await registrarAuditoria({
     usuarioId: actorId,

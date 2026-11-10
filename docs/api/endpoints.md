@@ -30,7 +30,7 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | PUT         | `/produccion/{id}/estado`                                            | Operario asignado (solo inicia), admin y supervisor (solo cancelan) | Cambiar estado; la orden se finaliza sola al completar la meta (CR-013) |
 | PUT         | `/produccion/{id}`                                                   | Admin, supervisor                      | Editar orden pendiente sin avance (medida, calibre y color van juntos; la materia prima se cambia, no se quita) |
 | POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance; suma a la variante de la orden y la crea si no existe; la observación (máx. 255) queda en el movimiento |
-| DELETE      | `/produccion/{id}`                                                   | Admin                                  | Eliminar orden                         |
+| DELETE      | `/produccion/{id}`                                                   | Admin                                  | Eliminar orden pendiente sin avance (las demás se cancelan; DEF-023) |
 | GET         | `/inventario`                                                        | Admin, supervisor, almacenista, vendedor | Consultar existencias                  |
 | GET         | `/inventario/movimientos`, `/inventario/{id}/movimientos`            | Admin, supervisor, almacenista         | Consultar ledger de inventario         |
 | POST        | `/inventario`                                                        | Admin, supervisor, almacenista         | Registrar ingreso manual              |

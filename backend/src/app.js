@@ -48,6 +48,10 @@ app.use("/api", (req, res) => {
 
 // Manejador de errores centralizado
 app.use((error, req, res, next) => {
+  // DEF-023: un cuerpo que no es JSON válido es un error del cliente, no del servidor
+  if (error.type === "entity.parse.failed") {
+    return res.status(400).json({ mensaje: "El cuerpo de la petición no es un JSON válido" });
+  }
   log.error("Error no controlado", { error, metodo: req.method, ruta: req.originalUrl.split("?")[0] });
   res.status(500).json({ mensaje: "Error interno del servidor" });
 });

@@ -520,8 +520,34 @@ async function misRegistros(usuarioId, periodo) {
   return { periodo, ...rango, resumen, detalle };
 }
 
+// DEF-023: solo se elimina una orden pendiente y sin avance (por ejemplo, creada por error); las que ya
+// tienen producción se cancelan, para no perder de qué orden salió lo que entró al inventario
 async function eliminar(id, actorId) {
-  await pool.query("DELETE FROM produccion WHERE id = ?", [id]);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [filas] = await connection.query(
+      "SELECT id, estado, cantidad_producida FROM produccion WHERE id = ? FOR UPDATE",
+      [id],
+    );
+    if (!filas.length) {
+      const error = new Error("Orden de producción no encontrada");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (filas[0].estado !== "pendiente" || Number(filas[0].cantidad_producida) > 0) {
+      const error = new Error("Solo se pueden eliminar órdenes pendientes sin avance; las demás se cancelan");
+      error.statusCode = 400;
+      throw error;
+    }
+    await connection.query("DELETE FROM produccion WHERE id = ?", [id]);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 
   await registrarAuditoria({
     usuarioId: actorId,
