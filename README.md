@@ -115,7 +115,7 @@ docs/          arquitectura, API, datos, pruebas y evidencias
 ```
 
 La estructura documental y los pendientes funcionales se detallan en [`docs/project-status.md`](docs/project-status.md). El contrato actual de endpoints está resumido en [`docs/api/endpoints.md`](docs/api/endpoints.md), y su versión formal en [`docs/api/openapi.json`](docs/api/openapi.json) (OpenAPI 3.0.3).
-El índice de manuales, diagramas, procedimientos y evidencias está en [`docs/README.md`](docs/README.md).
+El índice de manuales, diagramas, procedimientos y evidencias está en [`docs/README.md`](docs/README.md), y el paquete documental ADSO (Word y Excel de las plantillas del instructor) en [`docs/Documentacion_Proyecto_ADSO`](docs/Documentacion_Proyecto_ADSO/LEEME.md).
 
 ## Git y contribuciones
 

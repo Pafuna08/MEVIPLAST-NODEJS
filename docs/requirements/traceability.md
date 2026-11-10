@@ -1,6 +1,6 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop`, commit `d86f1e0` (08/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** (`02_Requisitos/Matriz_de_Trazabilidad.xlsx` del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop`, commit `d86f1e0` (08/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`decisiones-por-delegacion.md`](decisiones-por-delegacion.md)); la sesión de aceptación por rol con usuarios de la empresa no se realizó.
 
