@@ -15,7 +15,7 @@ export function Inventory({ data, onSubmit, saving }) {
         <Field label="Unidades"><input name="cantidad" type="number" /></Field>
       </FormPanel>
       <FormPanel title="Registrar salida manual" onSubmit={onSubmit} saving={saving} obligatorios={["inventario_id", "cantidad", "motivo", ...(exitReason === "Otro" ? ["detalle"] : [])]}>
-        <Field label="Producto"><select name="inventario_id">{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
+        <Field label="Producto"><select name="inventario_id" defaultValue=""><option value="" disabled>Selecciona el producto</option>{data.items.filter((item) => safeProductName(item.producto)).map((item) => <option key={item.id} value={item.id}>{safeProductName(item.producto)} ({number(item.cantidad)})</option>)}</select></Field>
         <Field label="Cantidad"><input name="cantidad" type="number" /></Field>
         <Field label="Motivo">
           <select name="motivo" value={exitReason} onChange={(event) => setExitReason(event.target.value)}>

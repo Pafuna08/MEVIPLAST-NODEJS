@@ -19,7 +19,7 @@ export function Advance({ data, onSubmit, saving }) {
     <>
       <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving} obligatorios={["id", "cantidad"]}>
-        <Field label="Orden"><select name="id" defaultValue={chosenOrder}>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
+        <Field label="Orden"><select name="id" defaultValue={chosenOrder || ""}><option value="" disabled>Selecciona la orden</option>{activeOrders.map((order) => <option key={order.id} value={order.id}>#{order.id} · {safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)} (pendiente {number(Number(order.cantidad) - Number(order.cantidad_producida || 0))})</option>)}</select></Field>
         <Field label="Cantidad producida"><input name="cantidad" type="number" /></Field>
         <Field label="Observaciones"><textarea name="observaciones" rows="3" /></Field>
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}

@@ -11,11 +11,9 @@ function variantLabel(item) {
 
 export function Sales({ data, onSubmit, saving, onReceipt }) {
   const [selectedInventoryId, setSelectedInventoryId] = useState("");
-  const [selectedFamily, setSelectedFamily] = useState(finishedProductFamilies[0]);
+  const [selectedFamily, setSelectedFamily] = useState("");
   const products = data.inventory.filter((item) => finishedProductFamilies.includes(item.familia));
-  const selectedProduct =
-    products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily) ||
-    products.find((item) => item.familia === selectedFamily && Number(item.cantidad) > 0);
+  const selectedProduct = products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily);
   const availableProducts = products.filter((item) => Number(item.cantidad) > 0);
   const lineReferences = availableProducts.filter((item) => item.familia === selectedFamily);
 
@@ -35,8 +33,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
               type="button"
               onClick={() => {
                 setSelectedFamily(family);
-                const firstAvailable = variants.find((item) => Number(item.cantidad) > 0);
-                if (firstAvailable) setSelectedInventoryId(String(firstAvailable.id));
+                setSelectedInventoryId("");
               }}
             >
               <span className="product-family-initial">{family.slice(0, 1)}</span>
@@ -48,7 +45,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
           );
         })}
       </div>
-      <Panel title={`Existencias de ${selectedFamily}`} className="reference-panel">
+      {selectedFamily && <Panel title={`Existencias de ${selectedFamily}`} className="reference-panel">
         {lineReferences.length ? (
           <div className="reference-list" role="group" aria-label={`Referencias de ${selectedFamily}`}>
             {lineReferences.map((item) => (
@@ -65,16 +62,15 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
             ))}
           </div>
         ) : <p className="empty">No hay referencias de esta línea con existencias.</p>}
-      </Panel>
+      </Panel>}
       <FormPanel title="Nueva venta" onSubmit={onSubmit} saving={saving} obligatorios={["cliente", "inventario_id", "unidades_paquete", "cantidad_paquetes", "precio_paquete"]}>
         <Field label="Cliente"><input name="cliente" /></Field>
         <Field label="Línea de producto">
           <select value={selectedFamily} onChange={(event) => {
-            const family = event.target.value;
-            setSelectedFamily(family);
-            const firstAvailable = products.find((item) => item.familia === family && Number(item.cantidad) > 0);
-            setSelectedInventoryId(firstAvailable ? String(firstAvailable.id) : "");
+            setSelectedFamily(event.target.value);
+            setSelectedInventoryId("");
           }}>
+            <option value="" disabled>Selecciona una línea</option>
             {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
           </select>
         </Field>
@@ -84,10 +80,10 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
             if (item) setSelectedFamily(item.familia);
             setSelectedInventoryId(event.target.value);
           }}>
+            <option value="" disabled>{selectedFamily ? "Selecciona la variante" : "Primero elige la línea"}</option>
             {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
               <option key={item.id} value={item.id}>{variantLabel(item)} · {number(item.cantidad)} unidades</option>
             ))}
-            {!availableProducts.some((item) => item.familia === selectedFamily) && <option value="" disabled>No hay variantes con existencias</option>}
           </select>
         </Field>
         {selectedProduct && <div className="product-variant-summary">
@@ -97,7 +93,8 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
           <div><small>DISPONIBLE</small><span>{number(selectedProduct.cantidad)} unidades</span></div>
         </div>}
         <Field label="Unidades por paquete">
-          <select name="unidades_paquete" defaultValue="50">
+          <select name="unidades_paquete" defaultValue="">
+            <option value="" disabled>Selecciona las unidades</option>
             {packageSizes.map((size) => <option key={size} value={size}>{size} unidades</option>)}
           </select>
         </Field>

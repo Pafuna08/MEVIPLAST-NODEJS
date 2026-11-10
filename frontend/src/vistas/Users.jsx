@@ -21,12 +21,12 @@ export function Users({
   return (
     <>
       <Intro title="Gestión de usuarios" description="Crea cuentas, activa o desactiva accesos y administra los usuarios del sistema." />
-      <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving} obligatorios={["nombre", "usuario", "correo", "password"]}>
+      <FormPanel title="Nuevo usuario" onSubmit={onSubmit} saving={saving} obligatorios={["nombre", "usuario", "correo", "password", "rol"]}>
         <Field label="Nombre"><input name="nombre" /></Field>
         <Field label="Usuario"><input name="usuario" /></Field>
         <Field label="Correo electrónico"><input name="correo" type="text" inputMode="email" autoComplete="email" /></Field>
         <Field label="Contraseña"><input name="password" type="password" /></Field>
-        <Field label="Rol"><select name="rol" defaultValue="operario"><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
+        <Field label="Rol"><select name="rol" defaultValue=""><option value="" disabled>Selecciona el rol</option><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
       </FormPanel>
       <Panel title="Usuarios registrados">
         <DataTable columns={["Nombre", "Usuario", "Correo electrónico", "Rol", "Estado", "Acción"]} rows={data.map((user) => ({

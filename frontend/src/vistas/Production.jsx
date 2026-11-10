@@ -85,7 +85,7 @@ export function Production({
           </Panel>
           <FormPanel
             title="Nueva orden de producción"
-            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id"]}
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id", "prioridad"]}
             onSubmit={(event) => {
               setSelectedTemplateId("");
               onSubmit(event);
@@ -133,8 +133,9 @@ export function Production({
               <select
                 key={`prioridad-${selectedTemplateId}`}
                 name="prioridad"
-                defaultValue={selectedTemplate?.prioridad || "media"}
+                defaultValue={selectedTemplate?.prioridad || ""}
               >
+                <option value="" disabled>Selecciona la prioridad</option>
                 <option value="alta">Alta</option>
                 <option value="media">Media</option>
                 <option value="baja">Baja</option>
@@ -143,7 +144,7 @@ export function Production({
           </FormPanel>
           <FormPanel
             title="Guardar plantilla frecuente"
-            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id"]}
+            obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id", "prioridad"]}
             onSubmit={async (event) => {
               event.preventDefault();
               const payload = sanitizePayload(
@@ -170,7 +171,8 @@ export function Production({
               </select>
             </Field>
             <Field label="Prioridad habitual">
-              <select name="prioridad" defaultValue="media">
+              <select name="prioridad" defaultValue="">
+                <option value="" disabled>Selecciona la prioridad</option>
                 <option value="alta">Alta</option>
                 <option value="media">Media</option>
                 <option value="baja">Baja</option>
