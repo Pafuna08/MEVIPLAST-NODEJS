@@ -207,8 +207,8 @@ const FLUJOS = [
   ["Teclado: ventanas de confirmación y comprobante (RNF-012)", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "vendedor");
-    const dentro = () => pagina.evaluate(() => !!document.activeElement?.closest(".confirm-modal"));
-    const foco = () => pagina.evaluate(() => document.activeElement?.textContent?.trim() || "");
+    const dentro = () => pagina.evaluate(() => !!globalThis.document.activeElement?.closest(".confirm-modal"));
+    const foco = () => pagina.evaluate(() => globalThis.document.activeElement?.textContent?.trim() || "");
     // Se abre con Enter, el foco entra, Tab y Mayús+Tab no salen, Esc cierra y el foco vuelve al botón
     async function revisarVentana(nombre, boton, ventana) {
       await boton.focus();
