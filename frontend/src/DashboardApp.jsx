@@ -18,6 +18,7 @@ import { SaleReceipt } from "./vistas/SaleReceipt.jsx";
 import { Sales } from "./vistas/Sales.jsx";
 import { Tasks } from "./vistas/Tasks.jsx";
 import { Users } from "./vistas/Users.jsx";
+import { Dialogo } from "./comun/Dialogo.jsx";
 
 // Resumen para confirmar los registros que mueven inventario o dinero: quedan en el ledger y no se deshacen.
 // Devuelve null para los formularios que guardan directo (órdenes, plantillas, usuarios, bobinas nuevas).
@@ -513,10 +514,7 @@ export default function DashboardApp() {
       </div>
       <div className={`toast ${toast ? "show" : ""}`} role="status">{toast}</div>
       {deleteTarget && (
-        <div className="confirm-overlay" role="presentation" onClick={(event) => {
-          if (event.target === event.currentTarget) setDeleteTarget(null);
-        }}>
-          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <Dialogo onClose={() => setDeleteTarget(null)} labelledBy="delete-title">
             <div className="confirm-header">
               <div className="confirm-icon">!</div>
               <div>
@@ -528,14 +526,10 @@ export default function DashboardApp() {
               <button className="confirm-cancel" type="button" onClick={() => setDeleteTarget(null)}>Cancelar</button>
               <button className="confirm-delete" type="button" onClick={deleteUser}>Eliminar</button>
             </div>
-          </section>
-        </div>
+          </Dialogo>
       )}
       {pendingSave && (
-        <div className="confirm-overlay" role="presentation" onClick={(event) => {
-          if (event.target === event.currentTarget) setPendingSave(null);
-        }}>
-          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="save-title">
+        <Dialogo onClose={() => setPendingSave(null)} labelledBy="save-title">
             <div className="confirm-header">
               <div className="confirm-icon">?</div>
               <div>
@@ -562,14 +556,10 @@ export default function DashboardApp() {
                 Sí, guardar
               </button>
             </div>
-          </section>
-        </div>
+          </Dialogo>
       )}
       {confirmLogout && (
-        <div className="confirm-overlay" role="presentation" onClick={(event) => {
-          if (event.target === event.currentTarget) setConfirmLogout(false);
-        }}>
-          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+        <Dialogo onClose={() => setConfirmLogout(false)} labelledBy="logout-title">
             <div className="confirm-header">
               <div className="confirm-icon">?</div>
               <div>
@@ -581,8 +571,7 @@ export default function DashboardApp() {
               <button className="confirm-cancel" type="button" autoFocus onClick={() => setConfirmLogout(false)}>Cancelar</button>
               <button className="confirm-delete" type="button" onClick={logout}>Cerrar sesión</button>
             </div>
-          </section>
-        </div>
+          </Dialogo>
       )}
       {receipt && <SaleReceipt sale={receipt} onClose={() => setReceipt(null)} />}
     </>
