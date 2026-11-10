@@ -41,6 +41,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Pendientes del cliente resueltos como decisiones del equipo por delegación de MEVIPLAST (10/11/2026): PEN-01 (la línea base del proceso manual se medirá en el piloto) y AC-006 (sin sesión de aceptación con usuarios; limitación declarada). En la suite ADSO se cierran también OBS-002 a OBS-004, que ya estaban decididos desde el 08/11. Paquete documental ADSO actualizado con el uso solo con teclado (DEF-025, CP-094, EV-039).
 - `npm test` y los scripts de cobertura cargan `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base inexistente: una prueba unitaria que llegue a la base sin simularla falla en lugar de leer o escribir en `meviplast_db` (incidente de prueba registrado en EV-2026-11-09-08).
 - Ventas por paquetes de 50, 100 o 500 unidades (se eligen de una lista), hasta 1 000 paquetes y hasta $100 000 000 por venta (CR-018, decisión del equipo). Antes el paquete admitía de 1 a 500 unidades sin tope de paquetes ni de precio.
 - Documentación del repositorio al día con `develop` tras el PR #68: README, estado del proyecto, catálogo de API, estrategia de pruebas (91 unitarias, 17 E2E, cobertura 68,0 % / 84,7 %), trazabilidad, guía de usuario y decisiones (CR-017); sin descripciones de campos o comportamientos que ya no existen. Nueva evidencia EV-2026-11-09-04 de la segunda ronda de afinado.

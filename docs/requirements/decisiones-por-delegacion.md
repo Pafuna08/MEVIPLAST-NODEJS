@@ -46,12 +46,21 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 | RN-025 | Formato de la variante: medida «ancho x largo» con unidad opcional (cm, mm, m, in, pulg), calibre numérico mayor que cero con hasta 2 decimales y color de una lista fija (Amarillo, Azul, Blanco, Café, Gris, Morado, Naranja, Natural, Negro, Rojo, Rosado, Transparente y Verde); se guardan normalizados («10x15» → «10 x 15», «cafe» → «Café») | Decisión del equipo por delegación (la lista de colores, tras las pruebas del 09/11/2026) |
 | RN-026 | Toda orden de producción y toda plantilla frecuente indican la materia prima (bobina) con la que se produce; al editar una orden se puede cambiar por otra existente, pero no quitar | Decisión del equipo por delegación (pruebas del 09/11/2026) |
 
+## Pendientes del cliente resueltos por delegación (10/11/2026)
+
+| ID | Pendiente | Decisión del equipo | Estado |
+| --- | --- | --- | --- |
+| PEN-01 | Línea base cuantitativa del proceso manual (tiempos, diferencias de inventario) | El equipo no puede medirla sin acceso a la operación diaria de la empresa. Queda como meta del piloto: en el primer mes de uso se comparan las diferencias de inventario y el tiempo de cierre con los reportes del sistema. En la entrega académica el impacto de negocio queda sin medir. | Decidido; la medición queda fuera del alcance académico |
+| AC-006 / TST-08 | Prueba de aceptación con usuarios o un representante | Con la delegación de MEVIPLAST, la verificación por rol la hizo el equipo con las cuentas DEMO: flujos en Edge, Chrome y Firefox, E2E por rol, uso solo con teclado y contraste (EV-2026-11-10-01 y 02). No hubo sesión con usuarios de la empresa ni firma del cliente. | Decidido; limitación declarada |
+
 ## Hallazgos registrados en lugar de los de la sesión
 
 El acta reservaba DEF-016 a DEF-020 para los hallazgos de la sesión. Como la sesión no se realizó, DEF-016 y DEF-017 se usan para los hallazgos de la instalación limpia del 08/11/2026 (EV-2026-11-08-01), ya corregidos en el PR #53:
 
 - **DEF-016** (baja): `db:init` mostraba un error vacío con MySQL apagado.
 - **DEF-017** (baja): `db:init` avisaba de migraciones pendientes en una base nueva.
+
+Los demás códigos (DEF-018 a DEF-025) son hallazgos de las rondas de afinado del equipo del 09 y 10/11/2026, todos corregidos y registrados en [`../evidence/README.md`](../evidence/README.md).
 
 ## Qué no cubre este registro
 
