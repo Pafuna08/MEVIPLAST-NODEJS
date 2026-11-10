@@ -178,11 +178,16 @@ const FLUJOS = [
     await form.locator("button[type=submit]").click();
     await form.locator(".form-error", { hasText: "Cliente" }).waitFor({ timeout: 10000 });
     if (await pagina.locator(".confirm-modal").count()) throw new Error("se abrió la confirmación con campos vacíos");
+    for (const selector of ["select[name=inventario_id]", "select[name=unidades_paquete]"]) {
+      if ((await form.locator(selector).inputValue()) !== "") problemas.push(`${selector} llega con una opción elegida`);
+    }
+    await pagina.locator(".product-family-card").filter({ hasText: /[1-9][\d.]* unidades en stock/ }).first().click();
+    await pagina.locator(".reference-option").first().click();
     await form.locator("input[name=cliente]").fill(`Cliente ${nombre}`);
     // CR-018: el paquete se elige de la lista (50, 100 o 500) y la venta tiene topes; sin el atributo max,
     // el panel avisa que admite como máximo 1.000 paquetes
     const tamanos = await form.locator("select[name=unidades_paquete] option").allInnerTexts();
-    if (tamanos.join("|") !== "50 unidades|100 unidades|500 unidades") problemas.push(`tamaños de paquete: ${tamanos.join(", ")}`);
+    if (tamanos.join("|") !== "Selecciona las unidades|50 unidades|100 unidades|500 unidades") problemas.push(`tamaños de paquete: ${tamanos.join(", ")}`);
     await form.locator("select[name=unidades_paquete]").selectOption("50");
     await form.locator("input[name=cantidad_paquetes]").fill("1001");
     await form.locator("input[name=precio_paquete]").fill("1500");
@@ -262,6 +267,11 @@ const FLUJOS = [
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Registrar movimiento");
+    // Ningún selector llega con una opción elegida: se muestra «Selecciona…»
+    for (const nombre of ["materia_prima_id", "tipo"]) {
+      if ((await form.locator(`select[name=${nombre}]`).inputValue()) !== "") problemas.push(`${nombre} llega con una opción elegida`);
+    }
+    await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("compra");
     await form.locator("input[name=cantidad]").fill("25");
     await form.locator("input[name=observaciones]").fill("Remisión de prueba");
@@ -277,6 +287,7 @@ const FLUJOS = [
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Registrar movimiento");
+    await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("ajuste_salida");
     // Mayor que el saldo pero dentro del tope de 100.000 kg (DEF-022)
     await form.locator("input[name=cantidad]").fill("99999");
@@ -294,9 +305,11 @@ const FLUJOS = [
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Registrar movimiento");
+    await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("consumo_produccion");
-    const orden = await form.locator("select[name=produccion_id] option").first().innerText();
+    const orden = await form.locator("select[name=produccion_id] option").nth(1).innerText().catch(() => "ninguna");
     if (!orden.startsWith("#")) throw new Error(`sin órdenes para consumir: ${orden}`);
+    await form.locator("select[name=produccion_id]").selectOption({ index: 1 });
     await form.locator("input[name=cantidad]").fill("5");
     await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
