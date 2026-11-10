@@ -349,7 +349,9 @@
                     "type": "string"
                   },
                   "usuario": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[a-z0-9._-]{3,50}$",
+                    "description": "Letras sin tilde, números, punto, guion y guion bajo, sin espacios (DEF-022); se guarda en minúsculas"
                   },
                   "correo": {
                     "type": "string",
@@ -657,8 +659,10 @@
                   },
                   "peso_rollo": {
                     "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 100000,
+                    "multipleOf": 0.01,
+                    "description": "Peso del rollo en kg: mayor que cero, hasta 100.000 y 2 decimales (DEF-022)"
                   }
                 },
                 "required": [
@@ -691,11 +695,15 @@
           },
           "403": {
             "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
           }
         },
         "x-roles": [
           "admin"
-        ]
+        ],
+        "description": "Una sola bobina por variante (tipo, medida, calibre y color): si ya existe responde 409 y su existencia sube con una compra (DEF-022)."
       }
     },
     "/materia-prima/bajo-stock": {
@@ -789,8 +797,10 @@
                   },
                   "cantidad": {
                     "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 100000,
+                    "multipleOf": 0.01,
+                    "description": "Kg: mayor que cero, hasta 100.000 y 2 decimales (DEF-022)"
                   },
                   "produccion_id": {
                     "type": "integer",
@@ -921,7 +931,10 @@
                   },
                   "stock_minimo": {
                     "type": "number",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 100000,
+                    "multipleOf": 0.01,
+                    "description": "Kg: de 0 a 100.000, con 2 decimales (DEF-022)"
                   }
                 }
               }
@@ -1116,9 +1129,10 @@
                     ]
                   },
                   "cantidad": {
-                    "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Meta en unidades: entero de 1 a 1.000.000 (DEF-022)"
                   },
                   "prioridad": {
                     "type": "string",
@@ -1311,7 +1325,10 @@
                     ]
                   },
                   "cantidad": {
-                    "type": "number"
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Meta habitual en unidades: entero de 1 a 1.000.000 (DEF-022)"
                   },
                   "prioridad": {
                     "type": "string",
@@ -1517,7 +1534,10 @@
                     ]
                   },
                   "cantidad": {
-                    "type": "number"
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Meta en unidades: entero de 1 a 1.000.000 (DEF-022)"
                   },
                   "responsable_id": {
                     "type": "integer"
@@ -1768,9 +1788,10 @@
                 "type": "object",
                 "properties": {
                   "cantidad": {
-                    "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Unidades producidas: entero de 1 a la meta pendiente, máximo 1.000.000 (DEF-022)"
                   },
                   "observaciones": {
                     "type": "string",
@@ -1888,7 +1909,9 @@
                   },
                   "cantidad": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Unidades: entero de 1 a 1.000.000 (DEF-022)"
                   }
                 },
                 "required": [
@@ -2031,9 +2054,10 @@
                 "type": "object",
                 "properties": {
                   "cantidad": {
-                    "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Unidades: entero de 1 a 1.000.000, sin superar el saldo (DEF-022)"
                   },
                   "motivo": {
                     "type": "string",
@@ -2141,17 +2165,25 @@
                   },
                   "cantidad_paquetes": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "description": "Paquetes: entero de 1 a 1.000 (CR-018)"
                   },
                   "unidades_paquete": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 500
+                    "enum": [
+                      50,
+                      100,
+                      500
+                    ],
+                    "description": "Presentación: 50, 100 o 500 unidades por paquete (CR-018)"
                   },
                   "precio_paquete": {
                     "type": "number",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 100000000,
+                    "multipleOf": 0.01,
+                    "description": "Precio por paquete en pesos: mayor que cero y hasta 100.000.000 (CR-018)"
                   }
                 },
                 "required": [
@@ -2189,7 +2221,8 @@
         "x-roles": [
           "admin",
           "vendedor"
-        ]
+        ],
+        "description": "El total de la venta (paquetes × precio por paquete) no puede superar 100.000.000 de pesos (CR-018); un número escrito con letras («2abc») se rechaza con 400 (DEF-022)."
       }
     },
     "/ventas/{id}/comprobante": {

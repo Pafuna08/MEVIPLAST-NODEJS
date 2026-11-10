@@ -3,6 +3,7 @@ const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
 const { validarVariante } = require("./inventario.service");
 const { limitesPeriodo } = require("./reportes.service");
+const { entero } = require("../utils/numeros");
 
 function validarProducto(producto) {
   if (!productosTerminados.includes(producto)) {
@@ -74,6 +75,7 @@ async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
   validarProducto(producto);
   const variante = varianteOrden(producto, datos);
+  const meta = entero(cantidad, "La meta");
   const materiaPrimaId = await validarMateriaPrima(materia_prima_id, pool, "la plantilla");
   const [resultado] = await pool.query(
     "INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -82,7 +84,7 @@ async function crearPlantilla(datos, actorId) {
       variante.medida,
       variante.calibre,
       variante.color,
-      Number(cantidad),
+      meta,
       materiaPrimaId,
       prioridad || "media",
       actorId,
@@ -133,6 +135,7 @@ async function crear(datos, actor) {
   } = datos;
   validarProducto(producto);
   const variante = varianteOrden(producto, datos);
+  const meta = entero(cantidad, "La meta");
   const materiaPrimaId = await validarMateriaPrima(materia_prima_id);
   let supervisorId = null;
   let responsableId = Number(responsable_id) || null;
@@ -157,7 +160,7 @@ async function crear(datos, actor) {
       variante.medida,
       variante.calibre,
       variante.color,
-      cantidad,
+      meta,
       materiaPrimaId,
       supervisorId,
       responsableId,
@@ -279,12 +282,7 @@ async function actualizarOrden(id, datos, actor) {
     const variante = camposVariante.length
       ? varianteOrden(producto !== undefined ? producto.trim() : orden.producto, datos)
       : null;
-    if (
-      cantidad !== undefined &&
-      (!Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0)
-    ) {
-      throw new Error("La meta debe ser mayor que cero");
-    }
+    if (cantidad !== undefined) entero(cantidad, "La meta");
     if (prioridad !== undefined && !["baja", "media", "alta"].includes(prioridad)) {
       throw new Error("La prioridad no es válida");
     }
@@ -412,13 +410,10 @@ async function cambiarEstado(id, estado, actor) {
 }
 
 async function registrarAvance(id, { cantidad, observaciones }, actor) {
-  const cantidadNumerica = Number(cantidad);
+  const cantidadNumerica = entero(cantidad, "La cantidad producida");
   const nota = typeof observaciones === "string" && observaciones.trim() ? observaciones.trim() : null;
   if (nota && nota.length > 255) {
     throw new Error("Las observaciones no pueden superar 255 caracteres");
-  }
-  if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
-    throw new Error("La cantidad debe ser mayor que cero");
   }
   const connection = await pool.getConnection();
   let transactionStarted = false;

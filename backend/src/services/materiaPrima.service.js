@@ -1,6 +1,7 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { normalizarMedida, normalizarCalibre, normalizarColor } = require("../utils/variantes");
+const { LIMITES, decimal } = require("../utils/numeros");
 
 const tiposEntrada = new Set(["compra", "ajuste_entrada"]);
 const tiposPermitidos = new Set([
@@ -63,12 +64,7 @@ async function crear(datos, actorId) {
     error.statusCode = 400;
     throw error;
   }
-  const pesoRollo = Number(peso_rollo);
-  if (!Number.isFinite(pesoRollo) || pesoRollo <= 0) {
-    const error = new Error("El peso del rollo debe ser mayor que cero");
-    error.statusCode = 400;
-    throw error;
-  }
+  const pesoRollo = decimal(peso_rollo, "El peso del rollo", LIMITES.KG_MAX);
 
   const connection = await pool.getConnection();
   let id;
@@ -76,6 +72,16 @@ async function crear(datos, actorId) {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+    // Una sola bobina por variante: si ya existe, su existencia sube con una compra (DEF-022)
+    const [repetidas] = await connection.query(
+      "SELECT id FROM materia_prima WHERE tipo = ? AND medida = ? AND calibre = ? AND color = ? LIMIT 1 FOR UPDATE",
+      [tipo, medida, calibre, color],
+    );
+    if (repetidas.length) {
+      const error = new Error("Esa bobina ya está registrada; para aumentar su existencia registra una compra");
+      error.statusCode = 409;
+      throw error;
+    }
     const [resultado] = await connection.query(
       "INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, peso_rollo, cantidad, unidad, proveedor, stock_minimo) VALUES (?, ?, ?, ?, ?, ?, ?, 'kg', NULL, 0)",
       [
@@ -119,6 +125,9 @@ async function actualizar(id, datos, actorId) {
       "Actualiza las cantidades mediante una compra, consumo o ajuste de inventario",
     );
   }
+  const stockMinimo = stock_minimo === undefined || stock_minimo === null || stock_minimo === ""
+    ? null
+    : decimal(stock_minimo, "El stock mínimo", LIMITES.KG_MAX, { permitirCero: true });
   await pool.query(
     `UPDATE materia_prima SET
       nombre = COALESCE(?, nombre),
@@ -127,7 +136,7 @@ async function actualizar(id, datos, actorId) {
       proveedor = COALESCE(?, proveedor),
       stock_minimo = COALESCE(?, stock_minimo)
      WHERE id = ?`,
-    [nombre, tipo, unidad, proveedor, stock_minimo, id],
+    [nombre, tipo, unidad, proveedor, stockMinimo, id],
   );
 
   await registrarAuditoria({
@@ -180,12 +189,9 @@ async function registrarMovimiento(
   { tipo, cantidad, observaciones, produccion_id },
   actor,
 ) {
-  const cantidadNumerica = Number(cantidad);
   if (!tiposPermitidos.has(tipo))
     throw new Error("Tipo de movimiento no válido");
-  if (!Number.isFinite(cantidadNumerica) || cantidadNumerica <= 0) {
-    throw new Error("La cantidad debe ser mayor que cero");
-  }
+  const cantidadNumerica = decimal(cantidad, "La cantidad", LIMITES.KG_MAX);
 
   const connection = await pool.getConnection();
   let transactionStarted = false;

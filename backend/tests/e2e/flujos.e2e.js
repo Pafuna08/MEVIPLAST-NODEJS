@@ -159,7 +159,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("GET", "/produccion/mis-registros?periodo=quincenal", tokens.operario)).status, 400);
 
     const venta = await llamar("POST", "/ventas", tokens.vendedor, {
-      cliente: "Cliente E2E", inventario_id: stock.id, cantidad_paquetes: 2, unidades_paquete: 250, precio_paquete: 30000,
+      cliente: "Cliente E2E", inventario_id: stock.id, cantidad_paquetes: 5, unidades_paquete: 100, precio_paquete: 12000,
     });
     assert.equal(venta.status, 201, JSON.stringify(venta.body));
     assert.equal(Number(venta.body.total), 60000);
@@ -311,9 +311,39 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(borrar.status, 204);
   });
 
+  await t.test("DEF-022 / CR-018: topes, enteros y números limpios; la base no recorta nada", async () => {
+    const contar = async (tabla) => Number((await db.query(`SELECT COUNT(*) AS n FROM \`${DB}\`.${tabla}`))[0][0].n);
+    const [ordenes, ventas, bobinas] = [await contar("produccion"), await contar("ventas"), await contar("materia_prima")];
+    const orden = { producto: "Adhesivo PP", medida: "10 x 15", calibre: "2", color: "Transparente", materia_prima_id: bobina, prioridad: "media" };
+    for (const [cantidad, mensaje] of [[1e12, /máximo 1.000.000/], [10.5, /entero/], ["2abc", /entero/]]) {
+      const r = await llamar("POST", "/produccion", tokens.admin, { ...orden, cantidad });
+      assert.equal(r.status, 400, `meta ${cantidad}`);
+      assert.match(r.body.mensaje, mensaje);
+    }
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 1e12 });
+    assert.equal(ingreso.status, 400);
+    const [[variante]] = await db.query(`SELECT id FROM \`${DB}\`.inventario WHERE cantidad > 0 LIMIT 1`);
+    assert.equal((await llamar("POST", `/inventario/${variante.id}/salida`, tokens.almacenista, { cantidad: 1.5, motivo: "Merma" })).status, 400);
+    const venta = { cliente: "Cliente topes", inventario_id: variante.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 };
+    for (const [cambio, mensaje] of [[{ unidades_paquete: 60 }, /50, 100 o 500/], [{ cantidad_paquetes: 1001 }, /máximo 1.000/],
+      [{ cantidad_paquetes: "2abc" }, /entero/], [{ precio_paquete: 1e15 }, /máximo \$100.000.000/]]) {
+      const r = await llamar("POST", "/ventas", tokens.vendedor, { ...venta, ...cambio });
+      assert.equal(r.status, 400, JSON.stringify(cambio));
+      assert.match(r.body.mensaje, mensaje);
+    }
+    const repetida = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Transparente", peso_rollo: 10 });
+    assert.equal(repetida.status, 409, "la bobina base ya existe con esa variante");
+    assert.equal((await llamar("PUT", `/materia-prima/${bobina}`, tokens.admin, { stock_minimo: -3 })).status, 400);
+    const conEspacio = await llamar("POST", "/usuarios", tokens.admin, { nombre: "Con espacio", usuario: "con espacio", correo: "espacio@e2e.local", password: CLAVE, rol: "operario" });
+    assert.equal(conEspacio.status, 400);
+    assert.deepEqual([await contar("produccion"), await contar("ventas"), await contar("materia_prima")], [ordenes, ventas, bobinas], "nada se guardó");
+    // Respaldo en la base: en modo estricto un valor que no cabe en la columna da error, no se recorta
+    await assert.rejects(pool.query("UPDATE inventario SET cantidad = 1e12 WHERE id = ?", [variante.id]), /Out of range/);
+  });
+
   await t.test("DEF-013 / RF-015 / RF-016: compras, ajustes y consumo por orden de materia prima", async () => {
     const creada = await llamar("POST", "/materia-prima", tokens.admin, {
-      tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Transparente", peso_rollo: 100,
+      tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Azul", peso_rollo: 100,
     });
     assert.equal(creada.status, 201, JSON.stringify(creada.body));
     const materiaId = creada.body.id;
@@ -363,7 +393,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     });
     assert.equal(medidaLarga.status, 400, JSON.stringify(medidaLarga.body));
     const clienteLargo = await llamar("POST", "/ventas", tokens.vendedor, {
-      cliente: "C".repeat(121), inventario_id: variante, cantidad_paquetes: 1, unidades_paquete: 1, precio_paquete: 100,
+      cliente: "C".repeat(121), inventario_id: variante, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 100,
     });
     assert.equal(clienteLargo.status, 400);
     assert.match(clienteLargo.body.mensaje, /máximo 120 caracteres/);

@@ -15,6 +15,17 @@ const pool = mysql.createPool({
   dateStrings: true,
 });
 
+// DEF-022: modo estricto en cada conexión. XAMPP trae MariaDB sin STRICT_TRANS_TABLES, y así un número
+// o un texto que no cabe en su columna se guardaba recortado sin avisar; ahora la base da error.
+pool.on("connection", (conexion) => {
+  conexion.query(
+    "SET SESSION sql_mode = TRIM(BOTH ',' FROM CONCAT(@@SESSION.sql_mode, ',STRICT_TRANS_TABLES'))",
+    (error) => {
+      if (error) log.error("No se pudo activar el modo estricto de MySQL", { error: error.message });
+    },
+  );
+});
+
 // Verifica la conexion al arrancar el servidor
 async function verificarConexion() {
   try {

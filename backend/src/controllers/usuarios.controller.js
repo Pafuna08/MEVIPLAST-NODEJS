@@ -28,6 +28,12 @@ async function crear(req, res) {
           mensaje: "nombre, usuario, correo, password y rol son obligatorios",
         });
     }
+    // DEF-022: sin espacios ni símbolos raros, para que se pueda escribir igual al iniciar sesión
+    if (!/^[a-z0-9._-]{3,50}$/.test(String(usuario))) {
+      return res.status(400).json({
+        mensaje: "El usuario solo admite letras sin tilde, números, punto, guion y guion bajo, sin espacios (3 a 50 caracteres)",
+      });
+    }
     const correoNormalizado = correo.trim().toLowerCase();
     if (
       correoNormalizado.length > 254 ||

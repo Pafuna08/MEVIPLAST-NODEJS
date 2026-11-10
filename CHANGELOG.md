@@ -40,6 +40,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Ventas por paquetes de 50, 100 o 500 unidades (se eligen de una lista), hasta 1 000 paquetes y hasta $100 000 000 por venta (CR-018, decisión del equipo). Antes el paquete admitía de 1 a 500 unidades sin tope de paquetes ni de precio.
 - Documentación del repositorio al día con `develop` tras el PR #68: README, estado del proyecto, catálogo de API, estrategia de pruebas (91 unitarias, 17 E2E, cobertura 68,0 % / 84,7 %), trazabilidad, guía de usuario y decisiones (CR-017); sin descripciones de campos o comportamientos que ya no existen. Nueva evidencia EV-2026-11-09-04 de la segunda ronda de afinado.
 - Toda orden de producción exige su materia prima (RN-026), al crearla (administrador y supervisor) y al editarla: se puede cambiar por otra bobina existente, pero no quitar. Las plantillas frecuentes también la exigen. Antes una orden o una plantilla se guardaba «Sin asociar».
 - El color pasa a una lista fija (RN-025): Amarillo, Azul, Blanco, Café, Gris, Morado, Naranja, Natural, Negro, Rojo, Rosado, Transparente y Verde, en un selector en órdenes, plantillas, inventario y bobinas; el servidor rechaza cualquier otro («Fdsa», «Blanco hueso») y acepta mayúsculas y tildes distintas («cafe» → «Café»).
@@ -80,6 +81,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- Las cantidades fuera de rango o mal escritas se rechazan con 400 en lugar de guardarse cambiadas (DEF-022, EV-2026-11-09-07): MariaDB de XAMPP no estaba en modo estricto y recortaba sin avisar una meta de 10^12 a 99 999 999,99 o un precio de 10^15 a 99 999 999,9999; ahora cada conexión activa `STRICT_TRANS_TABLES`. Las unidades (metas, plantillas, avances, ingresos y salidas) son enteras y llegan hasta 1 000 000; los kg de las bobinas, hasta 100 000 con 2 decimales; el saneamiento ya no convierte «2abc» en 2; una bobina se registra una sola vez por variante (409); el stock mínimo va de 0 a 100 000 kg, y el nombre de usuario no admite espacios ni símbolos. El panel aplica los mismos topes.
 - `npm run db:init` vuelve a crear una base nueva: la semilla DEMO del inventario todavía escribía la columna `ubicacion`, quitada con CR-015, y la instalación se detenía con «Unknown column 'ubicacion'». Una prueba compara las columnas de la semilla con `schema.sql` (DEF-020, EV-2026-11-09-05).
 - El panel valida el color contra la misma lista fija del servidor (RN-025) y avisa «Selecciona un color de la lista»; antes conservaba la regla anterior de «solo letras y espacios».
 - Usuarios: los botones «Cambiar» del correo quedan alineados en una misma columna; antes se corrían según el largo de cada correo.

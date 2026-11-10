@@ -179,13 +179,15 @@ const FLUJOS = [
     await form.locator(".form-error", { hasText: "Cliente" }).waitFor({ timeout: 10000 });
     if (await pagina.locator(".confirm-modal").count()) throw new Error("se abrió la confirmación con campos vacíos");
     await form.locator("input[name=cliente]").fill(`Cliente ${nombre}`);
-    // Sin el atributo max: el panel avisa que el paquete admite como máximo 500 unidades
-    await form.locator("input[name=unidades_paquete]").fill("600");
-    await form.locator("input[name=cantidad_paquetes]").fill("1");
+    // CR-018: el paquete se elige de la lista (50, 100 o 500) y la venta tiene topes; sin el atributo max,
+    // el panel avisa que admite como máximo 1.000 paquetes
+    const tamanos = await form.locator("select[name=unidades_paquete] option").allInnerTexts();
+    if (tamanos.join("|") !== "50 unidades|100 unidades|500 unidades") problemas.push(`tamaños de paquete: ${tamanos.join(", ")}`);
+    await form.locator("select[name=unidades_paquete]").selectOption("50");
+    await form.locator("input[name=cantidad_paquetes]").fill("1001");
     await form.locator("input[name=precio_paquete]").fill("1500");
     await form.locator("button[type=submit]").click();
-    await form.locator(".form-error", { hasText: "500" }).waitFor({ timeout: 10000 });
-    await form.locator("input[name=unidades_paquete]").fill("50");
+    await form.locator(".form-error", { hasText: "1.000" }).waitFor({ timeout: 10000 });
     await form.locator("input[name=cantidad_paquetes]").fill("2");
     await form.locator("input[name=precio_paquete]").fill("1500");
     // «Revisar» cierra la confirmación sin guardar: no se abre el comprobante
@@ -249,7 +251,8 @@ const FLUJOS = [
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Registrar movimiento");
     await form.locator("select[name=tipo]").selectOption("ajuste_salida");
-    await form.locator("input[name=cantidad]").fill("999999");
+    // Mayor que el saldo pero dentro del tope de 100.000 kg (DEF-022)
+    await form.locator("input[name=cantidad]").fill("99999");
     await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Stock insuficiente");
     await contexto.close();

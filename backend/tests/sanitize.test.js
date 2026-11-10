@@ -17,7 +17,10 @@ test("sanitizarTexto elimina HTML y contenido de scripts", () => {
 test("sanitizarNumero valida solo valores numericos positivos", () => {
   assert.equal(sanitizarNumero("12.5"), 12.5);
   assert.equal(sanitizarNumero("-4"), 0);
-  assert.equal(sanitizarNumero("abc"), 0);
+  // DEF-022: un texto que no es un número limpio no se convierte (antes «2abc» quedaba en 2)
+  assert.equal(sanitizarNumero("abc"), "abc");
+  assert.equal(sanitizarNumero("2abc"), "2abc");
+  assert.equal(sanitizarNumero("1e5"), "1e5");
 });
 
 test("sanitizarObjeto limpia strings y guarda ints en numeros", () => {

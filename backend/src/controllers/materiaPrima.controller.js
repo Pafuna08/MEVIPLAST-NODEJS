@@ -50,7 +50,9 @@ async function actualizar(req, res) {
     res.json(actualizado);
   } catch (error) {
     log.error("Error al atender la petición", { error });
-    res.status(500).json({ mensaje: "Error al actualizar materia prima" });
+    res
+      .status(error.statusCode || 500)
+      .json({ mensaje: error.statusCode ? error.message : "Error al actualizar materia prima" });
   }
 }
 

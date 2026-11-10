@@ -1,5 +1,6 @@
 const produccionService = require("../services/produccion.service");
 const log = require("../utils/logger").crearLogger("produccion");
+const { entero } = require("../utils/numeros");
 
 async function listar(req, res) {
   try {
@@ -40,9 +41,8 @@ async function listarPlantillas(req, res) {
 async function crearPlantilla(req, res) {
   try {
     const { producto, cantidad, prioridad } = req.body;
-    if (!producto?.trim() || !Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0) {
-      return res.status(400).json({ mensaje: "Producto y cantidad válida son obligatorios" });
-    }
+    if (!producto?.trim()) return res.status(400).json({ mensaje: "Producto y cantidad válida son obligatorios" });
+    entero(cantidad, "La meta");
     if (prioridad !== undefined && !["baja", "media", "alta"].includes(prioridad)) {
       return res.status(400).json({ mensaje: "La prioridad no es válida" });
     }
@@ -74,11 +74,12 @@ async function eliminarPlantilla(req, res) {
 async function crear(req, res) {
   try {
     const { producto, cantidad, prioridad } = req.body;
-    if (!producto?.trim() || !Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0) {
+    if (!producto?.trim()) {
       return res
         .status(400)
         .json({ mensaje: "producto y cantidad son obligatorios" });
     }
+    entero(cantidad, "La meta");
     if (prioridad !== undefined && !["baja", "media", "alta"].includes(prioridad)) {
       return res.status(400).json({ mensaje: "La prioridad no es válida" });
     }
@@ -150,11 +151,7 @@ async function actualizar(req, res) {
 
 async function registrarAvance(req, res) {
   try {
-    const cantidad = Number(req.body.cantidad);
-    if (!Number.isFinite(cantidad) || cantidad <= 0)
-      return res
-        .status(400)
-        .json({ mensaje: "cantidad debe ser mayor que cero" });
+    const cantidad = entero(req.body.cantidad, "La cantidad producida");
     res.json(
       await produccionService.registrarAvance(
         req.params.id,
