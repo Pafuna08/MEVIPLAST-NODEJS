@@ -50,7 +50,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-008 | Asignar orden a operario | Implementado | MVP | API-07 | CP-016, CP-028, CP-075 |
 | RF-009 | Consultar órdenes asignadas | Implementado | MVP | API-06 | CP-015, CP-020, CP-070 |
 | RF-010 | Registrar avance de producción | Implementado | MVP | API-07 | CP-028, CP-036, CP-037, CP-038, CP-039, CP-069, CP-073, CP-076, CP-077 |
-| RF-011 | Cambiar estado de la orden (el operario inicia; administrador y supervisor solo cancelan; CR-013) | Implementado | MVP | API-07 | CP-074 |
+| RF-011 | Cambiar estado de la orden (el operario inicia; administrador y supervisor solo cancelan; CR-013) | Implementado | MVP | API-07 | CP-074, CP-092 (una orden con avance se cancela, no se elimina, DEF-023) |
 | RF-012 | Editar orden pendiente | Implementado | MVP | API-06 | CP-011, CP-012, CP-071 |
 | RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013, CP-072 |
 | RF-014 | Registrar materia prima | Implementado | MVP | API-04 | CP-007, CP-008, CP-048, CP-087 (color de la lista, RN-025), CP-090 (kg hasta 100 000 y bobina única, DEF-022) |

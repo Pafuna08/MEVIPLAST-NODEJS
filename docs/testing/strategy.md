@@ -23,6 +23,7 @@ npm run test:e2e --prefix backend
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
+- DEF-023 (CP-092): JSON mal formado (400); una orden pendiente sin avance se elimina (204) y luego da 404, una con avance no se elimina (400) y sigue en la base; usuario y bobina inexistentes (404); cantidad al editar una bobina (400); tipo de movimiento inventado (400); fecha 2026-13-45 en la auditoría (400).
 - DEF-022 y CR-018 (CP-090, CP-091): una meta de 10^12, de 10,5 o «2abc», un ingreso de 10^12, una salida de 1,5, una venta de 60 unidades por paquete, de 1 001 paquetes, con «2abc» paquetes o con precio de 10^15, una bobina repetida, un stock mínimo negativo y un usuario con espacio se rechazan con 400 o 409 sin guardar nada; además, la base en modo estricto rechaza un valor que no cabe en la columna.
 - DEF-021 (CP-089): el administrador no puede quitarse el rol, desactivarse ni eliminarse (400 y sin cambios en la base); sí puede desactivar a otro administrador.
 - DEF-013 (CP-062): compra, ajuste mayor al saldo (rechazo sin cambios), permisos por tipo de movimiento, consumo en una orden que no usa la bobina (rechazo) y consumo válido ligado a la orden.
@@ -61,7 +62,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-104 pruebas unitarias y de rutas con `node:test` (104 aprobadas el 2026-11-09), en 22 archivos:
+109 pruebas unitarias y de rutas con `node:test` (109 aprobadas el 2026-11-09), en 23 archivos:
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -80,6 +81,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `production.service.test.js` (17): edición parcial sin quitar la materia prima (RN-026), plantillas del catálogo con variante y materia prima, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada si no existe).
 - `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
+- `respuestas-api.test.js` (5): JSON mal formado (400), eliminación solo de órdenes pendientes sin avance (400 y 404), usuario inexistente (404), cantidad o material inválido al editar una bobina (400) y fechas inexistentes en la auditoría (400) (DEF-023).
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
 - `sanitize.test.js` (4): sanitización de texto, números y objetos (un número mal escrito como «2abc» queda como texto para que el servicio lo rechace); los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
@@ -96,12 +98,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-09, sobre la rama `fix/MEVI-70-validar-cantidades` (DEF-022):
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-09, sobre la rama `fix/MEVI-71-respuestas-api` (DEF-023):
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 70,2 % | 80,5 % | 64,5 % |
-| Unitarias + E2E | 87,7 % | 81,7 % | 88,4 % |
+| Unitarias | 70,8 % | 81,0 % | 65,7 % |
+| Unitarias + E2E | 88,5 % | 82,5 % | 89,9 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 
