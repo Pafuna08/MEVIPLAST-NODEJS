@@ -112,6 +112,8 @@ Los controladores se cubren sobre todo con la suite E2E, por eso suben al combin
 
 La recuperación de contraseña y de usuario con un buzón real (Gmail del proyecto) se probó el 08/11/2026: CP-030, [`../evidence/EV-2026-11-08-correo.md`](../evidence/EV-2026-11-08-correo.md).
 
+El contraste de color (WCAG 2.1 AA) se midió con un script sobre las 21 vistas de los cinco roles, en escritorio y en celular, el 10/11/2026: 0 combinaciones por debajo de 4,5:1, sin desborde horizontal en celular y con todos los campos etiquetados ([`../evidence/EV-2026-11-10-contraste.md`](../evidence/EV-2026-11-10-contraste.md)). Falta probar la accesibilidad con lector de pantalla y con usuarios.
+
 Queda pendiente:
 
 - Rendimiento medido en el servidor y la red de la empresa.
