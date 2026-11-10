@@ -204,6 +204,33 @@ const FLUJOS = [
     if (problemas.length) throw new Error(problemas.join("; "));
     return `comprobante ${numero.replace("N.º ", "")}`;
   }],
+  ["Teclado: ventanas de confirmación y comprobante (RNF-012)", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "vendedor");
+    const dentro = () => pagina.evaluate(() => !!globalThis.document.activeElement?.closest(".confirm-modal"));
+    const foco = () => pagina.evaluate(() => globalThis.document.activeElement?.textContent?.trim() || "");
+    // Se abre con Enter, el foco entra, Tab y Mayús+Tab no salen, Esc cierra y el foco vuelve al botón
+    async function revisarVentana(nombre, boton, ventana) {
+      await boton.focus();
+      await pagina.keyboard.press("Enter");
+      await pagina.locator(ventana).waitFor({ timeout: 10000 });
+      if (!(await dentro())) problemas.push(`${nombre}: el foco no entra en la ventana`);
+      for (const tecla of ["Tab", "Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab", "Shift+Tab"]) {
+        await pagina.keyboard.press(tecla);
+        if (!(await dentro())) { problemas.push(`${nombre}: ${tecla} saca el foco de la ventana`); break; }
+      }
+      const texto = (await boton.textContent()).trim();
+      await pagina.keyboard.press("Escape");
+      await pagina.locator(ventana).waitFor({ state: "detached", timeout: 3000 }).catch(() => problemas.push(`${nombre}: Esc no cierra la ventana`));
+      if ((await foco()) !== texto) problemas.push(`${nombre}: al cerrar, el foco no vuelve a «${texto}»`);
+    }
+    await revisarVentana("cerrar sesión", pagina.locator(".logout-button, button", { hasText: "Cerrar sesión" }).first(), ".confirm-modal");
+    await pagina.locator("tr", { hasText: "Cliente" }).locator("button", { hasText: "Ver" }).first().waitFor({ timeout: 10000 });
+    await revisarVentana("comprobante", pagina.locator("tr", { hasText: "Cliente" }).locator("button", { hasText: "Ver" }).first(), ".receipt");
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return "Esc cierra, el foco queda dentro y vuelve al botón";
+  }],
   ["Operario: registrar avance de producción", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "operario");

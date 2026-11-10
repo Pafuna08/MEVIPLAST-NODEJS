@@ -1,14 +1,12 @@
 import React from "react";
 import { dateTimeFormat, money, number, packagesLabel, sanitizeText } from "../comun/formato.js";
+import { Dialogo } from "../comun/Dialogo.jsx";
 
 // Comprobante imprimible de una venta (RF-023)
 export function SaleReceipt({ sale, onClose }) {
   const variante = [sale.medida, sale.calibre && `calibre ${sale.calibre}`, sale.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
   return (
-    <div className="confirm-overlay receipt-overlay" role="presentation" onClick={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
-      <section className="confirm-modal receipt" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+    <Dialogo onClose={() => onClose()} labelledBy="receipt-title" overlayClassName="receipt-overlay" className="receipt">
         <header className="receipt-header">
           <img src="/assets/logo-meviplast.png" alt="" />
           <div>
@@ -43,7 +41,6 @@ export function SaleReceipt({ sale, onClose }) {
           <button className="confirm-cancel" type="button" onClick={onClose}>Cerrar</button>
           <button className="confirm-delete" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>
         </div>
-      </section>
-    </div>
+      </Dialogo>
   );
 }

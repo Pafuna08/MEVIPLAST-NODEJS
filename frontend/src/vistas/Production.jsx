@@ -3,6 +3,7 @@ import { Field, FormPanel, Intro, OrderRow, Panel, VariantFields, orderVariant }
 import { finishedProductFamilies } from "../comun/constantes.js";
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
+import { Dialogo } from "../comun/Dialogo.jsx";
 
 export function Production({
   data,
@@ -245,10 +246,7 @@ export function Production({
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>
       {cancelTarget && (
-        <div className="confirm-overlay" role="presentation" onClick={(event) => {
-          if (event.target === event.currentTarget) setCancelTarget(null);
-        }}>
-          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title">
+        <Dialogo onClose={() => setCancelTarget(null)} labelledBy="cancel-order-title">
             <div className="confirm-header">
               <div className="confirm-icon">!</div>
               <div>
@@ -272,8 +270,7 @@ export function Production({
                 Sí, cancelar la orden
               </button>
             </div>
-          </section>
-        </div>
+          </Dialogo>
       )}
     </>
   );
