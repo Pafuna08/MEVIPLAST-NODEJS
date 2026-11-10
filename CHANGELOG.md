@@ -40,6 +40,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- `npm test` y los scripts de cobertura cargan `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base inexistente: una prueba unitaria que llegue a la base sin simularla falla en lugar de leer o escribir en `meviplast_db` (incidente de prueba registrado en EV-2026-11-09-08).
 - Ventas por paquetes de 50, 100 o 500 unidades (se eligen de una lista), hasta 1 000 paquetes y hasta $100 000 000 por venta (CR-018, decisión del equipo). Antes el paquete admitía de 1 a 500 unidades sin tope de paquetes ni de precio.
 - Documentación del repositorio al día con `develop` tras el PR #68: README, estado del proyecto, catálogo de API, estrategia de pruebas (91 unitarias, 17 E2E, cobertura 68,0 % / 84,7 %), trazabilidad, guía de usuario y decisiones (CR-017); sin descripciones de campos o comportamientos que ya no existen. Nueva evidencia EV-2026-11-09-04 de la segunda ronda de afinado.
 - Toda orden de producción exige su materia prima (RN-026), al crearla (administrador y supervisor) y al editarla: se puede cambiar por otra bobina existente, pero no quitar. Las plantillas frecuentes también la exigen. Antes una orden o una plantilla se guardaba «Sin asociar».
