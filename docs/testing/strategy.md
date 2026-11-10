@@ -58,7 +58,7 @@ npm run test:browser
 
 Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usuario (disco C:). Para guardarlos en otro disco, defina la misma ruta al instalar y al ejecutar, por ejemplo `$env:PLAYWRIGHT_BROWSERS_PATH = "J:\playwright-navegadores"`.
 
-`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 14 flujos críticos (incluidos el reporte de rendimiento de operarios con su descarga en Excel, CP-080; compra, ajuste rechazado y consumo de materia prima; cerrar sesión con confirmación; el menú desde un reporte; «Mis tareas» → «Registrar avance» → «Mi historial»; y la confirmación con resumen de los registros irreversibles, donde «Revisar» no guarda; y la validación propia del panel: venta sin cliente y paquete de 600 unidades muestran su aviso sin abrir la confirmación) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
+`backend/tests/browser/navegadores.browser.js` crea `meviplast_browser` y ejecuta 15 flujos críticos (incluidos las ventanas de confirmación y el comprobante usados solo con teclado, RNF-012; el reporte de rendimiento de operarios con su descarga en Excel, CP-080; compra, ajuste rechazado y consumo de materia prima; cerrar sesión con confirmación; el menú desde un reporte; «Mis tareas» → «Registrar avance» → «Mi historial»; y la confirmación con resumen de los registros irreversibles, donde «Revisar» no guarda; y la validación propia del panel: venta sin cliente y paquete de 600 unidades muestran su aviso sin abrir la confirmación) en Edge (instalado en el equipo), Chrome for Testing y el Firefox de Playwright. Un flujo falla si aparece un error de JavaScript o una respuesta de error de la API no esperada. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md).
 
 ## Cobertura automatizada
 
@@ -112,7 +112,7 @@ Los controladores se cubren sobre todo con la suite E2E, por eso suben al combin
 
 La recuperación de contraseña y de usuario con un buzón real (Gmail del proyecto) se probó el 08/11/2026: CP-030, [`../evidence/EV-2026-11-08-correo.md`](../evidence/EV-2026-11-08-correo.md).
 
-El contraste de color (WCAG 2.1 AA) se midió con un script sobre las 21 vistas de los cinco roles, en escritorio y en celular, el 10/11/2026: 0 combinaciones por debajo de 4,5:1, sin desborde horizontal en celular y con todos los campos etiquetados ([`../evidence/EV-2026-11-10-contraste.md`](../evidence/EV-2026-11-10-contraste.md)). Falta probar la accesibilidad con lector de pantalla y con usuarios.
+El contraste de color (WCAG 2.1 AA) se midió con un script sobre las 21 vistas de los cinco roles, en escritorio y en celular, el 10/11/2026: 0 combinaciones por debajo de 4,5:1, sin desborde horizontal en celular y con todos los campos etiquetados ([`../evidence/EV-2026-11-10-contraste.md`](../evidence/EV-2026-11-10-contraste.md)). El uso solo con teclado se probó el mismo día en las 21 vistas y con una venta completa ([`../evidence/EV-2026-11-10-teclado.md`](../evidence/EV-2026-11-10-teclado.md)). Falta probar la accesibilidad con lector de pantalla y con usuarios.
 
 Queda pendiente:
 
