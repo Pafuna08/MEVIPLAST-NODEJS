@@ -185,11 +185,13 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(Number(comprobante.body.total), 60000);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.supervisor)).status, 403, "CR-021");
     assert.equal((await llamar("GET", "/ventas/999999/comprobante", tokens.admin)).status, 404);
 
     // RF-028: el detalle del periodo se descarga en Excel con los mismos datos
     const descargar = (ruta, token) => fetch(`${base}${ruta}`, { headers: { Authorization: `Bearer ${token}` } });
-    const excel = await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.supervisor);
+    const excel = await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.admin);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.supervisor)).status, 403, "CR-021");
     assert.equal(excel.status, 200);
     assert.match(excel.headers.get("content-type"), /spreadsheetml/);
     assert.match(excel.headers.get("content-disposition"), /reporte-ventas-semanal-\d{4}-\d{2}-\d{2}\.xlsx/);
@@ -215,9 +217,10 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       ["GET", "/produccion/plantillas", ["admin", "supervisor"]],
       ["GET", "/inventario", ["admin", "supervisor", "almacenista", "vendedor"]],
       ["GET", "/inventario/movimientos", ["admin", "supervisor", "almacenista"]],
-      ["GET", "/ventas", ["admin", "supervisor", "vendedor"]],
+      ["GET", "/ventas", ["admin", "vendedor"]],
       ["POST", "/ventas", ["admin", "vendedor"]],
       ["GET", "/reportes/produccion", ["admin", "supervisor"]],
+      ["GET", "/reportes/ventas", ["admin"]],
       ["GET", "/reportes/auditoria", ["admin"]],
       ["GET", "/lineas", ["admin", "supervisor", "almacenista", "vendedor"]],
       ["POST", "/lineas", ["admin"]],

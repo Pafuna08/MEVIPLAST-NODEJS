@@ -75,7 +75,13 @@ test("las lecturas de materias primas y producción respetan los roles", async (
     assert.equal(response.status, 200, `${rol} debe listar producción`);
   }
 
-  // DEF-007: el supervisor consulta ventas, pero no las registra
+  // CR-021: el supervisor no ve ventas: ni la lista, ni comprobantes, ni el reporte o su Excel
+  for (const ruta of ["/ventas", "/ventas/1/comprobante", "/reportes/ventas?periodo=diario", "/reportes/ventas/detalle?periodo=diario", "/reportes/ventas/detalle/excel?periodo=diario"]) {
+    const response = await get(ruta, "supervisor");
+    assert.equal(response.status, 403, `el supervisor no debe ver ${ruta}`);
+  }
+
+  // DEF-007: el supervisor no registra ventas
   for (const rol of ["supervisor", "operario", "almacenista"]) {
     const response = await post("/ventas", rol, {});
     assert.equal(response.status, 403, `${rol} no debe registrar ventas`);

@@ -454,6 +454,32 @@ const FLUJOS = [
     if (problemas.length) throw new Error(problemas.join("; "));
     return `orden de ${meta} vista, editada y cancelada desde la ventana`;
   }],
+  ["Administrador: comprobante desde el reporte de ventas", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "admin");
+    await pagina.goto(`${URL_BASE}/dashboard.html?reporte=ventas&periodo=anual`);
+    await pagina.waitForLoadState("networkidle");
+    const detalle = pagina.locator("section.panel", { has: pagina.locator("h3", { hasText: "Detalle de ventas" }) });
+    const fila = detalle.locator("tbody tr.clickable-row").first();
+    await fila.waitFor({ timeout: 10000 });
+    const cliente = (await fila.locator("td").nth(1).textContent()).trim();
+    // Clic en la fila: se abre el comprobante de esa venta, listo para imprimir o guardar en PDF
+    await fila.click();
+    const comprobante = pagina.locator(".receipt");
+    await comprobante.waitFor({ timeout: 10000 });
+    const texto = await comprobante.textContent();
+    if (!/N\.º V-\d{6}/.test(texto)) problemas.push("el comprobante no muestra su número");
+    if (!texto.includes(cliente)) problemas.push(`el comprobante no es de la venta elegida (${cliente})`);
+    if (!(await comprobante.locator("button", { hasText: "Imprimir / guardar PDF" }).count())) problemas.push("falta el botón de imprimir");
+    await pagina.keyboard.press("Escape");
+    await comprobante.waitFor({ state: "hidden", timeout: 10000 });
+    // También con el botón «Ver» de la última columna
+    await fila.locator("button", { hasText: "Ver" }).click();
+    await comprobante.waitFor({ timeout: 10000 });
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `comprobante de «${cliente}» abierto desde el reporte`;
+  }],
   ["Administrador: reporte y descarga a Excel", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "admin");
@@ -477,8 +503,12 @@ const FLUJOS = [
   ["Supervisor: rendimiento de operarios (HU-022)", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "supervisor");
+    // CR-021: el supervisor no ve ventas: ni en su Inicio ni en Reportes
+    await pagina.locator(".stat-card").first().waitFor({ timeout: 10000 });
+    if (await pagina.locator(".stat-card", { hasText: "Ventas" }).count()) problemas.push("el Inicio del supervisor muestra ventas");
     await pagina.goto(`${URL_BASE}/dashboard.html#reportes`);
     await pagina.waitForLoadState("networkidle");
+    if (await pagina.locator(".report-category", { hasText: "ventas" }).count()) problemas.push("el supervisor ve el reporte de ventas");
     const tarjeta = pagina.locator(".report-category", { hasText: "rendimiento de operarios" });
     await Promise.all([
       pagina.waitForURL(/reporte=rendimiento&periodo=mensual/),
