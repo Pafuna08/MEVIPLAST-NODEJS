@@ -20,7 +20,8 @@ const FIELD_RULES = {
   // Formato de RN-025, igual que backend/src/utils/variantes.js
   medida: {
     max: 40,
-    pattern: /^\d{1,4}(?:[.,]\d{1,2})?\s*[xX×*]\s*\d{1,4}(?:[.,]\d{1,2})?\s*(?:cm|mm|m|in|pulg)?$/i,
+    // «ancho x largo» o una talla de Cargadera (CR-019); el servidor revisa cuál corresponde a la línea
+    pattern: /^(?:T(?:15|20|25|30)|\d{1,4}(?:[.,]\d{1,2})?\s*[xX×*]\s*\d{1,4}(?:[.,]\d{1,2})?\s*(?:cm|mm|m|in|pulg)?)$/i,
     numbersPositive: true,
     message: "La medida debe ser ancho x largo, por ejemplo 10 x 15 o 40 x 60 cm.",
   },

@@ -1,5 +1,5 @@
-import React from "react";
-import { productColors } from "./constantes.js";
+import React, { useEffect, useRef, useState } from "react";
+import { lineSizes, productColors } from "./constantes.js";
 import { number, safeProductName, sanitizeText } from "./formato.js";
 import { clearInvalid, useObligatorios } from "./validacion.js";
 
@@ -92,13 +92,47 @@ export function orderVariant(order) {
 }
 
 export function VariantFields({ idPrefix, order }) {
+  // CR-019: la medida depende de la línea elegida en el mismo formulario (producto o familia):
+  // Cargadera elige una talla; las demás escriben «ancho x largo»
+  const marca = useRef(null);
+  const [linea, setLinea] = useState(order?.producto || "");
+  useEffect(() => {
+    const formulario = marca.current?.closest("form");
+    const selector = formulario?.querySelector('select[name="producto"], select[name="familia"]');
+    if (!selector) return undefined;
+    const actualizar = () => setLinea(selector.value);
+    // Tras un «reset» el valor cambia sin evento «change»
+    const tras = () => setTimeout(actualizar, 0);
+    actualizar();
+    selector.addEventListener("change", actualizar);
+    formulario.addEventListener("reset", tras);
+    return () => {
+      selector.removeEventListener("change", actualizar);
+      formulario.removeEventListener("reset", tras);
+    };
+  }, []);
+  const tallas = lineSizes[linea];
   const suggestions = [
-    ["medida", "Medida", ["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"]],
     ["calibre", "Calibre", ["0.80", "0.95", "1", "2", "3", "4", "5", "6", "8", "10"]],
   ];
+  const medida = tallas ? (
+    <Field key="medida-talla" label="Medida (talla)">
+      <select name="medida" defaultValue={tallas.includes(order?.medida) ? order.medida : ""}>
+        <option value="" disabled>Selecciona la talla</option>
+        {tallas.map((talla) => <option key={talla} value={talla}>{talla}</option>)}
+      </select>
+    </Field>
+  ) : (
+    <Field key="medida" label="Medida">
+      <input name="medida" list={`${idPrefix}-medida`} defaultValue={order?.medida && !lineSizes[order?.producto] ? order.medida : ""} />
+      <datalist id={`${idPrefix}-medida`}>
+        {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
+      </datalist>
+    </Field>
+  );
   // RN-025: el color se elige de la lista fija; un color anterior fuera de la lista obliga a elegir uno válido
   const color = productColors.includes(order?.color) ? order.color : "";
-  return [...suggestions.map(([name, label, values]) => (
+  return [<span key="marca" ref={marca} hidden />, medida, ...suggestions.map(([name, label, values]) => (
     <Field key={name} label={label}>
       <input name={name} list={`${idPrefix}-${name}`} defaultValue={order?.[name] || ""} />
       <datalist id={`${idPrefix}-${name}`}>

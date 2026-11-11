@@ -13,6 +13,11 @@ export const finishedProductFamilies = [
   "Troquel riñón",
 ];
 
+// CR-019: Cargadera se mide por tallas, igual que tallasPorLinea en backend/src/constants/productosTerminados.js
+export const lineSizes = {
+  Cargadera: ["T15", "T20", "T25", "T30"],
+};
+
 // Mismos motivos que backend/src/constants/motivosSalida.js
 export const exitReasons = [
   "Producto dañado o defectuoso",
