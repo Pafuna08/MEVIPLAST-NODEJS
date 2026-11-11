@@ -99,6 +99,9 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- La conexión a MySQL falla si un valor pegado en el panel de la nube trae un salto de línea al final (en Render, `DB_HOST` con «
+» daba `ENOTFOUND`): ahora se quitan los espacios y saltos de línea de `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y del certificado.
+
 - `db:init` usaba `ADD COLUMN IF NOT EXISTS`, que solo existe en MariaDB, y fallaba en MySQL 8; ahora agrega solo las columnas que falten.
 
 - El saneador de las peticiones convertía en texto un arreglo dentro del cuerpo (por ejemplo, las líneas de una venta); ahora sanea cada elemento.

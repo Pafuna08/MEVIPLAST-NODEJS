@@ -5,10 +5,14 @@ const fs = require("fs");
 // servidor usa la hora UTC: DB_SSL=true, el certificado en DB_SSL_CA (o en el archivo DB_SSL_CA_FILE) y
 // DB_TIME_ZONE con la zona de la empresa (-05:00 en Colombia).
 
+// Un valor pegado en el panel de la nube puede traer un espacio o un salto de línea al final
+// (con «host\n» MySQL responde ENOTFOUND): se quitan antes de usarlo
+const limpio = (valor) => String(valor ?? "").trim();
+
 // El certificado puede venir con saltos de línea escritos como «\n» (así se pega en una variable de entorno)
 function certificado() {
-  if (process.env.DB_SSL_CA) return process.env.DB_SSL_CA.replace(/\\n/g, "\n");
-  if (process.env.DB_SSL_CA_FILE) return fs.readFileSync(process.env.DB_SSL_CA_FILE, "utf8");
+  if (process.env.DB_SSL_CA) return process.env.DB_SSL_CA.replace(/\\n/g, "\n").trim();
+  if (process.env.DB_SSL_CA_FILE) return fs.readFileSync(limpio(process.env.DB_SSL_CA_FILE), "utf8");
   return undefined;
 }
 
@@ -21,10 +25,10 @@ function opcionesSsl() {
 function datosConexion() {
   const ssl = opcionesSsl();
   return {
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
+    host: limpio(process.env.DB_HOST) || "localhost",
+    port: Number(limpio(process.env.DB_PORT)) || 3306,
+    user: limpio(process.env.DB_USER) || "root",
+    password: limpio(process.env.DB_PASSWORD),
     ...(ssl ? { ssl } : {}),
   };
 }
