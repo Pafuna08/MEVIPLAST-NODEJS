@@ -32,6 +32,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Security
 
+- El supervisor ya no ve ventas (CR-021): la API responde 403 a sus consultas de la lista de ventas, los comprobantes, el reporte de ventas y su Excel. En Reportes solo le aparecen producción y rendimiento de operarios, y su Inicio muestra las órdenes finalizadas en lugar del total vendido. Los precios, totales y clientes son información comercial del administrador; el supervisor sigue viendo las existencias para planear (EV-2026-11-11-02).
+
 - Un administrador ya no puede quitarse su propio rol, desactivar su cuenta ni eliminarla, y el sistema nunca se queda sin un administrador activo: esos cambios responden 400. Antes la API lo permitía y el sistema podía quedar sin nadie que administre usuarios; en la tabla de usuarios, la fila propia muestra «Tu cuenta» en lugar de «Desactivar» (DEF-021, EV-2026-11-09-06).
 - El supervisor ya no puede registrar ventas por la API (`POST /ventas` responde 403); sigue consultando ventas, comprobantes y reportes. Antes la API se lo permitía aunque su menú no tenía la vista Ventas (DEF-007, decisión del equipo con la delegación de MEVIPLAST).
 - `npm audit` vuelve a 0 vulnerabilidades en backend y frontend (había 3 moderadas en herramientas de desarrollo, halladas en la instalación limpia del 2026-11-08): `vite` 6.4.4 → 6.4.5 y `minimatch` 10 → 11.0.5 dentro de `nodemon`, mediante un `override` porque `nodemon` 3.1.14 todavía pide la versión 10. Ninguna llegaba a producción (`npm audit --omit=dev` ya daba 0).
@@ -43,6 +45,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- En el reporte detallado de ventas, el administrador hace clic en una venta (o en «Ver») y se abre su comprobante, listo para imprimir o guardar en PDF; al imprimir sale solo el comprobante (EV-2026-11-11-02).
 - Las órdenes del administrador en Producción se ven en una tabla compacta (orden, producto, operario, barra de avance, prioridad y estado), con filtros por estado y su conteo («Abiertas» al entrar). Un clic en una orden abre una ventana con su detalle (meta, producido, materia prima, operario, supervisor, fechas y observaciones) y las acciones que su estado permite: editar, asignar operario o cancelar, con la confirmación de siempre. Sugerencia del instructor para aligerar la vista; la del supervisor y la del operario no cambian (EV-2026-11-11-01).
 - Cargadera se mide por tallas (CR-019): T15, T20, T25 o T30 en lugar de «ancho x largo». En inventario, órdenes, plantillas y asignación, al elegir Cargadera el campo de medida pasa a ser una lista con sus tallas; las demás líneas siguen con «ancho x largo» (RN-025). El servidor rechaza con 400 otra medida para Cargadera y una talla en otra línea, y guarda «t20» o «T 20» como «T20». La migración `20261110_cargadera_tallas.sql` pasa las existencias, órdenes y plantillas de Cargadera en «15 x 20» a T15 (las ventas ya registradas conservan su texto); los datos DEMO usan T15 (EV-2026-11-10-03).
 - Registrar producción desde «Registrar avance» en Mis tareas deja la orden fija, sin selector, para que el operario no registre el avance en otra orden por error; desde el menú se sigue eligiendo la orden.

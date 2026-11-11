@@ -3,7 +3,7 @@
 Corte: 09/11/2026, rama `develop` con los PR #1 a #68 fusionados. Sin etiqueta de liberación. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (desde el PR #53) está en curso.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 116 unitarias, 22 E2E con MySQL, prueba de carga y 17 flujos en cada uno de Edge, Chrome y Firefox (51); cobertura de 70,8 % con unitarias y 88,5 % con E2E, medida en CI.
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 116 unitarias, 22 E2E con MySQL, prueba de carga y 18 flujos en cada uno de Edge, Chrome y Firefox (54); cobertura de 70,8 % con unitarias y 88,5 % con E2E, medida en CI.
 - Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versión 2.1 al PR #68, pendiente de la revisión de Carlos y del instructor, más la Rúbrica Integral de Evaluación); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json).

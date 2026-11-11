@@ -14,7 +14,7 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 
 | ID | Pregunta | Decisión del equipo | Estado |
 | --- | --- | --- | --- |
-| OBS-001 / DEF-007 | ¿El supervisor debe registrar ventas? | No. Se retiró el permiso en la API; consulta ventas, comprobantes y reportes. | Aplicada (PR #55) |
+| OBS-001 / DEF-007 | ¿El supervisor debe registrar ventas? | No. Se retiró el permiso en la API. Desde CR-021 (11/11/2026) tampoco consulta ventas, comprobantes ni el reporte de ventas. | Aplicada (PR #55 y PR #87) |
 | OBS-002 / RN-024 | ¿Se mantiene el bloqueo de 5 intentos durante 15 minutos? | Se mantiene. | Vigente desde el PR #17 |
 | OBS-003 / RN-012, RN-013 | ¿Están completos los catálogos (6 líneas, bobinas PEBD, PEAD y PP)? | Se mantienen los catálogos presentados en la reunión inicial (CR-006). Una línea o un tipo de bobina nuevo se tramita como cambio. | Vigente |
 | OBS-004 | ¿Se aprueban los umbrales (≤ 3 s, ≥ 95 % de disponibilidad en horario laboral, 4 de 5 usuarios sin ayuda, respaldo diario con RPO 24 h y RTO 4 h)? | Se aprueban como metas. Se midió el tiempo de respuesta en un equipo local (p95 de 60 a 69 ms); la disponibilidad y la usabilidad no se pudieron medir sin la empresa. | Aprobados; medición parcial |
@@ -41,6 +41,7 @@ MEVIPLAST aprobó el alcance del sistema en la reunión inicial con el equipo y 
 | CR-018 | Topes de cantidades tras el sondeo de casos límite del equipo (09/11/2026): ventas de 50, 100 o 500 unidades por paquete, hasta 1 000 paquetes y $100 000 000 por venta; unidades enteras hasta 1 000 000 en órdenes, plantillas, avances e inventario; hasta 100 000 kg por movimiento de bobina | Decisión del equipo por delegación |
 | CR-019 | Cargadera se mide por tallas (T15, T20, T25 y T30), no por «ancho x largo», tras las pruebas del equipo del 10/11/2026; las existencias, órdenes y plantillas en «15 x 20» pasan a T15 con una migración | Decisión del equipo por delegación |
 | CR-020 | El administrador puede crear una línea de producto o un material (bobina) desde los selectores, con las mismas reglas de los formularios: medida en «ancho x largo» (no una lista cerrada), material y color de listas fijas; las líneas no se borran. Pedido del equipo en las pruebas del 10/11/2026 | Decisión del equipo por delegación |
+| CR-021 | El supervisor ve solo los reportes de producción y de rendimiento de operarios; las ventas (lista, comprobantes, reporte y Excel) son del administrador, por ser información comercial (precios, totales y clientes). Sigue viendo las existencias para planear. Criterio de mínimo privilegio, decidido por el equipo el 11/11/2026 | Decisión del equipo por delegación |
 | RN-005 | Ruta de la orden de producción (según CR-014) | Aprobada |
 | RN-012 | Catálogo de producto terminado (6 líneas; el administrador agrega otras según CR-020) | Aprobada; ampliación por decisión del equipo (CR-020) |
 | RN-013 | Catálogo de materias primas (PEBD, PEAD, PP con medida, calibre, color y peso) | Aprobada |
