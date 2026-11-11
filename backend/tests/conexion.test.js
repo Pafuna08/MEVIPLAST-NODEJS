@@ -35,6 +35,13 @@ test("en la nube la conexión va cifrada con el certificado de la variable (salt
   assert.equal(datos.ssl.ca, "-----BEGIN CERTIFICATE-----\nABC\n-----END CERTIFICATE-----");
 });
 
+test("los valores pegados con espacios o saltos de línea al final se limpian", (t) => {
+  conEntorno(t, { DB_HOST: "mysql.ejemplo.com\n", DB_PORT: " 12345\r\n", DB_USER: "avnadmin\n", DB_PASSWORD: "secreta\n", DB_SSL: "true", DB_SSL_CA: "-----BEGIN CERTIFICATE-----\\nABC\\n-----END CERTIFICATE-----\n" });
+  const datos = datosConexion();
+  assert.deepEqual([datos.host, datos.port, datos.user, datos.password], ["mysql.ejemplo.com", 12345, "avnadmin", "secreta"]);
+  assert.equal(datos.ssl.ca, "-----BEGIN CERTIFICATE-----\nABC\n-----END CERTIFICATE-----");
+});
+
 test("el certificado también se puede leer de un archivo", (t) => {
   const archivo = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "meviplast-ca-")), "ca.pem");
   fs.writeFileSync(archivo, "PEM DE PRUEBA");
