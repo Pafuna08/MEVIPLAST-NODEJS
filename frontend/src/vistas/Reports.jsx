@@ -20,7 +20,7 @@ export function Reports({ role }) {
   }
   return (
     <>
-      <Intro title="Reportes" description={isAdmin ? "Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." : "Consulta el seguimiento de producción y el rendimiento de los operarios por periodo."} action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
+      <Intro title="Reportes" description={isAdmin ? "Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." : "Consulta el seguimiento de producción y el rendimiento de los operarios por periodo."} />
       <section className="report-categories">
         {[
           ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
@@ -48,7 +48,7 @@ export function Reports({ role }) {
   );
 }
 
-export function ReportDetail({ data, onExportExcel, onReceipt }) {
+export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
   const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
   const titulo = { produccion: "producción", ventas: "ventas", rendimiento: "rendimiento de operarios" }[reporteTipo];
   const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
@@ -62,7 +62,7 @@ export function ReportDetail({ data, onExportExcel, onReceipt }) {
         action={
           <div className="report-actions">
             <button className="primary-action secondary" type="button" onClick={onExportExcel}>Descargar Excel</button>
-            <button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>
+            <button className="primary-action" type="button" title="Se abre en otra pestaña; desde allí lo imprimes o lo descargas" onClick={onOpenPdf}>Abrir PDF</button>
           </div>
         }
       />
