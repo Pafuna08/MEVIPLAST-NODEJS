@@ -400,10 +400,59 @@ const FLUJOS = [
     await form.locator("select[name=prioridad]").selectOption("media");
     await form.locator("button[type=submit]").click();
     await esperarAviso(pagina, "Registro guardado");
-    await pagina.locator(".order-row", { hasText: linea }).first().waitFor({ timeout: 10000 });
+    await pagina.locator(".orders-table tbody tr", { hasText: linea }).first().waitFor({ timeout: 10000 });
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
     return `línea «${linea}» y bobina ${medida} creadas y usadas en una orden`;
+  }],
+  ["Administrador: órdenes en tabla con detalle en ventana", async (navegador, nombre) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "admin");
+    await pagina.goto(`${URL_BASE}/dashboard.html#produccion`);
+    await pagina.waitForLoadState("networkidle");
+    // Orden propia de este navegador (la base es compartida): la meta la distingue
+    const meta = { Edge: "111", Chrome: "222", Firefox: "333" }[nombre] || "444";
+    const form = formulario(pagina, "Nueva orden de producción");
+    await form.locator("select[name=producto]").selectOption("Sencilla PP");
+    await form.locator("input[name=medida]").fill("6 x 9");
+    await form.locator("input[name=calibre]").fill("1");
+    await form.locator("select[name=color]").selectOption("Natural");
+    await form.locator("input[name=cantidad]").fill(meta);
+    await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
+    await form.locator("select[name=prioridad]").selectOption("baja");
+    await form.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Registro guardado");
+    // La lista es una tabla sin botones de acción por fila
+    const fila = pagina.locator(".orders-table tbody tr", { has: pagina.locator(`[title="0 de ${meta}"]`) }).first();
+    await fila.waitFor({ timeout: 10000 });
+    if (await pagina.locator(".orders-table button", { hasText: /Cancelar|Editar/ }).count()) problemas.push("la tabla todavía tiene botones de acción");
+    // Clic en la fila: ventana con el detalle y las acciones de una orden pendiente sin operario
+    await fila.click();
+    const ventana = pagina.locator(".order-modal");
+    await ventana.waitFor({ timeout: 10000 });
+    const texto = await ventana.textContent();
+    for (const esperado of ["Sencilla PP · 6 x 9 · calibre 1 · Natural", `${meta} unidades`, "Pendiente para los supervisores", "Asignar operario"]) {
+      if (!texto.includes(esperado)) problemas.push(`el detalle no muestra «${esperado}»`);
+    }
+    for (const boton of ["Cancelar orden", "Editar", "Cerrar"]) {
+      if (!(await ventana.locator("button", { hasText: boton }).count())) problemas.push(`falta el botón «${boton}»`);
+    }
+    // Editar dentro de la ventana y volver; Esc la cierra
+    await ventana.locator("button", { hasText: "Editar" }).click();
+    await ventana.locator("form[aria-label^='Editar orden'] input[name=cantidad]").waitFor({ timeout: 10000 });
+    await ventana.locator("button", { hasText: "Volver al detalle" }).click();
+    await pagina.keyboard.press("Escape");
+    await ventana.waitFor({ state: "hidden", timeout: 10000 });
+    // Cancelar desde la ventana: pide confirmación y la orden pasa al filtro «Canceladas»
+    await fila.locator(".link-button").click();
+    await ventana.locator("button", { hasText: "Cancelar orden" }).click();
+    await pagina.locator(".confirm-modal button", { hasText: "Sí, cancelar la orden" }).click();
+    await esperarAviso(pagina, "Estado actualizado");
+    await pagina.locator(".filter-chip", { hasText: "Canceladas" }).click();
+    await pagina.locator(".orders-table tbody tr", { has: pagina.locator(`[title="0 de ${meta}"]`) }).first().waitFor({ timeout: 10000 });
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `orden de ${meta} vista, editada y cancelada desde la ventana`;
   }],
   ["Administrador: reporte y descarga a Excel", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
