@@ -67,7 +67,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-025 | Reporte de ventas por periodo | Implementado | MVP | API-10 | CP-019, CP-028 |
 | RF-026 | Reporte de inventario | Parcial | MVP | API-10 | — |
 | RF-027 | Rendimiento por operario | Implementado | MVP | API-10 | CP-079, CP-080 |
-| RF-028 | Exportar reportes | Implementado | MVP | API-10 | CP-058, CP-059, CP-060 |
+| RF-028 | Exportar reportes | Implementado | MVP | API-10 | CP-058, CP-059, CP-060, CP-100 (PDF en otra pestaña) |
 | RF-029 | Consultar bitácora de auditoría | Implementado | MVP | API-11 | CP-068, CP-083, CP-084 (filtros, páginas y archivo, CR-016) |
 
 ## Brechas abiertas
