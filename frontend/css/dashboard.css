@@ -1387,11 +1387,21 @@ tbody tr.clickable-row:hover {
   justify-content: space-between;
   gap: 12px;
 }
+/* Con «anywhere» el navegador podía encoger la columna a una letra en el celular: el correo conserva un
+   ancho mínimo y, si es más largo, pasa a otra línea */
 .email-cell > span {
+  min-width: 18ch;
   overflow-wrap: anywhere;
 }
 .email-cell .text-action {
   flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .email-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
 }
 
 /* Registrar producción: la orden elegida en Mis tareas se muestra fija, sin selector */
