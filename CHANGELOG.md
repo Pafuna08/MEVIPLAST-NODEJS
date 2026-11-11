@@ -99,6 +99,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- En el celular, la columna del correo de la tabla de usuarios se encogía al ancho de una letra y el correo se leía letra por letra; ahora conserva un ancho mínimo, pasa a una segunda línea si es largo y el botón «Cambiar» queda debajo. Se revisaron las 8 vistas del administrador a 390 px de ancho: ninguna otra celda se encoge y ninguna página se sale de la pantalla.
+
 - La conexión a MySQL falla si un valor pegado en el panel de la nube trae un salto de línea al final (en Render, `DB_HOST` con «
 » daba `ENOTFOUND`): ahora se quitan los espacios y saltos de línea de `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y del certificado.
 
