@@ -94,10 +94,11 @@ export default function DashboardApp() {
   const reportParams = new URLSearchParams(window.location.search);
   const requestedReport = reportParams.get("reporte");
   const requestedPeriod = reportParams.get("periodo");
+  // CR-021: el reporte de ventas es solo del administrador
   const isReportDetail =
     ["produccion", "ventas", "rendimiento"].includes(requestedReport) &&
     ["diario", "semanal", "mensual", "anual"].includes(requestedPeriod) &&
-    ["Administrador", "Supervisor"].includes(role);
+    (requestedReport === "ventas" ? role === "Administrador" : ["Administrador", "Supervisor"].includes(role));
   const requestedView = window.location.hash.slice(1) || "inicio";
   const activeView = isReportDetail
     ? "reporte-detalle"
@@ -634,7 +635,7 @@ function renderView({
   createLine,
   createMaterial,
 }) {
-  if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} />;
+  if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} onReceipt={openReceipt} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} onCreateMaterial={createMaterial} />;
@@ -646,7 +647,7 @@ function renderView({
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} lines={lines} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
-  if (view === "reportes") return <Reports />;
+  if (view === "reportes") return <Reports role={role} />;
   if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }

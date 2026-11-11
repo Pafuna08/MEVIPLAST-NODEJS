@@ -45,9 +45,10 @@ export async function loadView(view, role, token) {
     if (role.apiRole === "operario") {
       return { orders, inventory: [] };
     }
+    // CR-021: solo el administrador ve el resumen de ventas
     const [inventory, sales] = await Promise.all([
       api("/api/inventario", token),
-      api("/api/reportes/ventas", token),
+      role.apiRole === "admin" ? api("/api/reportes/ventas", token) : null,
     ]);
     return { orders, inventory, sales };
   }
