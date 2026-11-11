@@ -48,7 +48,7 @@ function validarVariante({ familia, medida, calibre, color }) {
       throw error;
     }
   }
-  const variante = normalizarVariante({ medida, calibre, color });
+  const variante = normalizarVariante({ medida, calibre, color }, familia);
   const producto = `${familia} · ${variante.medida} · calibre ${variante.calibre} · ${variante.color}`;
   return { producto, ...variante };
 }

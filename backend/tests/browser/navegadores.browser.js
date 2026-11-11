@@ -333,9 +333,22 @@ const FLUJOS = [
     await form.locator("input[name=cantidad]").fill("300");
     await guardarConConfirmacion(pagina, form);
     await esperarAviso(pagina, "Registro guardado");
+    // CR-019: con Cargadera la medida se elige entre sus tallas; al volver a otra línea, se escribe
+    await form.locator("select[name=familia]").selectOption("Cargadera");
+    await form.locator("select[name=medida]").waitFor({ timeout: 5000 });
+    const tallas = await form.locator("select[name=medida] option").allInnerTexts();
+    if (tallas.join("|") !== "Selecciona la talla|T15|T20|T25|T30") problemas.push(`tallas de Cargadera: ${tallas.join(", ")}`);
+    await form.locator("select[name=medida]").selectOption("T25");
+    await form.locator("input[name=calibre]").fill("2");
+    await form.locator("select[name=color]").selectOption("Blanco");
+    await form.locator("input[name=cantidad]").fill("10");
+    await guardarConConfirmacion(pagina, form);
+    await esperarAviso(pagina, "Registro guardado");
+    await form.locator("select[name=familia]").selectOption("Sencilla PP");
+    await form.locator("input[name=medida]").waitFor({ timeout: 5000 }).catch(() => problemas.push("al cambiar de línea no vuelve el campo ancho x largo"));
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
-    return "ingreso guardado";
+    return "ingreso guardado, también de Cargadera en talla T25";
   }],
   ["Administrador: reporte y descarga a Excel", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);

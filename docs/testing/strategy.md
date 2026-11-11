@@ -36,6 +36,7 @@ npm run test:e2e --prefix backend
 - Plantillas: sin variante o sin materia prima se rechaza (400, RN-026), la misma variante repetida da 409 y otra variante de la misma línea se acepta.
 - RN-025 y RN-026 (CP-081, CP-086, CP-087): una medida «eddc», un calibre «eew» o un color fuera de la lista («Fdsa») se rechazan con 400; la medida «40x60 cm» se guarda como «40 x 60 cm»; una orden sin materia prima se rechaza.
 - CR-016 (CP-083, CP-084): los inicios de sesión no quedan en la tabla `auditoria`; la bitácora filtra por acción y fechas con total y páginas, rechaza filtros inválidos, y el archivo de lo de más de 12 meses escribe el CSV, borra solo eso, deja un evento ARCHIVAR_AUDITORIA y no repite.
+- CR-019 (CP-095): una orden de Cargadera en «t20» se guarda como T20; en «15 x 20» se rechaza con 400, igual que una talla en otra línea; la migración `20261110_cargadera_tallas.sql`, aplicada dos veces, pasa existencias, órdenes y plantillas de Cargadera en «15 x 20» a T15 sin perder unidades.
 - Migración `20261109_drop_unused_columns.sql` (CR-015, CP-082) aplicada sobre una base con `inventario.ubicacion` y `produccion.lote`, dos veces: quita las columnas sin perder filas.
 - Migración `20261027_template_variant.sql` aplicada sobre la tabla anterior (clave única por línea) y ejecutada dos veces; conserva la plantilla existente.
 
@@ -62,7 +63,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-110 pruebas unitarias y de rutas con `node:test` (110 aprobadas el 2026-11-09), en 24 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+111 pruebas unitarias y de rutas con `node:test` (111 aprobadas el 2026-11-10), en 24 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -87,7 +88,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `sanitize.test.js` (4): sanitización de texto, números y objetos (un número mal escrito como «2abc» queda como texto para que el servicio lo rechace); los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
 - `usuarios.service.test.js` (5): nadie se quita su propio rol de administrador, se desactiva ni se elimina; con otro administrador activo sí se cambia a un admin; siempre queda al menos uno activo; el admin sí cambia su propio nombre o correo (DEF-021).
-- `variantes.test.js` (7): medida «ancho x largo» normalizada, calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
+- `variantes.test.js` (8): medida «ancho x largo» normalizada, tallas T15 a T30 solo para Cargadera (CR-019), calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
 - `ventas.service.test.js` (5): paquetes de 50, 100 o 500 unidades (CR-018), descuento por paquetes, aislamiento del vendedor y comprobante.
 
 CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.

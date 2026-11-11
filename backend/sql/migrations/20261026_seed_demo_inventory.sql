@@ -90,7 +90,7 @@ FROM (
   UNION ALL
   SELECT 'Bolsas para la basura', '20 x 30', '2', 'Negro', 750
   UNION ALL
-  SELECT 'Cargadera', '15 x 20', '2', 'Blanco', 1100
+  SELECT 'Cargadera', 'T15', '2', 'Blanco', 1100
   UNION ALL
   SELECT 'Troquel riñón', '12 x 18', '2', 'Transparente', 600
 ) AS muestras

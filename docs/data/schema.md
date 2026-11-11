@@ -31,4 +31,6 @@ La migración `backend/sql/migrations/20261027_login_lockout.sql` agrega a `usua
 
 La migración `backend/sql/migrations/20261026_seed_demo_inventory.sql` agrega existencias DEMO de ejemplo a las seis materias primas y a las seis líneas de producto terminado. No registra ventas ni movimientos y solo actualiza materias primas de ejemplo que todavía están en cero y sin proveedor; las variantes de producto terminado solo se insertan si no existen. En las ubicaciones y proveedores se indica DEMO para distinguirlas de existencias reales.
 
+La migración `backend/sql/migrations/20261110_cargadera_tallas.sql` pasa las variantes de Cargadera en «15 x 20» a la talla T15 en `inventario`, `produccion` y `plantillas_produccion` (CR-019). No toca las ventas registradas y, si ya existe la misma variante en T15, deja la fila como está para no chocar con la clave única. Es idempotente.
+
 La migración `backend/sql/migrations/20261109_drop_unused_columns.sql` elimina dos columnas que ningún requisito usa: `inventario.ubicacion` (todo el producto terminado se guarda en el mismo lugar) y `produccion.lote` (sin uso desde el PR #45). Es la decisión CR-015 del equipo por delegación de MEVIPLAST. Cada borrado se hace solo si la columna existe; no modifica filas.

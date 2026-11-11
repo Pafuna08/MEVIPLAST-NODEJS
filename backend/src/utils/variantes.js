@@ -1,5 +1,6 @@
 // RN-025: formato de medida y calibre y color de una lista fija (inventario, órdenes, plantillas y materias primas).
 const { colores } = require("../constants/colores");
+const { tallasPorLinea } = require("../constants/productosTerminados");
 // Devuelve el valor normalizado para que «10x15», «10 X 15» y «10 x 15» sean la misma variante.
 
 const NUMERO = String.raw`\d{1,4}(?:[.,]\d{1,2})?`;
@@ -47,12 +48,22 @@ function normalizarColor(valor) {
   return color;
 }
 
-function normalizarVariante({ medida, calibre, color }) {
+// CR-019: en una línea con tallas (Cargadera) la medida es una de sus tallas: «t20» o «T 20» → «T20»
+function normalizarTalla(valor, linea) {
+  const tallas = tallasPorLinea[linea];
+  const texto = typeof valor === "string" ? valor.trim().toUpperCase().replace(/\s+/g, "") : "";
+  if (!tallas.includes(texto)) {
+    throw errorDeDato(`La medida de ${linea} debe ser ${tallas.slice(0, -1).join(", ")} o ${tallas[tallas.length - 1]}`);
+  }
+  return texto;
+}
+
+function normalizarVariante({ medida, calibre, color }, linea) {
   return {
-    medida: normalizarMedida(medida),
+    medida: tallasPorLinea[linea] ? normalizarTalla(medida, linea) : normalizarMedida(medida),
     calibre: normalizarCalibre(calibre),
     color: normalizarColor(color),
   };
 }
 
-module.exports = { normalizarMedida, normalizarCalibre, normalizarColor, normalizarVariante };
+module.exports = { normalizarMedida, normalizarCalibre, normalizarColor, normalizarVariante, normalizarTalla };

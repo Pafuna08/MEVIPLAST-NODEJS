@@ -97,27 +97,27 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("CP-028: orden → asignación → avance → inventario → venta → reportes", async () => {
     const sinVariante = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
+      producto: "Bolsas para la basura", cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
     });
     assert.equal(sinVariante.status, 400, "la orden exige medida, calibre y color");
     const orden = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
+      producto: "Bolsas para la basura", medida: "40x60 cm", calibre: "2", color: "Negro",
       cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     // RN-025: la medida se guarda normalizada y un dato sin formato se rechaza en el servidor
     assert.equal(orden.body.medida, "40 x 60 cm");
     const invalida = await llamar("POST", "/inventario", tokens.admin, {
-      familia: "Cargadera", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
+      familia: "Bolsas para la basura", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
     });
     assert.equal(invalida.status, 400, "medida y calibre sin formato se rechazan");
     // RN-025: el color debe ser de la lista; RN-026: la orden exige materia prima
     const colorInventado = await llamar("POST", "/inventario", tokens.admin, {
-      familia: "Cargadera", medida: "10 x 15", calibre: "2", color: "Fdsa", cantidad: 5,
+      familia: "Bolsas para la basura", medida: "10 x 15", calibre: "2", color: "Fdsa", cantidad: 5,
     });
     assert.equal(colorInventado.status, 400, "un color fuera de la lista se rechaza");
     const sinMateria = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", medida: "10 x 15", calibre: "2", color: "Negro", cantidad: 10, prioridad: "media",
+      producto: "Bolsas para la basura", medida: "10 x 15", calibre: "2", color: "Negro", cantidad: 10, prioridad: "media",
     });
     assert.equal(sinMateria.status, 400);
     assert.match(sinMateria.body.mensaje, /materia prima/);
@@ -141,7 +141,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(avance.body.estado, "finalizado");
 
     // El avance entra a la variante exacta de la orden
-    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad FROM inventario WHERE familia = 'Cargadera'");
+    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad FROM inventario WHERE familia = 'Bolsas para la basura'");
     assert.equal(variantes.length, 1);
     const [stock] = variantes;
     assert.deepEqual([stock.medida, stock.calibre, stock.color], ["40 x 60 cm", "2", "Negro"]);
@@ -181,7 +181,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(comprobante.status, 200, JSON.stringify(comprobante.body));
     assert.equal(comprobante.body.numero, `V-${String(venta.body.id).padStart(6, "0")}`);
     assert.equal(comprobante.body.cliente, "Cliente E2E");
-    assert.equal(comprobante.body.familia, "Cargadera");
+    assert.equal(comprobante.body.familia, "Bolsas para la basura");
     assert.equal(Number(comprobante.body.total), 60000);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
@@ -320,7 +320,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       assert.equal(r.status, 400, `meta ${cantidad}`);
       assert.match(r.body.mensaje, mensaje);
     }
-    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 1e12 });
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 1e12 });
     assert.equal(ingreso.status, 400);
     const [[variante]] = await db.query(`SELECT id FROM \`${DB}\`.inventario WHERE cantidad > 0 LIMIT 1`);
     assert.equal((await llamar("POST", `/inventario/${variante.id}/salida`, tokens.almacenista, { cantidad: 1.5, motivo: "Merma" })).status, 400);
@@ -364,7 +364,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const otra = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", medida: "40x60 cm", calibre: "2", color: "Negro",
+      producto: "Bolsas para la basura", medida: "40x60 cm", calibre: "2", color: "Negro",
       cantidad: 100, prioridad: "baja", materia_prima_id: bobina,
     });
     assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
@@ -454,7 +454,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("CR-014: si falta el supervisor, el administrador asigna el operario desde su panel", async () => {
     const orden = await llamar("POST", "/produccion", tokens.admin, {
-      producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media", materia_prima_id: bobina,
+      producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media", materia_prima_id: bobina,
     });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     const visibles = await llamar("GET", "/produccion", tokens.supervisor);
@@ -474,7 +474,7 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     const previo = fila(antes.body);
     assert.ok(previo, "el operario activo aparece aunque no tenga órdenes");
 
-    const variante = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media", materia_prima_id: bobina };
+    const variante = { producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media", materia_prima_id: bobina };
     const orden = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 200 });
     assert.equal(orden.status, 201, JSON.stringify(orden.body));
     assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
@@ -510,8 +510,8 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
   });
 
   await t.test("plantillas: una por variante, con la variante y la materia prima obligatorias", async () => {
-    const base = { producto: "Cargadera", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: bobina };
-    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Cargadera", cantidad: 300, materia_prima_id: bobina })).status, 400);
+    const base = { producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: bobina };
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Bolsas para la basura", cantidad: 300, materia_prima_id: bobina })).status, 400);
     const sinMateria = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, materia_prima_id: undefined });
     assert.equal(sinMateria.status, 400, "RN-026: la plantilla exige materia prima");
     assert.match(sinMateria.body.mensaje, /materia prima/);
@@ -620,5 +620,29 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(columnas.length, 0, "las dos columnas se eliminan");
     const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
     assert.deepEqual([Number(despues.inventario), Number(despues.produccion)], [Number(antes.inventario), Number(antes.produccion)], "no se pierden filas");
+  });
+
+  await t.test("CR-019: Cargadera usa tallas T15 a T30 y la migración pasa «15 x 20» a T15", async () => {
+    const orden = { producto: "Cargadera", calibre: "2", color: "Blanco", cantidad: 40, prioridad: "media", materia_prima_id: bobina };
+    const conTalla = await llamar("POST", "/produccion", tokens.admin, { ...orden, medida: "t20" });
+    assert.equal(conTalla.status, 201, JSON.stringify(conTalla.body));
+    assert.equal(conTalla.body.medida, "T20");
+    const conAnchoLargo = await llamar("POST", "/produccion", tokens.admin, { ...orden, medida: "15 x 20" });
+    assert.equal(conAnchoLargo.status, 400);
+    assert.match(conAnchoLargo.body.mensaje, /Cargadera debe ser T15, T20, T25 o T30/);
+    const otraLinea = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Sencilla PP", medida: "T15", calibre: "1", color: "Natural", cantidad: 5 });
+    assert.equal(otraLinea.status, 400, "las demás líneas siguen con ancho x largo");
+    // Base anterior: existencias, orden y plantilla de Cargadera en «15 x 20»
+    await db.query("INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES ('Cargadera · 15 x 20 · calibre 3 · Negro', 'Cargadera', '15 x 20', '3', 'Negro', 70)");
+    await db.query("INSERT INTO produccion (producto, medida, calibre, color, cantidad, materia_prima_id) VALUES ('Cargadera', '15 x 20', '3', 'Negro', 10, ?)", [bobina]);
+    await db.query("INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad) VALUES ('Cargadera', '15 x 20', '3', 'Negro', 10, ?, 'media')", [bobina]);
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261110_cargadera_tallas.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [[inventario]] = await db.query("SELECT medida, producto, cantidad FROM inventario WHERE familia = 'Cargadera' AND calibre = '3' AND color = 'Negro'");
+    assert.deepEqual({ medida: inventario.medida, producto: inventario.producto, cantidad: Number(inventario.cantidad) },
+      { medida: "T15", producto: "Cargadera · T15 · calibre 3 · Negro", cantidad: 70 });
+    const [[quedan]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario WHERE familia = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM plantillas_produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') AS n");
+    assert.equal(Number(quedan.n), 0, "no queda ninguna Cargadera en «15 x 20»");
   });
 });

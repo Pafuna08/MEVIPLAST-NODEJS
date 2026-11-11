@@ -7,4 +7,9 @@ const productosTerminados = [
   "Troquel riñón",
 ];
 
-module.exports = { productosTerminados };
+// CR-019: Cargadera se mide por tallas; las demás líneas, «ancho x largo» (RN-025)
+const tallasPorLinea = {
+  Cargadera: ["T15", "T20", "T25", "T30"],
+};
+
+module.exports = { productosTerminados, tallasPorLinea };

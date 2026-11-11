@@ -1105,7 +1105,7 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
+                    "description": "Medida, calibre y color: la variante del inventario que recibe el avance. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada. Cargadera usa su talla: T15, T20, T25 o T30 (CR-019)"
                   },
                   "calibre": {
                     "type": "string",
@@ -1301,7 +1301,7 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada. Cargadera usa su talla: T15, T20, T25 o T30 (CR-019)"
                   },
                   "calibre": {
                     "type": "string",
@@ -1510,7 +1510,7 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Medida, calibre y color van juntos. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
+                    "description": "Medida, calibre y color van juntos. Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada. Cargadera usa su talla: T15, T20, T25 o T30 (CR-019)"
                   },
                   "calibre": {
                     "type": "string",
@@ -1888,7 +1888,7 @@
                   },
                   "medida": {
                     "type": "string",
-                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
+                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada. Cargadera usa su talla: T15, T20, T25 o T30 (CR-019)"
                   },
                   "calibre": {
                     "type": "string",

@@ -53,7 +53,7 @@ test("RN-026: la orden de producción exige una materia prima existente", async 
   const original = pool.query;
   pool.query = async (sql, params = []) => (sql.startsWith("SELECT id FROM materia_prima") ? [Number(params[0]) === 4 ? [{ id: 4 }] : []] : [[], []]);
   t.after(() => { pool.query = original; });
-  const orden = { producto: "Cargadera", cantidad: 10, medida: "40 x 60", calibre: "2", color: "Negro" };
+  const orden = { producto: "Sencilla PP", cantidad: 10, medida: "40 x 60", calibre: "2", color: "Negro" };
   for (const materia of [undefined, "", 0, null]) {
     await assert.rejects(productionService.crear({ ...orden, materia_prima_id: materia }, { id: 1, rol: "admin" }), rechazo(/Selecciona la materia prima/));
   }
@@ -62,11 +62,24 @@ test("RN-026: la orden de producción exige una materia prima existente", async 
 
 test("RN-025: la orden de producción y la bobina usan la misma regla", async () => {
   await assert.rejects(
-    productionService.crear({ producto: "Cargadera", cantidad: 10, medida: "40 x 60", calibre: "dos", color: "Negro" }, { id: 1, rol: "admin" }),
+    productionService.crear({ producto: "Sencilla PP", cantidad: 10, medida: "40 x 60", calibre: "dos", color: "Negro" }, { id: 1, rol: "admin" }),
     rechazo(/calibre/),
   );
   await assert.rejects(
     materiaPrimaService.crear({ tipo: "PEBD", medida: "grande", calibre: "1", color: "Natural", peso_rollo: 20 }, 1),
     rechazo(/ancho x largo/),
   );
+});
+
+test("Cargadera usa tallas T15, T20, T25 y T30; las demás líneas, ancho x largo (CR-019)", () => {
+  const { validarVariante } = require("../src/services/inventario.service");
+  const cargadera = (medida) => validarVariante({ familia: "Cargadera", medida, calibre: "2", color: "Blanco" });
+  assert.equal(cargadera("T15").medida, "T15");
+  assert.equal(cargadera(" t20 ").medida, "T20");
+  assert.equal(cargadera("T 25").producto, "Cargadera · T25 · calibre 2 · Blanco");
+  for (const medida of ["15 x 20", "T35", "T", "20"]) {
+    assert.throws(() => cargadera(medida), { statusCode: 400, message: /Cargadera debe ser T15, T20, T25 o T30/ }, medida);
+  }
+  assert.throws(() => validarVariante({ familia: "Sencilla PP", medida: "T15", calibre: "2", color: "Blanco" }), /ancho x largo/);
+  assert.equal(validarVariante({ familia: "Sencilla PP", medida: "6x9", calibre: "1", color: "Natural" }).medida, "6 x 9");
 });
