@@ -61,7 +61,14 @@ test("ingresar inventario crea una variante de una línea permitida con sus espe
   assert.deepEqual(movement.params, [18, 4, null, "ingreso_manual", 500]);
 });
 
-test("ingresar inventario rechaza líneas fuera del catálogo MEVIPLAST", async () => {
+test("ingresar inventario rechaza líneas fuera del catálogo MEVIPLAST", async (t) => {
+  // Una línea que no es de base se busca en lineas_producto (CR-020)
+  const originalQuery = pool.query;
+  pool.query = async (sql) => {
+    if (sql.startsWith("SELECT nombre FROM lineas_producto")) return [[{ nombre: "Sencilla PP" }, { nombre: "Cargadera" }]];
+    throw new Error(`consulta inesperada: ${sql}`);
+  };
+  t.after(() => { pool.query = originalQuery; });
   await assert.rejects(
     inventoryService.ingresar(
       {

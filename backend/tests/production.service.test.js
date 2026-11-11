@@ -67,7 +67,13 @@ test("actualizarOrden preserva relaciones omitidas y no deja quitar la materia p
   assert.deepEqual(updatedOrder.params, [4, 7]);
 });
 
-test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async () => {
+test("crear plantilla rechaza productos fuera del catálogo MEVIPLAST", async (t) => {
+  const originalQuery = pool.query;
+  pool.query = async (sql) => {
+    if (sql.startsWith("SELECT nombre FROM lineas_producto")) return [[{ nombre: "Adhesivo PP" }, { nombre: "Sencilla PP" }]];
+    throw new Error(`consulta inesperada: ${sql}`);
+  };
+  t.after(() => { pool.query = originalQuery; });
   await assert.rejects(
     productionService.crearPlantilla(
       { producto: "Sello fondo", cantidad: 20 },

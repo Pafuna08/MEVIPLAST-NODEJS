@@ -1,6 +1,7 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { productosTerminados } = require("../constants/productosTerminados");
+const lineasService = require("./lineas.service");
 const { motivosSalida } = require("../constants/motivosSalida");
 const { normalizarVariante } = require("../utils/variantes");
 const { entero } = require("../utils/numeros");
@@ -26,9 +27,10 @@ function validarMotivo(motivo, detalle) {
   return texto ? `${motivo}: ${texto}` : motivo;
 }
 
-// Línea del catálogo (RN-012) y variante con formato válido (RN-025); devuelve los valores normalizados
-function validarVariante({ familia, medida, calibre, color }) {
-  if (!productosTerminados.includes(familia)) {
+// Línea del catálogo (RN-012, CR-020: las de lineas_producto) y variante con formato válido (RN-025);
+// devuelve los valores normalizados
+function validarVariante({ familia, medida, calibre, color }, lineas = productosTerminados) {
+  if (!lineas.includes(familia)) {
     const error = new Error("Selecciona una línea de producto válida");
     error.statusCode = 400;
     throw error;
@@ -54,11 +56,12 @@ function validarVariante({ familia, medida, calibre, color }) {
 }
 
 async function listar() {
+  const lineas = await lineasService.listar();
   const [filas] = await pool.query(
     `SELECT * FROM inventario
-     WHERE familia IN (${productosTerminados.map(() => "?").join(", ")})
+     WHERE familia IN (${lineas.map(() => "?").join(", ")})
      ORDER BY familia, medida, calibre, color`,
-    productosTerminados,
+    lineas,
   );
   return filas;
 }
@@ -88,7 +91,7 @@ async function ingresar(
     error.statusCode = 400;
     throw error;
   }
-  const variante = validarVariante({ familia, medida, calibre, color });
+  const variante = validarVariante({ familia, medida, calibre, color }, await lineasService.paraValidar(familia));
   const { producto } = variante;
 
   const connection = await pool.getConnection();

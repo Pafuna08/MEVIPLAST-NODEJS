@@ -9,6 +9,7 @@ const produccionRoutes = require("./produccion.routes");
 const inventarioRoutes = require("./inventario.routes");
 const ventasRoutes = require("./ventas.routes");
 const reportesRoutes = require("./reportes.routes");
+const lineasRoutes = require("./lineas.routes");
 
 const router = Router();
 
@@ -34,6 +35,8 @@ router.use("/materia-prima", materiaPrimaRoutes);
 router.use("/produccion", produccionRoutes);
 
 // EP-003 Inventario y Ventas
+// Catálogo de líneas de producto terminado (RN-012, CR-020)
+router.use("/lineas", lineasRoutes);
 router.use("/inventario", inventarioRoutes);
 router.use("/ventas", ventasRoutes);
 

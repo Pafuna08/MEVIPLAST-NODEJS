@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Field, FormPanel, Intro, OrderRow, Panel, VariantFields, orderVariant } from "../comun/componentes.jsx";
-import { finishedProductFamilies } from "../comun/constantes.js";
+import { CREATE_OPTION } from "../comun/constantes.js";
+import { NewLineDialog, NewMaterialDialog, useSelectAfterRender } from "../comun/CrearOpcion.jsx";
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
 import { Dialogo } from "../comun/Dialogo.jsx";
 
 export function Production({
   data,
+  lines,
   role,
   view,
   onSubmit,
@@ -16,8 +18,24 @@ export function Production({
   onAssignOrder,
   onSaveTemplate,
   onDeleteTemplate,
+  onCreateLine,
+  onCreateMaterial,
 }) {
   const [editingOrder, setEditingOrder] = useState(null);
+  // «+ Crear…» en la nueva orden: qué se crea y el selector que debe quedar con lo creado
+  const [creating, setCreating] = useState(null);
+  const selectAfterRender = useSelectAfterRender();
+  function offerCreate(event, kind) {
+    if (event.target.value !== CREATE_OPTION) return;
+    // El selector vuelve a «Selecciona…» mientras la ventana está abierta (y la medida, a «ancho x largo»)
+    event.target.value = "";
+    event.target.dispatchEvent(new Event("change", { bubbles: true }));
+    setCreating({ kind, select: event.target });
+  }
+  function finishCreate(value) {
+    selectAfterRender(creating?.select, value);
+    setCreating(null);
+  }
   const [inlineWarning, checkInline] = useObligatorios();
   const [cancelTarget, setCancelTarget] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
@@ -103,9 +121,11 @@ export function Production({
                 key={`producto-${selectedTemplateId}`}
                 name="producto"
                 defaultValue={safeProductName(selectedTemplate?.producto) || ""}
+                onChange={(event) => offerCreate(event, "line")}
               >
                 <option value="" disabled>Selecciona una línea</option>
-                {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
+                {lines.map((family) => <option key={family} value={family}>{family}</option>)}
+                <option value={CREATE_OPTION}>+ Crear nueva línea…</option>
               </select>
             </Field>
             <VariantFields key={`variante-${selectedTemplateId}`} idPrefix="orden-nueva" order={selectedTemplate} />
@@ -122,11 +142,13 @@ export function Production({
                 key={`materia-${selectedTemplateId}`}
                 name="materia_prima_id"
                 defaultValue={selectedTemplate?.materia_prima_id || ""}
+                onChange={(event) => offerCreate(event, "material")}
               >
                 <option value="" disabled>Selecciona la materia prima</option>
                 {data.materials.map((material) => (
                   <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>
                 ))}
+                <option value={CREATE_OPTION}>+ Crear nuevo material…</option>
               </select>
             </Field>
             <Field label="Prioridad">
@@ -156,7 +178,7 @@ export function Production({
             saving={false}
           >
             <Field label="Producto">
-              <select name="producto" defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select>
+              <select name="producto" defaultValue=""><option value="" disabled>Selecciona una línea</option>{lines.map((family) => <option key={family} value={family}>{family}</option>)}</select>
             </Field>
             <VariantFields idPrefix="plantilla-nueva" />
             <Field label="Meta habitual">
@@ -207,7 +229,7 @@ export function Production({
                   if (await onEditOrder(order.id, payload)) setEditingOrder(null);
                 }}
               >
-                <Field label="Producto"><select name="producto" defaultValue={order.producto}>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+                <Field label="Producto"><select name="producto" defaultValue={order.producto}>{lines.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
                 <VariantFields idPrefix={`orden-${order.id}`} order={order} />
                 <Field label="Meta"><input name="cantidad" type="number" defaultValue={order.cantidad} /></Field>
                 <Field label="Materia prima"><select name="materia_prima_id" defaultValue={order.materia_prima_id || ""}><option value="" disabled>Selecciona la materia prima</option>{data.materials.map((material) => <option key={material.id} value={material.id}>{sanitizeText(material.nombre)}</option>)}</select></Field>
@@ -274,6 +296,8 @@ export function Production({
             </div>
           </Dialogo>
       )}
+      {creating?.kind === "line" && <NewLineDialog onCreate={onCreateLine} onClose={() => setCreating(null)} onCreated={finishCreate} />}
+      {creating?.kind === "material" && <NewMaterialDialog onCreate={onCreateMaterial} onClose={() => setCreating(null)} onCreated={(material) => finishCreate(material.id)} />}
     </>
   );
 }

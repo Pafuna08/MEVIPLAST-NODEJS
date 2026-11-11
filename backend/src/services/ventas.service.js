@@ -1,6 +1,6 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
-const { productosTerminados } = require("../constants/productosTerminados");
+const lineasService = require("./lineas.service");
 const { LIMITES, entero, decimal, leerNumero, errorDeDato, miles } = require("../utils/numeros");
 
 async function listar(actor) {
@@ -68,7 +68,7 @@ async function registrar(
       "SELECT id, producto, familia, cantidad FROM inventario WHERE id = ? FOR UPDATE",
       [inventario_id],
     );
-    if (inventario.length === 0 || !productosTerminados.includes(inventario[0].familia)) {
+    if (inventario.length === 0 || !(await lineasService.paraValidar(inventario[0].familia)).includes(inventario[0].familia)) {
       throw new Error("Selecciona una variante de producto válida");
     }
     productoNombre = inventario[0].producto;

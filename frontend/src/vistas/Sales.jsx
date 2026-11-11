@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DataTable, Field, FormPanel, Intro, Panel } from "../comun/componentes.jsx";
-import { finishedProductFamilies, packageSizes } from "../comun/constantes.js";
+import { packageSizes } from "../comun/constantes.js";
 import { money, number, packagesLabel, sanitizeText } from "../comun/formato.js";
 
 // «10 x 15 · calibre 2 · Transparente»; los registros anteriores a la variante no la tienen
@@ -9,10 +9,10 @@ function variantLabel(item) {
   return `${sanitizeText(item.medida || "Sin medida")} · calibre ${sanitizeText(item.calibre || "—")} · ${sanitizeText(item.color || "Sin color")}`;
 }
 
-export function Sales({ data, onSubmit, saving, onReceipt }) {
+export function Sales({ data, lines, onSubmit, saving, onReceipt }) {
   const [selectedInventoryId, setSelectedInventoryId] = useState("");
   const [selectedFamily, setSelectedFamily] = useState("");
-  const products = data.inventory.filter((item) => finishedProductFamilies.includes(item.familia));
+  const products = data.inventory.filter((item) => lines.includes(item.familia));
   const selectedProduct = products.find((item) => String(item.id) === selectedInventoryId && item.familia === selectedFamily);
   const availableProducts = products.filter((item) => Number(item.cantidad) > 0);
   const lineReferences = availableProducts.filter((item) => item.familia === selectedFamily);
@@ -21,7 +21,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
     <>
       <Intro title="Ventas" description="Elige una línea y una variante disponible; las existencias se descuentan al registrar la venta." />
       <div className="product-family-grid">
-        {finishedProductFamilies.map((family) => {
+        {lines.map((family) => {
           const variants = products.filter((item) => item.familia === family);
           const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
           // Solo cuentan las referencias con unidades: son las que se pueden vender
@@ -71,7 +71,7 @@ export function Sales({ data, onSubmit, saving, onReceipt }) {
             setSelectedInventoryId("");
           }}>
             <option value="" disabled>Selecciona una línea</option>
-            {finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}
+            {lines.map((family) => <option key={family} value={family}>{family}</option>)}
           </select>
         </Field>
         <Field label="Variante (medida / calibre / color)">

@@ -19,6 +19,8 @@ Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Resp
 | GET         | `/materia-prima/movimientos`, `/materia-prima/{id}/movimientos`     | Admin, supervisor, almacenista         | Consultar ledger de materias primas    |
 | POST        | `/materia-prima/movimientos`                                         | Admin, almacenista; consumo: admin/supervisor | Compra, ajuste o consumo asociado a orden |
 | GET         | `/produccion`                                                        | Admin; supervisor limitado a órdenes entregadas; operario limitado a sus órdenes | Consultar órdenes (abiertas primero, por prioridad) |
+| GET         | `/lineas`                                                            | Admin, supervisor, almacenista, vendedor | Líneas de producto terminado: las seis de RN-012 y las que agregó el administrador (CR-020) |
+| POST        | `/lineas`                                                            | Admin                                  | Crear una línea; nombre de 3 a 60 caracteres, 409 si ya existe (CR-020) |
 | GET         | `/produccion/operarios`                                              | Admin, supervisor                      | Consultar operarios activos            |
 | GET         | `/produccion/supervisores`                                           | Admin                                  | Consultar supervisores activos         |
 | GET         | `/produccion/plantillas`                                             | Admin, supervisor                      | Consultar plantillas de órdenes        |
