@@ -73,6 +73,8 @@ Para verificar el despliegue, `GET /api/health` responde 200 si la API y la base
 
 ### Despliegue en la nube
 
+Versión publicada: **https://meviplast.onrender.com** (Render, plan gratuito: si nadie la usa en 15 minutos se duerme y la primera visita tarda entre 30 y 60 segundos). Las cuentas de esa versión tienen contraseñas propias; no son las demo y no están en el repositorio.
+
 El repositorio trae [`render.yaml`](render.yaml) para publicar el panel y la API en Render, con la base en un MySQL 8 administrado (Aiven) por conexión cifrada. Los pasos, las variables y la verificación están en [`docs/operations/despliegue-render.md`](docs/operations/despliegue-render.md). En un servidor público, `db:init` se corre con `DB_DEMO=false` y `ADMIN_PASSWORD`, para no crear las cuentas demo.
 
 El servidor escribe sus registros como una línea JSON por evento, con `fecha`, `nivel`, `modulo` y `mensaje`: el arranque, la conexión a MySQL, cada petición a la API (método, ruta, estado, duración y usuario, nunca el cuerpo) y los errores. Los eventos normales van a la salida estándar y las advertencias y errores a la de errores. El nivel se elige con `LOG_LEVEL` (`info` por defecto) y los campos sensibles se ocultan. Para guardarlos, redirige la salida a un archivo o usa el servicio que ejecute el servidor. La API no acepta llamadas desde otros dominios salvo los listados en `CORS_ORIGINS`; el panel servido por Express no lo necesita.
