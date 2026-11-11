@@ -85,14 +85,19 @@ function hojaTabla(libro, nombre, columnas, filas) {
   return hoja;
 }
 
+// Datos del reporte del periodo; el Excel y el PDF usan los mismos (RF-028)
+function cargarDatos(tipo, periodo, ahora) {
+  const config = COLUMNAS[tipo];
+  if (config.cargar) return config.cargar(periodo, ahora);
+  return tipo === "produccion"
+    ? reportesService.detalleProduccion(periodo, ahora)
+    : reportesService.detalleVentas(periodo, ahora);
+}
+
 async function libroDetalle(tipo, periodo, ahora = new Date()) {
   const config = COLUMNAS[tipo];
   if (!config) throw new Error("El reporte debe ser de producción, ventas o rendimiento");
-  const datos = config.cargar
-    ? await config.cargar(periodo, ahora)
-    : tipo === "produccion"
-      ? await reportesService.detalleProduccion(periodo, ahora)
-      : await reportesService.detalleVentas(periodo, ahora);
+  const datos = await cargarDatos(tipo, periodo, ahora);
 
   const libro = new ExcelJS.Workbook();
   libro.creator = "MEVIPLAST";
@@ -125,4 +130,6 @@ async function libroDetalle(tipo, periodo, ahora = new Date()) {
   };
 }
 
-module.exports = { libroDetalle };
+const FORMATOS = { DINERO: FORMATO_DINERO, UNIDADES: FORMATO_UNIDADES, FECHA: FORMATO_FECHA, PORCENTAJE: FORMATO_PORCENTAJE };
+
+module.exports = { libroDetalle, cargarDatos, COLUMNAS, FORMATOS };

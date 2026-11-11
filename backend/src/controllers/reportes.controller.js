@@ -1,5 +1,6 @@
 const reportesService = require("../services/reportes.service");
 const reportesExcel = require("../services/reportesExcel.service");
+const reportesPdf = require("../services/reportesPdf.service");
 const log = require("../utils/logger").crearLogger("reportes");
 
 async function produccion(req, res) {
@@ -98,8 +99,32 @@ function exportarExcel(tipo) {
   };
 }
 
+// El mismo detalle en PDF, para abrirlo en una pestaña e imprimirlo o descargarlo (RF-028)
+function exportarPdf(tipo) {
+  return async (req, res) => {
+    try {
+      const { buffer, nombreArchivo } = await reportesPdf.pdfDetalle(tipo, req.query.periodo);
+      res.set({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${nombreArchivo}"`,
+        "Cache-Control": "no-store",
+      });
+      res.send(buffer);
+    } catch (error) {
+      if (error.message.startsWith("El periodo")) {
+        return res.status(400).json({ mensaje: error.message });
+      }
+      log.error("Error al atender la petición", { error });
+      res.status(500).json({ mensaje: "Error al generar el reporte en PDF" });
+    }
+  };
+}
+
 module.exports = {
   produccion,
+  pdfProduccion: exportarPdf("produccion"),
+  pdfVentas: exportarPdf("ventas"),
+  pdfRendimiento: exportarPdf("rendimiento"),
   detalleProduccion,
   detalleVentas,
   excelProduccion: exportarExcel("produccion"),

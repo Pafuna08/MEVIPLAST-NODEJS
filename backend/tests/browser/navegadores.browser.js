@@ -134,6 +134,21 @@ async function guardarConConfirmacion(pagina, form) {
 
 const formulario = (pagina, titulo) => pagina.locator("section.form-panel", { has: pagina.locator("h3", { hasText: titulo }) });
 
+// «Abrir PDF» abre el PDF en otra pestaña: Edge y Chrome lo muestran en su visor; el Firefox de Playwright
+// no trae visor de PDF y lo descarga. En los dos casos llegó el PDF a la pestaña nueva.
+async function abrePdf(contexto, boton) {
+  // Se espera la ventana que abre la página (window.open), no cualquier página nueva: Edge sin ventana abre
+  // además su página de descargas (edge://downloads-hub) después de bajar el Excel
+  const [pestana] = await Promise.all([boton.page().waitForEvent("popup", { timeout: 20000 }), boton.click()]);
+  const abierto = await new Promise((resolve) => {
+    pestana.waitForURL(/^blob:/, { timeout: 15000 }).then(() => resolve("visor"), () => {});
+    pestana.waitForEvent("download", { timeout: 15000 }).then(() => resolve("descarga"), () => {});
+    setTimeout(() => resolve(null), 16000);
+  });
+  await Promise.race([pestana.close().catch(() => {}), new Promise((resolve) => setTimeout(resolve, 5000))]);
+  return abierto;
+}
+
 // Flujos críticos. Cada uno recibe el navegador y su nombre, y devuelve un detalle corto.
 const FLUJOS = [
   ["Sitio público e inicio de sesión fallido", async (navegador) => {
@@ -217,16 +232,7 @@ const FLUJOS = [
     await comprobante.waitFor({ timeout: 10000 });
     if ((await comprobante.locator(".receipt-table tbody tr").count()) !== 2) problemas.push("el comprobante no tiene los dos productos");
     // «Abrir PDF» abre el comprobante en otra pestaña, con el visor del navegador
-    const [pestana] = await Promise.all([contexto.waitForEvent("page"), comprobante.locator("button", { hasText: "Abrir PDF" }).click()]);
-    // Edge y Chrome lo muestran en su visor; el Firefox de Playwright no trae visor de PDF y lo descarga:
-    // en los dos casos llegó el PDF a la pestaña nueva
-    const abierto = await new Promise((resolve) => {
-      pestana.waitForURL(/^blob:/, { timeout: 15000 }).then(() => resolve("visor"), () => {});
-      pestana.waitForEvent("download", { timeout: 15000 }).then(() => resolve("descarga"), () => {});
-      setTimeout(() => resolve(null), 16000);
-    });
-    if (!abierto) problemas.push("«Abrir PDF» no abrió el comprobante en otra pestaña");
-    await pestana.close();
+    if (!(await abrePdf(contexto, comprobante.locator("button", { hasText: "Abrir PDF" })))) problemas.push("«Abrir PDF» no abrió el comprobante en otra pestaña");
     const numero = await comprobante.locator(".receipt-number span").innerText();
     if (!/V-\d{6}/.test(numero)) throw new Error(`número de comprobante: ${numero}`);
     await comprobante.locator("text=Cerrar").click();
@@ -513,6 +519,8 @@ const FLUJOS = [
     const [descarga] = await Promise.all([pagina.waitForEvent("download"), pagina.click("text=Descargar Excel")]);
     const nombre = descarga.suggestedFilename();
     const tam = fs.statSync(await descarga.path()).size;
+    // RF-028: el reporte también se abre en PDF en otra pestaña
+    if (!(await abrePdf(contexto, pagina.locator(".report-actions button", { hasText: "Abrir PDF" })))) problemas.push("«Abrir PDF» no abrió el reporte");
     // Desde el reporte, el menú lleva a otra sección (antes se quedaba en el reporte)
     await Promise.all([pagina.waitForURL(/dashboard\.html#usuarios$/), pagina.click(".sidebar nav >> text=Usuarios")]);
     await pagina.locator(".page-intro h2", { hasText: "Usuarios" }).waitFor({ timeout: 10000 });
@@ -545,6 +553,7 @@ const FLUJOS = [
     if (!/^\d+(,\d)? %$/.test(cumplimiento)) throw new Error(`cumplimiento «${cumplimiento}»`);
     const [descarga] = await Promise.all([pagina.waitForEvent("download"), pagina.click("text=Descargar Excel")]);
     const nombre = descarga.suggestedFilename();
+    if (!(await abrePdf(contexto, pagina.locator(".report-actions button", { hasText: "Abrir PDF" })))) problemas.push("«Abrir PDF» no abrió el reporte de rendimiento");
     await contexto.close();
     if (!/^reporte-rendimiento-mensual-\d{4}-\d{2}-\d{2}\.xlsx$/.test(nombre)) throw new Error(`descarga ${nombre}`);
     if (problemas.length) throw new Error(problemas.join("; "));

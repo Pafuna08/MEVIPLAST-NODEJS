@@ -202,6 +202,16 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     const descargar = (ruta, token) => fetch(`${base}${ruta}`, { headers: { Authorization: `Bearer ${token}` } });
     const excel = await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.admin);
     assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.supervisor)).status, 403, "CR-021");
+    // RF-028: el mismo detalle en PDF, para abrirlo en otra pestaña
+    for (const [ruta, token] of [["/reportes/ventas/detalle/pdf?periodo=semanal", tokens.admin], ["/reportes/produccion/detalle/pdf?periodo=mensual", tokens.supervisor], ["/reportes/rendimiento/pdf?periodo=anual", tokens.supervisor]]) {
+      const pdf = await descargar(ruta, token);
+      assert.equal(pdf.status, 200, ruta);
+      assert.equal(pdf.headers.get("content-type"), "application/pdf");
+      assert.match(pdf.headers.get("content-disposition"), /^inline; filename="reporte-\w+-\w+-\d{4}-\d{2}-\d{2}\.pdf"$/);
+      assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+    }
+    assert.equal((await descargar("/reportes/ventas/detalle/pdf?periodo=semanal", tokens.supervisor)).status, 403, "CR-021");
+    assert.equal((await descargar("/reportes/produccion/detalle/pdf?periodo=quincenal", tokens.admin)).status, 400);
     assert.equal(excel.status, 200);
     assert.match(excel.headers.get("content-type"), /spreadsheetml/);
     assert.match(excel.headers.get("content-disposition"), /reporte-ventas-semanal-\d{4}-\d{2}-\d{2}\.xlsx/);

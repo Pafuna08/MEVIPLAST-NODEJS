@@ -2533,6 +2533,58 @@
         ]
       }
     },
+    "/reportes/produccion/detalle/pdf": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de producción en PDF",
+        "x-requisitos": "RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte en PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ],
+        "description": "El mismo detalle en PDF (RF-028), para abrirlo en otra pestaña e imprimirlo o descargarlo con el visor del navegador."
+      }
+    },
     "/reportes/produccion/detalle/excel": {
       "get": {
         "tags": [
@@ -2673,6 +2725,57 @@
         ]
       }
     },
+    "/reportes/ventas/detalle/pdf": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Detalle de ventas en PDF",
+        "x-requisitos": "RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte en PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ],
+        "description": "El mismo detalle en PDF (RF-028), para abrirlo en otra pestaña e imprimirlo o descargarlo con el visor del navegador."
+      }
+    },
     "/reportes/ventas/detalle/excel": {
       "get": {
         "tags": [
@@ -2764,6 +2867,58 @@
           "supervisor"
         ],
         "description": "Por cada operario activo: órdenes asignadas y creadas en el periodo (sin las canceladas), finalizadas, meta, producido (limitado a la meta de cada orden), cumplimiento = producido / meta × 100 (null si no tiene órdenes) y unidades que registró en el periodo."
+      }
+    },
+    "/reportes/rendimiento/pdf": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Cumplimiento de la meta por operario en PDF",
+        "x-requisitos": "RF-027, RF-028",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "diario",
+                "semanal",
+                "mensual",
+                "anual"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte en PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor"
+        ],
+        "description": "El mismo detalle en PDF (RF-028), para abrirlo en otra pestaña e imprimirlo o descargarlo con el visor del navegador."
       }
     },
     "/reportes/rendimiento/excel": {

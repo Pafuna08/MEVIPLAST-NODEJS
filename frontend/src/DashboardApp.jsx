@@ -237,16 +237,16 @@ export default function DashboardApp() {
     }
   }
 
-  // El comprobante en PDF se abre en otra pestaña, con el visor del navegador (imprimir y descargar).
+  // Un PDF (comprobante o reporte) se abre en otra pestaña, con el visor del navegador (imprimir y descargar).
   // La pestaña se abre en el mismo clic para que el navegador no la bloquee; el PDF llega después.
-  async function openReceiptPdf(id) {
+  async function openPdf(apiPath, title) {
     const tab = window.open("", "_blank");
     if (tab) {
-      tab.document.title = "Comprobante de venta";
-      tab.document.body.textContent = "Generando el comprobante…";
+      tab.document.title = title;
+      tab.document.body.textContent = `Generando ${title.toLowerCase()}…`;
     }
     try {
-      const response = await fetch(`/api/ventas/${id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(apiPath, { headers: { Authorization: `Bearer ${token}` } });
       if (response.status === 401) {
         tab?.close();
         localStorage.removeItem("meviplastToken");
@@ -256,7 +256,7 @@ export default function DashboardApp() {
       }
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.mensaje || "No fue posible generar el PDF del comprobante.");
+        throw new Error(data.mensaje || "No fue posible generar el PDF.");
       }
       const url = URL.createObjectURL(await response.blob());
       if (tab) {
@@ -274,6 +274,14 @@ export default function DashboardApp() {
       tab?.close();
       setToast(cause.message);
     }
+  }
+
+  const openReceiptPdf = (id) => openPdf(`/api/ventas/${id}/comprobante/pdf`, "El comprobante de venta");
+
+  // El reporte del periodo en PDF (RF-028)
+  function openReportPdf() {
+    const ruta = requestedReport === "rendimiento" ? "rendimiento/pdf" : `${requestedReport}/detalle/pdf`;
+    return openPdf(`/api/reportes/${ruta}?periodo=${requestedPeriod}`, "El reporte");
   }
 
   async function openReceipt(id) {
@@ -546,6 +554,7 @@ export default function DashboardApp() {
     deleteProductionTemplate,
     openReceipt,
     downloadReportExcel,
+    openReportPdf,
     createLine,
     createMaterial,
   });
@@ -690,10 +699,11 @@ function renderView({
   deleteProductionTemplate,
   openReceipt,
   downloadReportExcel,
+  openReportPdf,
   createLine,
   createMaterial,
 }) {
-  if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} onReceipt={openReceipt} />;
+  if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} onOpenPdf={openReportPdf} onReceipt={openReceipt} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} onCreateMaterial={createMaterial} />;

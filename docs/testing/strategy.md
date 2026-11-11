@@ -65,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-122 pruebas unitarias y de rutas con `node:test` (122 aprobadas el 2026-11-11), en 26 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+125 pruebas unitarias y de rutas con `node:test` (125 aprobadas el 2026-11-11), en 27 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -86,6 +86,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 52 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
 - `production.service.test.js` (17): edición parcial sin quitar la materia prima (RN-026), plantillas del catálogo con variante y materia prima, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada si no existe).
 - `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
+- `reportesPdf.test.js` (3): el reporte en PDF es un PDF válido con su título y el nombre de archivo del periodo; uno largo sigue en varias páginas; un periodo o un tipo inválidos se rechazan.
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
 - `respuestas-api.test.js` (5): JSON mal formado (400), eliminación solo de órdenes pendientes sin avance (400 y 404), usuario inexistente (404), cantidad o material inválido al editar una bobina (400) y fechas inexistentes en la auditoría (400) (DEF-023).
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
