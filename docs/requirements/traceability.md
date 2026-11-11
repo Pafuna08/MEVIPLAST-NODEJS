@@ -62,7 +62,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028, CP-078, CP-088 (lista de referencias), CP-091 (paquetes de 50, 100 o 500 y topes de venta, CR-018) |
 | RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031 |
 | RF-022 | Consultar historial de ventas | Implementado | MVP | API-09 | CP-026 |
-| RF-023 | Generar comprobante de venta | Implementado | MVP | API-09 | CP-055, CP-056, CP-057 |
+| RF-023 | Generar comprobante de venta | Implementado | MVP | API-09 | CP-055, CP-056, CP-057, CP-097 (desde el reporte de ventas; el supervisor no lo ve, CR-021) |
 | RF-024 | Reporte de producción por periodo | Implementado | MVP | API-10 | CP-017, CP-018, CP-028 |
 | RF-025 | Reporte de ventas por periodo | Implementado | MVP | API-10 | CP-019, CP-028 |
 | RF-026 | Reporte de inventario | Parcial | MVP | API-10 | — |

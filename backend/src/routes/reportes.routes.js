@@ -5,13 +5,15 @@ const { verificarToken, verificarRol } = require("../middlewares/auth.middleware
 const router = Router();
 
 router.use(verificarToken, verificarRol("admin", "supervisor"));
+// CR-021: las ventas (dinero, precios y clientes) son del administrador; el supervisor ve producción y rendimiento
+const soloAdmin = verificarRol("admin");
 
 router.get("/produccion", controller.produccion);
 router.get("/produccion/detalle", controller.detalleProduccion);
 router.get("/produccion/detalle/excel", controller.excelProduccion);
-router.get("/ventas", controller.ventas);
-router.get("/ventas/detalle", controller.detalleVentas);
-router.get("/ventas/detalle/excel", controller.excelVentas);
+router.get("/ventas", soloAdmin, controller.ventas);
+router.get("/ventas/detalle", soloAdmin, controller.detalleVentas);
+router.get("/ventas/detalle/excel", soloAdmin, controller.excelVentas);
 router.get("/rendimiento", controller.rendimiento);
 router.get("/rendimiento/excel", controller.excelRendimiento);
 router.get("/inventario", controller.inventario);

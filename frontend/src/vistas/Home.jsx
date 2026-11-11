@@ -40,7 +40,10 @@ export function Home({ data, role, navigate }) {
         ["Unidades producidas", number(produced), "UN", producedDetail],
         ["Inventario terminado", number(data.inventory.reduce((sum, item) => sum + Number(item.cantidad), 0)), "INV",
           `Unidades en ${data.inventory.filter((item) => Number(item.cantidad) > 0).length} variantes con existencias`],
-        ["Ventas", money(data.sales.resumen.total_vendido), "$", `${number(salesCount)} ${salesCount === 1 ? "venta registrada" : "ventas registradas"}`],
+        // CR-021: el supervisor no ve ventas; en su lugar, las órdenes finalizadas
+        data.sales
+          ? ["Ventas", money(data.sales.resumen.total_vendido), "$", `${number(salesCount)} ${salesCount === 1 ? "venta registrada" : "ventas registradas"}`]
+          : ["Completadas", data.orders.filter((order) => order.estado === "finalizado").length, "OK", "Órdenes finalizadas"],
       ];
   const completed = data.orders.filter((order) => order.estado === "finalizado").length;
   const soldOut = data.inventory.filter((item) => Number(item.cantidad) === 0).length;

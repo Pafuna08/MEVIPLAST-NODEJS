@@ -938,10 +938,10 @@ th {
   color: var(--steel);
   font-size: 0.82rem;
 }
-.orders-table tbody tr.clickable-row {
+tbody tr.clickable-row {
   cursor: pointer;
 }
-.orders-table tbody tr.clickable-row:hover {
+tbody tr.clickable-row:hover {
   background: #f4f7fa;
 }
 .link-button {

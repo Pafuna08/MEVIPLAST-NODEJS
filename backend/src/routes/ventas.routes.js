@@ -11,15 +11,15 @@ router.use(verificarToken);
 
 router.get(
   "/",
-  verificarRol("admin", "supervisor", "vendedor"),
+  verificarRol("admin", "vendedor"),
   controller.listar,
 );
 router.get(
   "/:id/comprobante",
-  verificarRol("admin", "supervisor", "vendedor"),
+  verificarRol("admin", "vendedor"),
   controller.comprobante,
 );
-// El supervisor consulta ventas y comprobantes, pero no las registra (DEF-007).
+// El supervisor no registra ventas (DEF-007) ni las consulta (CR-021): son información comercial.
 router.post("/", verificarRol("admin", "vendedor"), controller.registrar);
 
 module.exports = router;

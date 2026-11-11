@@ -2,7 +2,8 @@ import React from "react";
 import { DataTable, Intro, Panel } from "../comun/componentes.jsx";
 import { money, number, percentFormat, safeProductName, sanitizeText } from "../comun/formato.js";
 
-export function Reports() {
+export function Reports({ role }) {
+  const isAdmin = role === "admin";
   const periodos = [
     ["diario", "Diario"],
     ["semanal", "Semanal"],
@@ -19,13 +20,13 @@ export function Reports() {
   }
   return (
     <>
-      <Intro title="Reportes" description="Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
+      <Intro title="Reportes" description={isAdmin ? "Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." : "Consulta el seguimiento de producción y el rendimiento de los operarios por periodo."} action={<button className="primary-action" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>} />
       <section className="report-categories">
         {[
           ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
           ["ventas", "Ventas", "Consulta ventas, unidades, clientes y valores registrados."],
           ["rendimiento", "Rendimiento de operarios", "Consulta el % de cumplimiento de la meta de cada operario."],
-        ].map(([tipo, titulo, descripcion]) => (
+        ].filter(([tipo]) => isAdmin || tipo !== "ventas").map(([tipo, titulo, descripcion]) => (
           <Panel key={tipo} title={`Reporte de ${titulo.toLowerCase()}`} className="report-category">
             <p>{descripcion}</p>
             <div className="report-periods">
@@ -47,7 +48,7 @@ export function Reports() {
   );
 }
 
-export function ReportDetail({ data, onExportExcel }) {
+export function ReportDetail({ data, onExportExcel, onReceipt }) {
   const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
   const titulo = { produccion: "producción", ventas: "ventas", rendimiento: "rendimiento de operarios" }[reporteTipo];
   const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
@@ -97,10 +98,18 @@ export function ReportDetail({ data, onExportExcel }) {
             cells: <><td>{item.fecha}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{item.orden_id ? `#${item.orden_id}` : "—"}</td><td>{sanitizeText(item.operario || "No registrado")}</td><td>{number(item.cantidad)}</td></>,
           }))} />
         ) : (
-          <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]} rows={data.detalle.map((item) => ({
-            key: item.id,
-            cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td></>,
-          }))} />
+          <>
+            {data.detalle.length > 0 && <p className="panel-note">Haz clic en una venta para ver su comprobante e imprimirlo o guardarlo en PDF.</p>}
+            <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total", "Comprobante"]} rows={data.detalle.map((item) => ({
+              key: item.id,
+              className: "clickable-row",
+              onClick: () => onReceipt(item.id),
+              cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td><td><button className="link-button" type="button" aria-label={`Ver el comprobante de la venta a ${sanitizeText(item.cliente)}`} onClick={(event) => {
+                event.stopPropagation();
+                onReceipt(item.id);
+              }}>Ver</button></td></>,
+            }))} />
+          </>
         )}
         {!data.detalle.length && <p className="empty">No hay registros en este periodo.</p>}
       </Panel>

@@ -24,7 +24,7 @@ export function DataTable({ columns, rows, empty = "No hay datos para mostrar." 
         </thead>
         <tbody>
           {rows.length ? (
-            rows.map((row, index) => <tr key={row.key ?? index}>{row.cells}</tr>)
+            rows.map((row, index) => <tr key={row.key ?? index} className={row.className} onClick={row.onClick}>{row.cells}</tr>)
           ) : (
             <tr><td colSpan={columns.length}>{empty}</td></tr>
           )}

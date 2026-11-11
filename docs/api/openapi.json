@@ -2243,7 +2243,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "vendedor"
         ]
       },
@@ -2380,7 +2379,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "vendedor"
         ]
       }
@@ -2553,8 +2551,7 @@
           }
         },
         "x-roles": [
-          "admin",
-          "supervisor"
+          "admin"
         ]
       }
     },
@@ -2603,8 +2600,7 @@
           }
         },
         "x-roles": [
-          "admin",
-          "supervisor"
+          "admin"
         ]
       }
     },
@@ -2646,8 +2642,7 @@
           }
         },
         "x-roles": [
-          "admin",
-          "supervisor"
+          "admin"
         ]
       }
     },
