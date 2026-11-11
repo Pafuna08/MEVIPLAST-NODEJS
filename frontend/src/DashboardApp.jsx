@@ -237,6 +237,45 @@ export default function DashboardApp() {
     }
   }
 
+  // El comprobante en PDF se abre en otra pestaña, con el visor del navegador (imprimir y descargar).
+  // La pestaña se abre en el mismo clic para que el navegador no la bloquee; el PDF llega después.
+  async function openReceiptPdf(id) {
+    const tab = window.open("", "_blank");
+    if (tab) {
+      tab.document.title = "Comprobante de venta";
+      tab.document.body.textContent = "Generando el comprobante…";
+    }
+    try {
+      const response = await fetch(`/api/ventas/${id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.status === 401) {
+        tab?.close();
+        localStorage.removeItem("meviplastToken");
+        localStorage.removeItem("meviplastSession");
+        window.location.replace("/login.html");
+        return;
+      }
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.mensaje || "No fue posible generar el PDF del comprobante.");
+      }
+      const url = URL.createObjectURL(await response.blob());
+      if (tab) {
+        tab.location.href = url;
+      } else {
+        // Si el navegador bloqueó la pestaña, se abre con un enlace
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (cause) {
+      tab?.close();
+      setToast(cause.message);
+    }
+  }
+
   async function openReceipt(id) {
     try {
       const venta = await api(`/api/ventas/${id}/comprobante`, token);
@@ -624,7 +663,7 @@ export default function DashboardApp() {
             </div>
           </Dialogo>
       )}
-      {receipt && <SaleReceipt sale={receipt} onClose={() => setReceipt(null)} />}
+      {receipt && <SaleReceipt sale={receipt} onClose={() => setReceipt(null)} onOpenPdf={openReceiptPdf} />}
     </>
   );
 }

@@ -216,6 +216,17 @@ const FLUJOS = [
     const comprobante = pagina.locator(".receipt");
     await comprobante.waitFor({ timeout: 10000 });
     if ((await comprobante.locator(".receipt-table tbody tr").count()) !== 2) problemas.push("el comprobante no tiene los dos productos");
+    // «Abrir PDF» abre el comprobante en otra pestaña, con el visor del navegador
+    const [pestana] = await Promise.all([contexto.waitForEvent("page"), comprobante.locator("button", { hasText: "Abrir PDF" }).click()]);
+    // Edge y Chrome lo muestran en su visor; el Firefox de Playwright no trae visor de PDF y lo descarga:
+    // en los dos casos llegó el PDF a la pestaña nueva
+    const abierto = await new Promise((resolve) => {
+      pestana.waitForURL(/^blob:/, { timeout: 15000 }).then(() => resolve("visor"), () => {});
+      pestana.waitForEvent("download", { timeout: 15000 }).then(() => resolve("descarga"), () => {});
+      setTimeout(() => resolve(null), 16000);
+    });
+    if (!abierto) problemas.push("«Abrir PDF» no abrió el comprobante en otra pestaña");
+    await pestana.close();
     const numero = await comprobante.locator(".receipt-number span").innerText();
     if (!/V-\d{6}/.test(numero)) throw new Error(`número de comprobante: ${numero}`);
     await comprobante.locator("text=Cerrar").click();
@@ -476,7 +487,7 @@ const FLUJOS = [
     const detalle = pagina.locator("section.panel", { has: pagina.locator("h3", { hasText: "Detalle de ventas" }) });
     const fila = detalle.locator("tbody tr.clickable-row").first();
     await fila.waitFor({ timeout: 10000 });
-    const cliente = (await fila.locator("td").nth(1).textContent()).trim();
+    const cliente = (await fila.locator("td").nth(2).textContent()).trim();
     // Clic en la fila: se abre el comprobante de esa venta, listo para imprimir o guardar en PDF
     await fila.click();
     const comprobante = pagina.locator(".receipt");
@@ -484,7 +495,7 @@ const FLUJOS = [
     const texto = await comprobante.textContent();
     if (!/N\.º V-\d{6}/.test(texto)) problemas.push("el comprobante no muestra su número");
     if (!texto.includes(cliente)) problemas.push(`el comprobante no es de la venta elegida (${cliente})`);
-    if (!(await comprobante.locator("button", { hasText: "Imprimir / guardar PDF" }).count())) problemas.push("falta el botón de imprimir");
+    if (!(await comprobante.locator("button", { hasText: "Abrir PDF" }).count())) problemas.push("falta el botón «Abrir PDF»");
     await pagina.keyboard.press("Escape");
     await comprobante.waitFor({ state: "hidden", timeout: 10000 });
     // También con el botón «Ver» de la última columna

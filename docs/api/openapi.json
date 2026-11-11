@@ -2347,6 +2347,56 @@
         "description": "El total de la venta (paquetes × precio por paquete) no puede superar 100.000.000 de pesos (CR-018); un número escrito con letras («2abc») se rechaza con 400 (DEF-022)."
       }
     },
+    "/ventas/{id}/comprobante/pdf": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Comprobante de venta en PDF",
+        "description": "El mismo comprobante en PDF, para abrirlo en otra pestaña e imprimirlo o descargarlo con el visor del navegador. El vendedor solo obtiene los de sus ventas (404 si no es suya).",
+        "x-requisitos": "RF-023",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF del comprobante",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "vendedor"
+        ]
+      }
+    },
     "/ventas/{id}/comprobante": {
       "get": {
         "tags": [

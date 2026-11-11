@@ -19,6 +19,11 @@ router.get(
   verificarRol("admin", "vendedor"),
   controller.comprobante,
 );
+router.get(
+  "/:id/comprobante/pdf",
+  verificarRol("admin", "vendedor"),
+  controller.comprobantePdf,
+);
 // El supervisor no registra ventas (DEF-007) ni las consulta (CR-021): son información comercial.
 router.post("/", verificarRol("admin", "vendedor"), controller.registrar);
 

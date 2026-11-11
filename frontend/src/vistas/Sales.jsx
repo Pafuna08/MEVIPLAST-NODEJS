@@ -230,7 +230,7 @@ export function Sales({ data, lines, onSubmitSale, saving, onReceipt }) {
           <button className="primary-action" type="submit" disabled={saving}>{saving ? "Guardando..." : "Registrar venta"}</button>
         </form>
       </section>
-      <Panel title="Ventas registradas"><DataTable columns={["N.º", "Cliente", "Productos", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td>{sanitizeText(sale.numero || `#${sale.id}`)}</td><td>{sanitizeText(sale.cliente)}</td><td>{itemsSummary(sale)}</td><td>{number(sale.unidades ?? sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
+      <Panel title="Ventas registradas"><DataTable columns={["N.º", "Cliente", "Productos", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td className="nowrap">{sanitizeText(sale.numero || `#${sale.id}`)}</td><td>{sanitizeText(sale.cliente)}</td><td>{itemsSummary(sale)}</td><td>{number(sale.unidades ?? sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
     </>
   );
 }
