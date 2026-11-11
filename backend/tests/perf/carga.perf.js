@@ -90,10 +90,15 @@ async function prepararBase() {
   for (let i = 1; i <= 400; i += 1) {
     const v = azar(variantes);
     const dias = i % 25;
+    // CR-022: encabezado y una línea por venta
     const [r] = await raiz.query(
-      `INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete, usuario_id, fecha)
-       VALUES (?, ?, 500, 60, ?, 2, 250, 15000, ?, NOW() - INTERVAL ? DAY)`,
-      [`Cliente perf ${i % 40}`, v.producto, v.id, ids.vendedor, dias],
+      "INSERT INTO ventas (cliente, total, usuario_id, fecha) VALUES (?, 30000, ?, NOW() - INTERVAL ? DAY)",
+      [`Cliente perf ${i % 40}`, ids.vendedor, dias],
+    );
+    await raiz.query(
+      `INSERT INTO ventas_detalle (venta_id, inventario_id, producto, cantidad, precio_unitario, cantidad_paquetes, unidades_paquete, precio_paquete)
+       VALUES (?, ?, ?, 500, 60, 5, 100, 6000)`,
+      [r.insertId, v.id, v.producto],
     );
     await raiz.query(
       "INSERT INTO movimientos_inventario (inventario_id, usuario_id, venta_id, tipo, cantidad, fecha) VALUES (?, ?, ?, 'venta', 500, NOW() - INTERVAL ? DAY)",

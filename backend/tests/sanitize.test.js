@@ -36,6 +36,16 @@ test("sanitizarObjeto limpia strings y guarda ints en numeros", () => {
   assert.equal(salida.descripcion, "texto");
 });
 
+test("sanitizarObjeto conserva los arreglos de objetos y sanea cada elemento (CR-022)", () => {
+  const salida = sanitizarObjeto({
+    cliente: "<b>Tienda</b>",
+    items: [{ inventario_id: "7", cantidad_paquetes: "2", precio_paquete: "1500" }, { inventario_id: 8, nota: "<i>x</i>" }],
+  });
+  assert.equal(salida.cliente, "Tienda");
+  assert.ok(Array.isArray(salida.items));
+  assert.deepEqual(salida.items, [{ inventario_id: 7, cantidad_paquetes: 2, precio_paquete: 1500 }, { inventario_id: 8, nota: "x" }]);
+});
+
 test("sanitizarObjeto no convierte en número textos cuya clave contiene «id» o «min»", () => {
   const salida = sanitizarObjeto({
     prioridad: "alta",

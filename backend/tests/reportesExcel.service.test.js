@@ -7,14 +7,14 @@ const { libroDetalle } = require("../src/services/reportesExcel.service");
 function simularVentas(t) {
   const originalQuery = pool.query;
   pool.query = async (sql) => {
-    if (sql.includes("SELECT id, fecha, cliente")) {
+    if (sql.includes("AS numero, v.fecha")) {
       return [[
-        { id: 2, fecha: new Date(2026, 9, 27, 10, 30), cliente: "Tienda Uno", producto: "Cargadera", cantidad: "500.00", precio_unitario: "120.00", total: "60000.00" },
-        { id: 1, fecha: new Date(2026, 9, 26, 9, 0), cliente: "=1+1", producto: "Adhesivo PP", cantidad: "250.00", precio_unitario: "128.00", total: "32000.00" },
+        { id: 2, venta_id: 2, numero: "V-000002", fecha: new Date(2026, 9, 27, 10, 30), cliente: "Tienda Uno", producto: "Cargadera", cantidad: "500.00", precio_unitario: "120.00", total: "60000.00" },
+        { id: 1, venta_id: 1, numero: "V-000001", fecha: new Date(2026, 9, 26, 9, 0), cliente: "=1+1", producto: "Adhesivo PP", cantidad: "250.00", precio_unitario: "128.00", total: "32000.00" },
       ], []];
     }
     if (sql.includes("COUNT(*) AS numero_ventas")) return [[{ numero_ventas: 2, unidades: "750.00", total_vendido: "92000.00" }], []];
-    if (sql.includes("GROUP BY producto")) return [[{ producto: "Cargadera", unidades: "500.00", total: "60000.00" }, { producto: "Adhesivo PP", unidades: "250.00", total: "32000.00" }], []];
+    if (sql.includes("GROUP BY d.producto")) return [[{ producto: "Cargadera", unidades: "500.00", total: "60000.00" }, { producto: "Adhesivo PP", unidades: "250.00", total: "32000.00" }], []];
     return [[], []];
   };
   t.after(() => {
@@ -43,14 +43,15 @@ test("el Excel de ventas trae resumen, totales por producto y detalle con númer
   assert.equal(resumen.getCell("B8").value, 92000);
 
   const detalle = libro.getWorksheet("Detalle");
-  assert.deepEqual(detalle.getRow(1).values.slice(1), ["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]);
-  assert.equal(detalle.getCell("F2").value, 60000, "los DECIMAL de MySQL se exportan como número");
-  assert.equal(detalle.getCell("F2").numFmt, '"$" #,##0');
+  assert.deepEqual(detalle.getRow(1).values.slice(1), ["Fecha", "Venta", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total"]);
+  assert.equal(detalle.getCell("B2").value, "V-000002", "cada línea dice a qué venta pertenece (CR-022)");
+  assert.equal(detalle.getCell("G2").value, 60000, "los DECIMAL de MySQL se exportan como número");
+  assert.equal(detalle.getCell("G2").numFmt, '"$" #,##0');
   const fecha = detalle.getCell("A2").value;
   assert.ok(fecha instanceof Date);
   assert.deepEqual([fecha.getUTCDate(), fecha.getUTCHours(), fecha.getUTCMinutes()], [27, 10, 30], "Excel muestra la hora local de la venta, no la UTC");
-  assert.equal(detalle.getCell("B3").value, "=1+1", "un texto que empieza por = se guarda como texto, no como fórmula");
-  assert.equal(detalle.getCell("B3").formula, undefined);
+  assert.equal(detalle.getCell("C3").value, "=1+1", "un texto que empieza por = se guarda como texto, no como fórmula");
+  assert.equal(detalle.getCell("C3").formula, undefined);
 });
 
 test("el Excel rechaza un periodo inválido", async () => {

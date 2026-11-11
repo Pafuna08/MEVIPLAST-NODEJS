@@ -40,5 +40,6 @@ test("el diagrama ER tiene cada clave foránea con su regla de borrado", () => {
       assert.match(er, relacion, `falta la relación ${padre} → ${hija} (${columna}, ${regla})`);
     }
   }
-  assert.equal(total, 16, "se esperaban 16 claves foráneas en schema.sql");
+  // CR-022: ventas_detalle suma dos (venta e inventario) y ventas pierde la de inventario
+  assert.equal(total, 17, "se esperaban 17 claves foráneas en schema.sql");
 });

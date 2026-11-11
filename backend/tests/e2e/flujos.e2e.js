@@ -181,7 +181,8 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(comprobante.status, 200, JSON.stringify(comprobante.body));
     assert.equal(comprobante.body.numero, `V-${String(venta.body.id).padStart(6, "0")}`);
     assert.equal(comprobante.body.cliente, "Cliente E2E");
-    assert.equal(comprobante.body.familia, "Bolsas para la basura");
+    assert.equal(comprobante.body.items.length, 1);
+    assert.equal(comprobante.body.items[0].familia, "Bolsas para la basura");
     assert.equal(Number(comprobante.body.total), 60000);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
@@ -678,5 +679,110 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal(venta.status, 201, JSON.stringify(venta.body));
     const [[auditada]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'CREAR_LINEA_PRODUCTO' AND detalle LIKE '%Bolsa de regalo%'");
     assert.equal(Number(auditada.n), 1);
+  });
+
+  await t.test("CR-022: una venta con varios productos, un comprobante y todo o nada", async () => {
+    for (const ingreso of [
+      { familia: "Sencilla PP", medida: "30 x 40", calibre: "1", color: "Verde", cantidad: 1000 },
+      { familia: "Adhesivo Seguridad", medida: "10 x 15", calibre: "2", color: "Azul", cantidad: 500 },
+    ]) assert.equal((await llamar("POST", "/inventario", tokens.almacenista, ingreso)).status, 201);
+    const existencias = async () => (await llamar("GET", "/inventario", tokens.almacenista)).body;
+    const buscar = (lista, familia, color) => lista.find((i) => i.familia === familia && i.color === color);
+    let lista = await existencias();
+    const a = buscar(lista, "Sencilla PP", "Verde");
+    const b = buscar(lista, "Adhesivo Seguridad", "Azul");
+
+    const venta = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [
+        { inventario_id: a.id, cantidad_paquetes: 2, unidades_paquete: 100, precio_paquete: 5000 },
+        { inventario_id: b.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 3000 },
+      ],
+    });
+    assert.equal(venta.status, 201, JSON.stringify(venta.body));
+    assert.equal(Number(venta.body.total), 13000, "el total es la suma de las líneas");
+    assert.equal(venta.body.items.length, 2);
+    lista = await existencias();
+    assert.deepEqual([Number(buscar(lista, "Sencilla PP", "Verde").cantidad), Number(buscar(lista, "Adhesivo Seguridad", "Azul").cantidad)], [800, 450]);
+    const comprobante = await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.vendedor);
+    assert.equal(comprobante.status, 200);
+    assert.deepEqual(comprobante.body.items.map((item) => Number(item.total)), [10000, 3000]);
+    const [[movimientos]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE venta_id = ?", [venta.body.id]);
+    assert.equal(Number(movimientos.n), 2, "un movimiento por producto");
+
+    // Si a un producto le falta stock no se guarda nada
+    const [[antes]] = await db.query("SELECT (SELECT COUNT(*) FROM ventas) AS ventas, (SELECT COUNT(*) FROM ventas_detalle) AS lineas");
+    const sinStock = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [
+        { inventario_id: a.id, cantidad_paquetes: 1, unidades_paquete: 100, precio_paquete: 5000 },
+        { inventario_id: b.id, cantidad_paquetes: 10, unidades_paquete: 50, precio_paquete: 3000 },
+      ],
+    });
+    assert.equal(sinStock.status, 400);
+    assert.match(sinStock.body.mensaje, /Producto 2: stock insuficiente/);
+    const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM ventas) AS ventas, (SELECT COUNT(*) FROM ventas_detalle) AS lineas");
+    assert.deepEqual(despues, antes, "ni encabezado ni líneas");
+    assert.equal(Number(buscar(await existencias(), "Sencilla PP", "Verde").cantidad), 800, "el primer producto no se descuenta");
+    const repetida = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [1, 2].map(() => ({ inventario_id: a.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 })),
+    });
+    assert.equal(repetida.status, 400);
+
+    // El reporte muestra una fila por producto y cuenta la venta una sola vez
+    const reporte = await llamar("GET", "/reportes/ventas/detalle?periodo=anual", tokens.admin);
+    assert.equal(reporte.body.detalle.filter((fila) => fila.venta_id === venta.body.id).length, 2);
+    const [[{ n: ventasDelAnio }]] = await db.query("SELECT COUNT(*) AS n FROM ventas WHERE YEAR(fecha) = YEAR(NOW())");
+    assert.equal(Number(reporte.body.resumen.numero_ventas), Number(ventasDelAnio));
+    const listado = (await llamar("GET", "/ventas", tokens.vendedor)).body.find((v) => v.id === venta.body.id);
+    assert.equal(listado.items.length, 2);
+  });
+
+  await t.test("CR-022: la migración pasa cada venta anterior a una venta de una línea y es idempotente", async () => {
+    const nombre = `${DB}_ventas`;
+    const raiz = await mysql.createConnection(conexion);
+    try {
+      await raiz.query(`DROP DATABASE IF EXISTS \`${nombre}\``);
+      await raiz.query(`CREATE DATABASE \`${nombre}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+      await raiz.changeUser({ database: nombre });
+      // Tablas como estaban antes de CR-022
+      await raiz.query(`
+        CREATE TABLE usuarios (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(120));
+        CREATE TABLE inventario (id INT AUTO_INCREMENT PRIMARY KEY, producto VARCHAR(255), familia VARCHAR(80), cantidad DECIMAL(10,2));
+        CREATE TABLE ventas (
+          id INT AUTO_INCREMENT PRIMARY KEY, cliente VARCHAR(120) NOT NULL, producto VARCHAR(255) NOT NULL,
+          cantidad DECIMAL(10,2) NOT NULL, precio_unitario DECIMAL(12,4) NOT NULL, inventario_id INT NULL,
+          cantidad_paquetes INT NOT NULL, unidades_paquete INT NOT NULL, precio_paquete DECIMAL(12,2) NOT NULL,
+          total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_paquetes * precio_paquete) STORED,
+          usuario_id INT NULL, fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+          FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE SET NULL);
+        CREATE TABLE movimientos_inventario (id INT AUTO_INCREMENT PRIMARY KEY, venta_id INT NULL,
+          FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL);
+        INSERT INTO usuarios (nombre) VALUES ('Vendedor');
+        INSERT INTO inventario (producto, familia, cantidad) VALUES ('Cargadera · T15 · calibre 2 · Blanco', 'Cargadera', 100);
+        INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete, usuario_id)
+          VALUES ('Tienda A', 'Cargadera · T15 · calibre 2 · Blanco', 500, 90, 1, 5, 100, 9000, 1),
+                 ('Tienda B', 'Producto antiguo', 50, 120, NULL, 1, 50, 6000, NULL);
+        INSERT INTO movimientos_inventario (venta_id) VALUES (1);`);
+      const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261111_ventas_detalle.sql"), "utf8");
+      await raiz.query(migracion);
+      await raiz.query(migracion);
+      const [columnas] = await raiz.query("SELECT column_name AS c FROM information_schema.columns WHERE table_schema = ? AND table_name = 'ventas' ORDER BY ordinal_position", [nombre]);
+      assert.deepEqual(columnas.map((f) => f.c), ["id", "cliente", "total", "usuario_id", "fecha"]);
+      const [ventas] = await raiz.query("SELECT id, cliente, total FROM ventas ORDER BY id");
+      assert.deepEqual(ventas.map((v) => [v.cliente, Number(v.total)]), [["Tienda A", 45000], ["Tienda B", 6000]], "el total se conserva");
+      const [lineas] = await raiz.query("SELECT venta_id, inventario_id, producto, cantidad, total FROM ventas_detalle ORDER BY venta_id");
+      assert.deepEqual(lineas.map((l) => [l.venta_id, l.inventario_id, l.producto, Number(l.cantidad), Number(l.total)]), [
+        [1, 1, "Cargadera · T15 · calibre 2 · Blanco", 500, 45000],
+        [2, null, "Producto antiguo", 50, 6000],
+      ], "una línea por venta anterior, sin repetirse al aplicar dos veces");
+      const [[movimiento]] = await raiz.query("SELECT venta_id FROM movimientos_inventario");
+      assert.equal(movimiento.venta_id, 1, "los movimientos siguen enlazados a su venta");
+    } finally {
+      await raiz.query(`DROP DATABASE IF EXISTS \`${nombre}\``);
+      await raiz.end();
+    }
   });
 });

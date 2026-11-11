@@ -43,7 +43,7 @@ test("detalleVentas filtra los registros por el rango seleccionado", async (t) =
     if (sql.includes("COUNT(*) AS numero_ventas")) {
       return [[{ numero_ventas: 2, unidades: 5, total_vendido: 12000 }]];
     }
-    if (sql.includes("GROUP BY producto")) {
+    if (sql.includes("GROUP BY d.producto")) {
       return [[{ producto: "Bolsa", unidades: 5, total: 12000 }]];
     }
     return [[{ id: 1, cliente: "Cliente", producto: "Bolsa", cantidad: 5 }]];
@@ -61,8 +61,12 @@ test("detalleVentas filtra los registros por el rango seleccionado", async (t) =
   assert.equal(reporte.resumen.numero_ventas, 2);
   assert.equal(reporte.detalle.length, 1);
   assert.equal(queries.length, 3);
+  // CR-022: el resumen cuenta ventas en el encabezado y unidades en las líneas, con el mismo rango
   for (const query of queries) {
-    assert.deepEqual(query.params, ["2026-10-01", "2026-11-01"]);
+    assert.ok(query.params.length % 2 === 0 && query.params.length > 0);
+    for (let i = 0; i < query.params.length; i += 2) {
+      assert.deepEqual(query.params.slice(i, i + 2), ["2026-10-01", "2026-11-01"]);
+    }
   }
 });
 
