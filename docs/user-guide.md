@@ -52,7 +52,7 @@ El supervisor no registra ventas (DEF-007) ni las consulta (CR-021): los precios
 ## Vendedor
 
 - **Ventas:** registrar ventas con uno o varios productos para el mismo cliente (ver «Ventas» del administrador) y consultar únicamente las ventas registradas con su cuenta, con su número, sus productos y su total.
-- **Comprobante de venta:** se abre al registrar una venta y desde el botón **Ver** de cada venta. **Imprimir / guardar PDF** imprime solo el comprobante; para obtener el PDF, elija "Guardar como PDF" como impresora. Es un documento de control interno, no una factura electrónica.
+- **Comprobante de venta:** se abre al registrar una venta y desde el botón **Ver** de cada venta. **Abrir PDF** abre el comprobante en otra pestaña del navegador; allí se imprime o se descarga con los botones del visor de PDF (no hace falta saber configurar la impresora). Es un documento de control interno, no una factura electrónica.
 - La vista de ventas muestra las referencias con existencias de cada línea para elegir la variante; no permite modificar inventario.
 
 ## Almacenista

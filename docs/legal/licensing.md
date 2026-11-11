@@ -22,6 +22,7 @@ Las licencias de las dependencias son permisivas y compatibles con el uso propie
 | dotenv | 16.6.1 | BSD-2-Clause |
 | exceljs | 4.4.0 | MIT |
 | uuid (de exceljs, forzada con `overrides`) | 11.1.1 | MIT |
+| pdfkit (comprobante de venta en PDF) | 0.20.2 | MIT |
 | react, react-dom | 19.3.1 | MIT |
 | vite (desarrollo) | 6.4.5 | MIT |
 | nodemon (desarrollo) | 3.1.14 | MIT |

@@ -65,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-120 pruebas unitarias y de rutas con `node:test` (120 aprobadas el 2026-11-11), en 25 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+122 pruebas unitarias y de rutas con `node:test` (122 aprobadas el 2026-11-11), en 26 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -79,6 +79,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
 - `longitudes.test.js` (2): un texto más largo que su columna se rechaza con 400 y la variante respeta el largo de medida, calibre y color.
 - `lineas.test.js` (5): nombre de una línea nueva (limpio, de 3 a 60 caracteres, sin símbolos), lista de la tabla con las seis de base si falta, sin consultar la base para una línea de base, 409 si ya existe sin importar mayúsculas y auditoría, y una línea nueva medida en «ancho x largo» (CR-020).
+- `comprobantePdf.test.js` (2): el comprobante en PDF es un documento PDF válido con el número de la venta en el título y una página; con muchas líneas sigue en otra página.
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `numeros.test.js` (7): lectura estricta de números («2abc», «1e5» y «0x10» no son números), enteros de 1 a 1 000 000, kg con 2 decimales hasta 100 000, metas y avances enteros, ingresos y salidas con tope, bobina única por variante (409) y ventas de 50, 100 o 500 unidades por paquete, hasta 1 000 paquetes y $100 000 000 (DEF-022, CR-018).
