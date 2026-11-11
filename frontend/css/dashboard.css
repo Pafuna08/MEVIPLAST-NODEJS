@@ -905,6 +905,31 @@ th {
   margin: 0;
   color: var(--navy);
 }
+/* Ventana «+ Crear…» de los selectores (CR-020) */
+.create-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.create-modal .data-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0 22px 22px;
+}
+.create-modal .form-error,
+.create-modal .confirm-actions {
+  grid-column: 1 / -1;
+}
+.create-modal .confirm-actions {
+  padding: 0;
+}
+.create-icon {
+  background: linear-gradient(135deg, var(--navy), #2f5d86);
+}
+@media (max-width: 640px) {
+  .create-modal .data-form {
+    grid-template-columns: 1fr;
+  }
+}
 .confirm-cancel {
   color: var(--navy);
   background: var(--white);

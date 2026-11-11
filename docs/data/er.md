@@ -87,6 +87,11 @@ erDiagram
         DECIMAL cantidad "unidades"
         DATETIME actualizado_en
     }
+    lineas_producto {
+        INT id PK
+        VARCHAR nombre UK "RN-012; el administrador agrega líneas (CR-020)"
+        DATETIME creado_en
+    }
     ventas {
         INT id PK
         VARCHAR cliente

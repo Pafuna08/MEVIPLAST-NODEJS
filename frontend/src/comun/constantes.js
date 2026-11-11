@@ -13,6 +13,9 @@ export const finishedProductFamilies = [
   "Troquel riñón",
 ];
 
+// Valor de la opción «+ Crear…» al final de un selector (CR-020, solo el administrador)
+export const CREATE_OPTION = "__crear__";
+
 // CR-019: Cargadera se mide por tallas, igual que tallasPorLinea en backend/src/constants/productosTerminados.js
 export const lineSizes = {
   Cargadera: ["T15", "T20", "T25", "T30"],

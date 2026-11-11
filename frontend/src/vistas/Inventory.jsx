@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { DataTable, Field, FormPanel, Intro, Panel, VariantFields } from "../comun/componentes.jsx";
-import { exitReasons, finishedProductFamilies, inventoryMovementLabels } from "../comun/constantes.js";
+import { exitReasons, inventoryMovementLabels } from "../comun/constantes.js";
 import { number, safeProductName, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS } from "../comun/validacion.js";
 
-export function Inventory({ data, onSubmit, saving }) {
+export function Inventory({ data, lines, onSubmit, saving }) {
   const [exitReason, setExitReason] = useState("");
   return (
     <>
       <Intro title="Inventario terminado" description="Registra variantes de las líneas de producto que fabrica MEVIPLAST." />
       <FormPanel title="Ingreso de inventario" onSubmit={onSubmit} saving={saving} obligatorios={["familia", ...VARIANT_FIELDS, "cantidad"]}>
-        <Field label="Línea de producto"><select name="familia" defaultValue=""><option value="" disabled>Selecciona una línea</option>{finishedProductFamilies.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
+        <Field label="Línea de producto"><select name="familia" defaultValue=""><option value="" disabled>Selecciona una línea</option>{lines.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
         <VariantFields idPrefix="inventario" />
         <Field label="Unidades"><input name="cantidad" type="number" /></Field>
       </FormPanel>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api, loadView, readSession } from "./comun/api.js";
 import { orderVariant } from "./comun/componentes.jsx";
-import { movementTypeNames, roleViews, viewTitles } from "./comun/constantes.js";
+import { finishedProductFamilies, movementTypeNames, roleViews, viewTitles } from "./comun/constantes.js";
 import { money, number, packagesLabel, safeProductName, sanitizePayload, sanitizeText } from "./comun/formato.js";
 import { blockNonNumericKeys, blockNonNumericPaste } from "./comun/validacion.js";
 import { Advance } from "./vistas/Advance.jsx";
@@ -117,6 +117,8 @@ export default function DashboardApp() {
   const [receipt, setReceipt] = useState(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [pendingSave, setPendingSave] = useState(null);
+  // Líneas de producto terminado (RN-012); el administrador puede agregar otras (CR-020)
+  const [lines, setLines] = useState(finishedProductFamilies);
   const requestVersion = `${activeView}:${reloadKey}`;
 
   useEffect(() => {
@@ -162,6 +164,17 @@ export default function DashboardApp() {
       });
     return () => { current = false; };
   }, [activeView, config, reloadKey, requestVersion, token]);
+
+  useEffect(() => {
+    if (!config || !token || config.apiRole === "operario") return undefined;
+    let current = true;
+    api("/api/lineas", token)
+      .then((result) => {
+        if (current && Array.isArray(result) && result.length) setLines(result);
+      })
+      .catch(() => {});
+    return () => { current = false; };
+  }, [config, reloadKey, token]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -296,6 +309,22 @@ export default function DashboardApp() {
       setSaving(false);
     }
     if (newSaleId) await openReceipt(newSaleId);
+  }
+
+  // «+ Crear…» de los selectores (solo el administrador): se agrega a la lista sin recargar la vista,
+  // para no perder lo que ya se escribió en el formulario
+  async function createLine(nombre) {
+    const linea = await api("/api/lineas", token, { method: "POST", body: JSON.stringify({ nombre }) });
+    setLines((current) => (current.includes(linea.nombre) ? current : [...current, linea.nombre]));
+    setToast(`Línea «${linea.nombre}» creada.`);
+    return linea.nombre;
+  }
+
+  async function createMaterial(payload) {
+    const material = await api("/api/materia-prima", token, { method: "POST", body: JSON.stringify(payload) });
+    setData((current) => ({ ...current, materials: [material, ...(current?.materials || [])] }));
+    setToast("Material creado.");
+    return material;
   }
 
   async function updateOrderStatus(id, status) {
@@ -435,6 +464,7 @@ export default function DashboardApp() {
   ) : renderView({
     view: activeView,
     data,
+    lines,
     role: appRole,
     username: session.username,
     token,
@@ -458,6 +488,8 @@ export default function DashboardApp() {
     deleteProductionTemplate,
     openReceipt,
     downloadReportExcel,
+    createLine,
+    createMaterial,
   });
 
   return (
@@ -581,6 +613,7 @@ export default function DashboardApp() {
 function renderView({
   view,
   data,
+  lines,
   role,
   username,
   token,
@@ -598,19 +631,21 @@ function renderView({
   deleteProductionTemplate,
   openReceipt,
   downloadReportExcel,
+  createLine,
+  createMaterial,
 }) {
   if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
-  if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} />;
-  if (view === "inventario") return <Inventory data={data} onSubmit={submitForm} saving={saving} />;
+  if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} onCreateMaterial={createMaterial} />;
+  if (view === "inventario") return <Inventory data={data} lines={lines} onSubmit={submitForm} saving={saving} />;
   if (view === "tareas") return <Tasks orders={data} onChangeStatus={updateOrderStatus} navigate={navigate} />;
   if (view === "historial") return <History orders={data} token={token} />;
-  if (view === "produccion") return <Production data={data} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} />;
-  if (view === "asignar") return <Assign data={data} onSubmit={submitForm} saving={saving} />;
+  if (view === "produccion") return <Production data={data} lines={lines} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} onCreateLine={createLine} onCreateMaterial={createMaterial} />;
+  if (view === "asignar") return <Assign data={data} lines={lines} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
-  if (view === "ventas") return <Sales data={data} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
+  if (view === "ventas") return <Sales data={data} lines={lines} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports />;
   if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;

@@ -1,12 +1,13 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
-const { productosTerminados } = require("../constants/productosTerminados");
+const lineasService = require("./lineas.service");
 const { validarVariante } = require("./inventario.service");
 const { limitesPeriodo } = require("./reportes.service");
 const { entero } = require("../utils/numeros");
 
-function validarProducto(producto) {
-  if (!productosTerminados.includes(producto)) {
+// Línea del catálogo (RN-012); desde CR-020 las de la tabla lineas_producto
+function validarProducto(producto, lineas) {
+  if (!lineas.includes(producto)) {
     const error = new Error("Selecciona una línea de producto válida");
     error.statusCode = 400;
     throw error;
@@ -14,14 +15,15 @@ function validarProducto(producto) {
 }
 
 // Medida, calibre y color de la orden: la variante del inventario que recibirá el avance
-function varianteOrden(producto, { medida, calibre, color }) {
-  const { producto: etiqueta, ...variante } = validarVariante({ familia: producto, medida, calibre, color });
+function varianteOrden(producto, { medida, calibre, color }, lineas) {
+  const { producto: etiqueta, ...variante } = validarVariante({ familia: producto, medida, calibre, color }, lineas);
   return { ...variante, etiqueta };
 }
 
 async function listar(usuario) {
-  const condiciones = [`p.producto IN (${productosTerminados.map(() => "?").join(", ")})`];
-  const valores = [...productosTerminados];
+  const lineas = await lineasService.listar();
+  const condiciones = [`p.producto IN (${lineas.map(() => "?").join(", ")})`];
+  const valores = [...lineas];
   if (usuario?.rol === "operario") {
     condiciones.push("p.responsable_id = ?");
     valores.push(usuario.id);
@@ -60,21 +62,23 @@ async function listarSupervisores() {
 }
 
 async function listarPlantillas() {
+  const lineas = await lineasService.listar();
   const [filas] = await pool.query(
     `SELECT p.*, m.nombre AS materia_prima_nombre
      FROM plantillas_produccion p
      LEFT JOIN materia_prima m ON m.id = p.materia_prima_id
-     WHERE p.producto IN (${productosTerminados.map(() => "?").join(", ")})
+     WHERE p.producto IN (${lineas.map(() => "?").join(", ")})
      ORDER BY p.producto, p.medida, p.calibre, p.color`,
-    productosTerminados,
+    lineas,
   );
   return filas;
 }
 
 async function crearPlantilla(datos, actorId) {
   const { producto, cantidad, materia_prima_id, prioridad } = datos;
-  validarProducto(producto);
-  const variante = varianteOrden(producto, datos);
+  const lineas = await lineasService.paraValidar(producto);
+  validarProducto(producto, lineas);
+  const variante = varianteOrden(producto, datos, lineas);
   const meta = entero(cantidad, "La meta");
   const materiaPrimaId = await validarMateriaPrima(materia_prima_id, pool, "la plantilla");
   const [resultado] = await pool.query(
@@ -133,8 +137,9 @@ async function crear(datos, actor) {
     responsable_id,
     prioridad,
   } = datos;
-  validarProducto(producto);
-  const variante = varianteOrden(producto, datos);
+  const lineas = await lineasService.paraValidar(producto);
+  validarProducto(producto, lineas);
+  const variante = varianteOrden(producto, datos, lineas);
   const meta = entero(cantidad, "La meta");
   const materiaPrimaId = await validarMateriaPrima(materia_prima_id);
   let supervisorId = null;
@@ -278,9 +283,12 @@ async function actualizarOrden(id, datos, actor) {
     if (producto !== undefined && (typeof producto !== "string" || !producto.trim())) {
       throw new Error("El producto no puede estar vacío");
     }
-    if (producto !== undefined) validarProducto(producto.trim());
+    const lineas = producto !== undefined || camposVariante.length
+      ? await lineasService.paraValidar(producto !== undefined ? producto.trim() : orden.producto)
+      : [];
+    if (producto !== undefined) validarProducto(producto.trim(), lineas);
     const variante = camposVariante.length
-      ? varianteOrden(producto !== undefined ? producto.trim() : orden.producto, datos)
+      ? varianteOrden(producto !== undefined ? producto.trim() : orden.producto, datos, lineas)
       : null;
     if (cantidad !== undefined) entero(cantidad, "La meta");
     if (prioridad !== undefined && !["baja", "media", "alta"].includes(prioridad)) {

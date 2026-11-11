@@ -572,6 +572,104 @@
         ]
       }
     },
+    "/lineas": {
+      "get": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Listar las líneas de producto terminado",
+        "description": "Las seis líneas de la reunión inicial y las que agregó el administrador, en el orden en que se crearon (RN-012, CR-020).",
+        "x-requisitos": "RF-018",
+        "responses": {
+          "200": {
+            "description": "Nombres de las líneas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "almacenista",
+          "vendedor"
+        ]
+      },
+      "post": {
+        "tags": [
+          "Producción"
+        ],
+        "summary": "Crear una línea de producto terminado",
+        "description": "Solo el administrador (CR-020). El nombre se limpia de espacios y empieza en mayúscula; una línea nueva se mide en ancho x largo (RN-025). Las líneas no se borran.",
+        "x-requisitos": "RF-018",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 60,
+                    "description": "Letras, números, espacios, punto y guion; al menos una letra"
+                  }
+                },
+                "required": [
+                  "nombre"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Línea creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nombre": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflicto"
+          }
+        },
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
     "/materia-prima": {
       "get": {
         "tags": [

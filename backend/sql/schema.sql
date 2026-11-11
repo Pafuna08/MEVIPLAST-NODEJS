@@ -70,6 +70,22 @@ CREATE TABLE IF NOT EXISTS materia_prima (
 -- ---------------------------------------------------------
 -- EP-001 Produccion
 -- ---------------------------------------------------------
+-- RN-012 / CR-020: líneas de producto terminado. Las seis de la reunión inicial vienen de base;
+-- el administrador agrega otras desde el panel. No se borran: órdenes, existencias y ventas las nombran.
+CREATE TABLE IF NOT EXISTS lineas_producto (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(60) NOT NULL UNIQUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO lineas_producto (id, nombre) VALUES
+  (1, 'Adhesivo PP'),
+  (2, 'Adhesivo Seguridad'),
+  (3, 'Sencilla PP'),
+  (4, 'Bolsas para la basura'),
+  (5, 'Cargadera'),
+  (6, 'Troquel riñón');
+
 CREATE TABLE IF NOT EXISTS produccion (
   id INT AUTO_INCREMENT PRIMARY KEY,
   producto VARCHAR(120) NOT NULL,
