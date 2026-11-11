@@ -5,6 +5,7 @@ import { NewLineDialog, NewMaterialDialog, useSelectAfterRender } from "../comun
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
 import { Dialogo } from "../comun/Dialogo.jsx";
+import { AdminOrders } from "./AdminOrders.jsx";
 
 export function Production({
   data,
@@ -203,7 +204,11 @@ export function Production({
           </FormPanel>
         </>
       )}
-      <Panel title="Órdenes">
+      {isAdmin && view === "produccion" ? (
+        <Panel title="Órdenes">
+          <AdminOrders orders={orders} data={data} lines={lines} onEditOrder={onEditOrder} onAssignOrder={onAssignOrder} onCancel={setCancelTarget} />
+        </Panel>
+      ) : <Panel title="Órdenes">
         {orders.map((order) => (
           <React.Fragment key={order.id}>
             <OrderRow
@@ -268,7 +273,7 @@ export function Production({
           </React.Fragment>
         ))}
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
-      </Panel>
+      </Panel>}
       {cancelTarget && (
         <Dialogo onClose={() => setCancelTarget(null)} labelledBy="cancel-order-title">
             <div className="confirm-header">

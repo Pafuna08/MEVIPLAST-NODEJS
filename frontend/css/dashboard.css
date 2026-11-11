@@ -905,6 +905,114 @@ th {
   margin: 0;
   color: var(--navy);
 }
+/* Órdenes del administrador: tabla compacta con filtros y detalle en una ventana */
+.order-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 18px 0;
+}
+.filter-chip {
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--navy);
+  background: var(--white);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.filter-chip span {
+  margin-left: 4px;
+  opacity: 0.85;
+}
+.filter-chip.active {
+  border-color: var(--navy);
+  color: var(--white);
+  background: var(--navy);
+}
+.orders-hint {
+  margin: 0;
+  padding: 10px 18px 6px;
+  color: var(--steel);
+  font-size: 0.82rem;
+}
+.orders-table tbody tr.clickable-row {
+  cursor: pointer;
+}
+.orders-table tbody tr.clickable-row:hover {
+  background: #f4f7fa;
+}
+.link-button {
+  padding: 4px 0;
+  border: 0;
+  color: var(--navy);
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.muted-text {
+  color: var(--steel);
+}
+.order-modal {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.order-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 22px 14px;
+}
+.order-modal-header h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.2rem;
+}
+.order-modal-header p {
+  margin: 6px 0 0;
+  color: var(--steel);
+  font-size: 0.87rem;
+}
+.order-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.order-summary dd .performance-cell {
+  margin-top: 6px;
+}
+.order-modal .data-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0 22px 18px;
+}
+.order-modal .data-form .form-error,
+.order-modal .data-form .confirm-actions {
+  grid-column: 1 / -1;
+  padding: 0;
+}
+.order-modal .confirm-actions {
+  flex-wrap: wrap;
+}
+.confirm-edit {
+  color: var(--navy);
+  background: #e8eef5;
+}
+@media (max-width: 640px) {
+  .order-modal .data-form {
+    grid-template-columns: 1fr;
+  }
+  .order-modal-header {
+    flex-direction: column;
+  }
+}
+
 /* Ventana «+ Crear…» de los selectores (CR-020) */
 .create-modal {
   width: min(560px, 100%);
