@@ -1187,6 +1187,13 @@ th {
   flex-shrink: 0;
 }
 
+/* Registrar producción: la orden elegida en Mis tareas se muestra fija, sin selector */
+.data-form .fixed-field {
+  color: var(--ink);
+  background: var(--bg);
+  cursor: default;
+}
+
 /* Usuarios: en la fila propia no se ofrece desactivar ni eliminar (la cuenta con la sesión abierta) */
 .own-account {
   color: var(--steel);

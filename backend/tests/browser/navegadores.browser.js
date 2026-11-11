@@ -247,7 +247,9 @@ const FLUJOS = [
     await Promise.all([pagina.waitForURL(/#registrar$/), primera.locator("text=Registrar avance").click()]);
     await pagina.waitForLoadState("networkidle");
     const form = formulario(pagina, "Nuevo registro");
-    if ((await form.locator("select[name=id]").inputValue()) !== ordenId) throw new Error("la orden elegida en Mis tareas no quedó seleccionada");
+    // La orden elegida en Mis tareas queda fija: sin selector para no registrar en otra por error
+    if ((await form.locator("input[type=hidden][name=id]").inputValue()) !== ordenId) throw new Error("la orden elegida en Mis tareas no quedó fija");
+    if (await form.locator("select[name=id]").count()) problemas.push("la orden elegida todavía se puede cambiar");
     const nota = `NAV-${ordenId}-${Date.now()}`;
     await form.locator("input[name=cantidad]").fill("5");
     await form.locator("textarea[name=observaciones]").fill(nota);
