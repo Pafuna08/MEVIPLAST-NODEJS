@@ -6,6 +6,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Added
 
+- Ventas con varios productos (CR-022): una venta tiene encabezado (cliente, vendedor, fecha y total) y una o más líneas en la tabla nueva `ventas_detalle`. En el panel, el vendedor agrega productos a la venta (línea, variante, presentación, paquetes y precio), ve los subtotales y el total, puede quitar una línea y registra todo junto; si llena un solo producto puede registrarlo directamente. La confirmación lista cada producto, el comprobante trae una fila por producto y el reporte y el Excel de ventas muestran una fila por producto con el número de su venta. `POST /ventas` recibe `items` (hasta 20, sin variantes repetidas) y sigue aceptando el formato de un solo producto; toda la venta es una transacción: si a un producto le falta stock no se guarda ninguno. El tope de $100 000 000 (CR-018) es del total de la venta. La migración `20261111_ventas_detalle.sql` convierte cada venta anterior en una venta de una línea, con el mismo total y sus movimientos (EV-2026-11-11-03).
+
 - Crear una línea de producto o un material desde los selectores (CR-020, solo el administrador). En la nueva orden de producción, el selector de línea termina en «+ Crear nueva línea…» y el de materia prima en «+ Crear nuevo material…»; en Materias primas, el selector de «Registrar movimiento» también ofrece «+ Crear nuevo material…». Cada opción abre una ventana con las mismas reglas del formulario normal (la medida sigue en «ancho x largo», RN-025) y lo creado queda elegido sin recargar la vista. Las líneas pasan a la tabla `lineas_producto` (migración `20261110_lineas_producto.sql`, con las seis de RN-012), con `GET /api/lineas` y `POST /api/lineas`; el nombre se guarda sin espacios de más y con mayúscula inicial, y una línea repetida (sin importar mayúsculas ni tildes) responde 409. Las líneas no se borran (EV-2026-11-10-04).
 
 - Paquete documental ADSO en `docs/Documentacion_Proyecto_ADSO` (Word, Excel, capturas y diagramas, versión 2.2), por indicación del instructor; antes se guardaba fuera del repositorio. Se actualiza junto con el código.
@@ -92,6 +94,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 - Las migraciones del 2026-10-26 retiran materias primas, productos, ventas y movimientos ajenos al catálogo confirmado.
 
 ### Fixed
+
+- El saneador de las peticiones convertía en texto un arreglo dentro del cuerpo (por ejemplo, las líneas de una venta); ahora sanea cada elemento.
 
 - Las ventanas de confirmación y el comprobante se pueden usar solo con teclado (DEF-025, RNF-012, EV-2026-11-10-02): el foco entra al abrirlas, Tab no sale de la ventana, Esc la cierra y el foco vuelve al botón que la abrió. Antes Esc no hacía nada y Tab llevaba el foco a la página de atrás.
 - Contraste WCAG AA en todo el panel, el inicio de sesión y el sitio público (ACC-001, AC-003, EV-2026-11-10-01): rojo `#e63946` → `#d02c3a` (texto blanco de 4,2:1 a 5,1:1), gris `#667588` → `#5f6e81` (de 4,2:1 a 4,6:1) y las iniciales del avatar vuelven a ser blancas (estaban en gris, 3,4:1). El aviso vacío ya no asoma en la esquina inferior derecha (DEF-024) y los enlaces del inicio de sesión tienen un área táctil de al menos 24 px en celular. Medido en 42 vistas: 0 combinaciones por debajo del mínimo.

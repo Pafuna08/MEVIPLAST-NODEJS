@@ -27,7 +27,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | HU-002 | Operario | Consultar tareas asignadas | RF-009 | Implementado | El operario solo recibe las órdenes cuyo responsable es su cuenta. «Mis tareas» muestra solo las abiertas, con «Iniciar» y «Registrar avance». |
 | HU-003 | Operario | Registrar producción realizada | RF-010, RF-011 | Implementado | Avance > 0 y ≤ meta pendiente; incrementa la variante de la orden (medida, calibre y color) en el inventario y finaliza la orden al completar la meta. «Mi historial» muestra los avances propios por día, semana, mes o año. |
 | HU-007 | Almacenista | Actualizar cantidades disponibles | RF-015 | Implementado | Solo mediante movimientos (compra, ajuste de entrada/salida) desde «Registrar movimiento»; la cantidad no se edita directamente. Formulario restaurado en DEF-013 (PR #33). |
-| HU-013 | Vendedor | Registrar ventas | RF-020, RF-023 | Implementado | Venta por paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y $100 000 000 (CR-018) con comprobante imprimible (RF-023, PR #27); la lista de referencias en existencia de cada línea permite elegir la variante (PR #66). |
+| HU-013 | Vendedor | Registrar ventas | RF-020, RF-023 | Implementado | Venta por paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y $100 000 000 (CR-018) con comprobante imprimible (RF-023, PR #27); la lista de referencias en existencia de cada línea permite elegir la variante (PR #66); una venta puede llevar varios productos con un solo comprobante (CR-022). |
 | HU-014 | Vendedor | Actualizar stock automáticamente | RF-021 | Implementado | Venta, descuento y movimiento se confirman en una sola transacción con bloqueo de fila. |
 | HU-012 | Vendedor | Consultar inventario disponible | RF-019 | Implementado | El vendedor consulta existencias sin poder modificarlas. |
 | HU-024 | Vendedor | Visualizar historial de ventas | RF-022 | Implementado | El vendedor ve solo sus ventas; sin filtros por fecha o cliente. |
@@ -59,8 +59,8 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
 | RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078, CP-081, CP-082, CP-090 (unidades enteras hasta 1 000 000, DEF-022), CP-095 (tallas de Cargadera, CR-019), CP-096 (líneas nuevas, CR-020) |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | — |
-| RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028, CP-078, CP-088 (lista de referencias), CP-091 (paquetes de 50, 100 o 500 y topes de venta, CR-018) |
-| RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031 |
+| RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028, CP-078, CP-088 (lista de referencias), CP-091 (paquetes de 50, 100 o 500 y topes de venta, CR-018), CP-098 (varios productos por venta, CR-022) |
+| RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031, CP-098 (todo o nada con varios productos) |
 | RF-022 | Consultar historial de ventas | Implementado | MVP | API-09 | CP-026 |
 | RF-023 | Generar comprobante de venta | Implementado | MVP | API-09 | CP-055, CP-056, CP-057, CP-097 (desde el reporte de ventas; el supervisor no lo ve, CR-021) |
 | RF-024 | Reporte de producción por periodo | Implementado | MVP | API-10 | CP-017, CP-018, CP-028 |

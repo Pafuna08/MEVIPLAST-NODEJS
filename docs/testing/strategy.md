@@ -38,6 +38,7 @@ npm run test:e2e --prefix backend
 - CR-016 (CP-083, CP-084): los inicios de sesión no quedan en la tabla `auditoria`; la bitácora filtra por acción y fechas con total y páginas, rechaza filtros inválidos, y el archivo de lo de más de 12 meses escribe el CSV, borra solo eso, deja un evento ARCHIVAR_AUDITORIA y no repite.
 - CR-019 (CP-095): una orden de Cargadera en «t20» se guarda como T20; en «15 x 20» se rechaza con 400, igual que una talla en otra línea; la migración `20261110_cargadera_tallas.sql`, aplicada dos veces, pasa existencias, órdenes y plantillas de Cargadera en «15 x 20» a T15 sin perder unidades.
 - CR-020 (CP-096): `GET /lineas` trae las seis líneas de base; el supervisor no puede crear una línea (403), un nombre con «<» se rechaza (400), «  bolsa   de regalo » se guarda como «Bolsa de regalo», «BOLSA DE REGALO» y «troquel rinon» responden 409; con la línea nueva se crea una orden en «20x30» (en «T20», 400), se ingresa inventario y se vende, y la creación queda en la auditoría.
+- CR-022 (CP-098): venta de dos productos con comprobante de dos líneas, stock y movimientos de cada uno, el reporte con una fila por producto y la venta contada una vez; si a un producto le falta stock no se guarda ni el encabezado ni las líneas; una variante repetida se rechaza. La migración `20261111_ventas_detalle.sql`, aplicada dos veces sobre una base con la tabla de ventas anterior, deja el encabezado con cliente, total, vendedor y fecha, una línea por venta con el mismo total y los movimientos enlazados.
 - Migración `20261109_drop_unused_columns.sql` (CR-015, CP-082) aplicada sobre una base con `inventario.ubicacion` y `produccion.lote`, dos veces: quita las columnas sin perder filas.
 - Migración `20261027_template_variant.sql` aplicada sobre la tabla anterior (clave única por línea) y ejecutada dos veces; conserva la plantilla existente.
 
@@ -64,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-116 pruebas unitarias y de rutas con `node:test` (116 aprobadas el 2026-11-10), en 25 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+120 pruebas unitarias y de rutas con `node:test` (120 aprobadas el 2026-11-11), en 25 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
@@ -73,7 +74,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `auth.smtp.test.js` (1): la recuperación entrega el correo a un servidor SMTP local con el enlace de un solo uso.
 - `entorno.test.js` (1): falla si se quita la carga de `tests/entorno-pruebas.js` (las pruebas unitarias no usan la base de `.env`).
-- `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 16 claves foráneas con la regla de borrado.
+- `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 17 claves foráneas con la regla de borrado.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
 - `longitudes.test.js` (2): un texto más largo que su columna se rechaza con 400 y la variante respeta el largo de medida, calibre y color.
@@ -87,11 +88,11 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
 - `respuestas-api.test.js` (5): JSON mal formado (400), eliminación solo de órdenes pendientes sin avance (400 y 404), usuario inexistente (404), cantidad o material inválido al editar una bobina (400) y fechas inexistentes en la auditoría (400) (DEF-023).
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada.
-- `sanitize.test.js` (4): sanitización de texto, números y objetos (un número mal escrito como «2abc» queda como texto para que el servicio lo rechace); los campos de texto cuya clave contiene «id» no se convierten en número.
+- `sanitize.test.js` (5): sanitización de texto, números, objetos y arreglos dentro del cuerpo (las líneas de una venta) (un número mal escrito como «2abc» queda como texto para que el servicio lo rechace); los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
 - `usuarios.service.test.js` (5): nadie se quita su propio rol de administrador, se desactiva ni se elimina; con otro administrador activo sí se cambia a un admin; siempre queda al menos uno activo; el admin sí cambia su propio nombre o correo (DEF-021).
 - `variantes.test.js` (8): medida «ancho x largo» normalizada, tallas T15 a T30 solo para Cargadera (CR-019), calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
-- `ventas.service.test.js` (5): paquetes de 50, 100 o 500 unidades (CR-018), descuento por paquetes, aislamiento del vendedor y comprobante.
+- `ventas.service.test.js` (8): paquetes de 50, 100 o 500 unidades (CR-018), descuento por paquetes, venta con varios productos (una línea, un descuento y un movimiento por producto; todo o nada si falta stock), reglas de la venta (cliente, al menos un producto, hasta 20, sin variantes repetidas, tope del total), aislamiento del vendedor y comprobante con todas sus líneas (CR-022).
 
 CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
 
