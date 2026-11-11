@@ -1,6 +1,6 @@
 # Esquema de datos
 
-La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schema.sql); la inicialización y migración inicial están en `backend/src/config/initDb.js`. El diagrama entidad-relación, con todas las columnas y las 16 claves foráneas, está en [`er.md`](er.md).
+La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schema.sql); la inicialización y migración inicial están en `backend/src/config/initDb.js`. El diagrama entidad-relación, con todas las columnas y las 17 claves foráneas, está en [`er.md`](er.md).
 
 | Tabla           | Propósito                                 | Relaciones / notas                                                    |
 | --------------- | ----------------------------------------- | --------------------------------------------------------------------- |
@@ -14,7 +14,8 @@ La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schem
 | `plantillas_produccion` | Recetas/órdenes frecuentes reutilizables | El administrador mantiene plantillas para crear órdenes con datos sugeridos; una por variante (línea, medida, calibre y color) |
 | `inventario`    | Existencia agregada de producto terminado | Una fila por variante (familia, medida, calibre, color) |
 | `movimientos_inventario` | Ledger de producto terminado | Saldos iniciales, ingresos, producción, salidas y ventas, enlazados a la orden o la venta (ADR-003) |
-| `ventas`        | Venta, paquetes, precio y fecha           | `total` calculado por MySQL; movimiento enlazado al descontar stock; el comprobante se arma desde esta tabla (número `V-` + id) |
+| `ventas`        | Encabezado de la venta: cliente, vendedor, fecha y total | `total` = suma de sus líneas; el comprobante se arma con el encabezado y sus líneas (número `V-` + id) |
+| `ventas_detalle` | Productos de cada venta (CR-022)         | Variante, paquetes, unidades por paquete, precio por paquete y total de la línea (calculado por MySQL); un movimiento de inventario por línea |
 
 La migración `backend/sql/migrations/20261020_roles_and_stock_movements.sql` amplía los roles, crea ambos ledgers e importa los saldos existentes como movimientos iniciales. Se probó dos veces sobre un esquema previo y datos ficticios en una instancia temporal aislada MariaDB 10.4.32. El respaldo y la restauración se ensayaron el 2026-10-27 ([`../operations/backup-restore.md`](../operations/backup-restore.md)). `db:init` omite las migraciones por defecto y avisa que están pendientes. Para autorizarlas se requieren `DB_APPLY_MIGRATIONS=true` y `DB_BACKUP_CONFIRMED=true`, tras verificar el respaldo, revisar el plan y obtener aprobación expresa; cada migración aplicada queda en la tabla `schema_migrations` y no se repite. Hasta el 2026-10-27 la ruta de las migraciones en `initDb.js` era incorrecta y esas variables no tenían efecto (DEF-015). Si una migración se aplicó a mano sin registrarla, se volvería a ejecutar: antes de usar las variables sobre una base existente hay que comparar `schema_migrations` con la carpeta. En el `meviplast_db` local están registradas las 11 (verificado el 2026-10-27, EV-2026-10-27-06). `db:init` sí crea el esquema y agrega datos demo, así que tampoco debe tratarse como una operación inocua sobre datos existentes.
 
@@ -31,6 +32,8 @@ La migración `backend/sql/migrations/20261026_finished_product_sales_catalog.sq
 La migración `backend/sql/migrations/20261027_login_lockout.sql` agrega a `usuarios` los campos `intentos_fallidos` y `bloqueado_hasta` para el bloqueo temporal por intentos fallidos (HU-019). Solo agrega columnas; no modifica datos existentes.
 
 La migración `backend/sql/migrations/20261026_seed_demo_inventory.sql` agrega existencias DEMO de ejemplo a las seis materias primas y a las seis líneas de producto terminado. No registra ventas ni movimientos y solo actualiza materias primas de ejemplo que todavía están en cero y sin proveedor; las variantes de producto terminado solo se insertan si no existen. En las ubicaciones y proveedores se indica DEMO para distinguirlas de existencias reales.
+
+La migración `backend/sql/migrations/20261111_ventas_detalle.sql` crea `ventas_detalle`, copia cada venta anterior como una venta de una línea y quita del encabezado las columnas de producto; el total del encabezado deja de ser calculado y conserva su valor (CR-022). Es idempotente.
 
 La migración `backend/sql/migrations/20261110_lineas_producto.sql` crea `lineas_producto` con las seis líneas de RN-012 (CR-020). `produccion`, `plantillas_produccion` e `inventario` siguen guardando el nombre de la línea como texto; el servidor lo valida contra esta tabla. Es idempotente.
 

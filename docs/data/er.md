@@ -95,16 +95,21 @@ erDiagram
     ventas {
         INT id PK
         VARCHAR cliente
-        VARCHAR producto
-        DECIMAL cantidad "unidades"
-        DECIMAL precio_unitario
-        INT inventario_id FK
-        INT cantidad_paquetes
-        INT unidades_paquete "1 a 500"
-        DECIMAL precio_paquete
-        DECIMAL total "generada: paquetes x precio"
+        DECIMAL total "suma de sus líneas (CR-022)"
         INT usuario_id FK
         DATETIME fecha
+    }
+    ventas_detalle {
+        INT id PK
+        INT venta_id FK
+        INT inventario_id FK
+        VARCHAR producto "variante al momento de vender"
+        DECIMAL cantidad "unidades"
+        DECIMAL precio_unitario
+        INT cantidad_paquetes "1 a 1 000"
+        INT unidades_paquete "50, 100 o 500"
+        DECIMAL precio_paquete
+        DECIMAL total "generada: paquetes x precio"
     }
     movimientos_materia_prima {
         INT id PK
@@ -141,7 +146,8 @@ erDiagram
     materia_prima ||--o{ movimientos_materia_prima : "materia_prima_id, RESTRICT"
     produccion |o--o{ movimientos_materia_prima : "produccion_id, SET NULL"
     produccion |o--o{ movimientos_inventario : "produccion_id, SET NULL"
-    inventario |o--o{ ventas : "inventario_id, SET NULL"
+    ventas ||--|{ ventas_detalle : "venta_id, CASCADE"
+    inventario |o--o{ ventas_detalle : "inventario_id, SET NULL"
     inventario ||--o{ movimientos_inventario : "inventario_id, RESTRICT"
     ventas |o--o{ movimientos_inventario : "venta_id, SET NULL"
 ```

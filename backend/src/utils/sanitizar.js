@@ -63,7 +63,10 @@ function sanitizarObjeto(valor) {
           claveNormalizada,
         );
 
-      if (item !== null && typeof item === "object" && !Array.isArray(item)) {
+      // Un arreglo dentro del objeto (p. ej. las líneas de una venta, CR-022) se sanea elemento por elemento
+      if (Array.isArray(item)) {
+        limpio[nombre] = sanitizarObjeto(item);
+      } else if (item !== null && typeof item === "object") {
         limpio[nombre] = sanitizarObjeto(item);
       } else if (typeof item === "string") {
         if (

@@ -191,23 +191,37 @@ const FLUJOS = [
     await form.locator("select[name=unidades_paquete]").selectOption("50");
     await form.locator("input[name=cantidad_paquetes]").fill("1001");
     await form.locator("input[name=precio_paquete]").fill("1500");
-    await form.locator("button[type=submit]").click();
+    const agregar = form.locator("button", { hasText: "Agregar a la venta" });
+    await agregar.click();
     await form.locator(".form-error", { hasText: "1.000" }).waitFor({ timeout: 10000 });
     await form.locator("input[name=cantidad_paquetes]").fill("2");
-    await form.locator("input[name=precio_paquete]").fill("1500");
+    await agregar.click();
+    // CR-022: un segundo producto de otra línea en la misma venta
+    await pagina.locator(".product-family-card").filter({ hasText: /[1-9][\d.]* unidades en stock/ }).nth(1).click();
+    await pagina.locator(".reference-option").first().click();
+    await form.locator("select[name=unidades_paquete]").selectOption("100");
+    await form.locator("input[name=cantidad_paquetes]").fill("1");
+    await form.locator("input[name=precio_paquete]").fill("9000");
+    await agregar.click();
+    const filasCarrito = form.locator(".sale-cart tbody tr");
+    if ((await filasCarrito.count()) !== 2) problemas.push(`el carrito tiene ${await filasCarrito.count()} productos`);
+    if (!(await form.locator(".sale-cart tfoot").innerText()).includes("12.000")) problemas.push("el total del carrito no es $12.000");
     // «Revisar» cierra la confirmación sin guardar: no se abre el comprobante
     await form.locator("button[type=submit]").click();
+    const resumen = await pagina.locator(".confirm-modal .confirm-summary").innerText();
+    if (!resumen.includes("Producto 2")) problemas.push("la confirmación no lista los dos productos");
     await pagina.locator(".confirm-modal .confirm-cancel").click();
     if (await pagina.locator(".receipt").count()) throw new Error("Revisar guardó la venta");
     await guardarConConfirmacion(pagina, form);
     const comprobante = pagina.locator(".receipt");
     await comprobante.waitFor({ timeout: 10000 });
+    if ((await comprobante.locator(".receipt-table tbody tr").count()) !== 2) problemas.push("el comprobante no tiene los dos productos");
     const numero = await comprobante.locator(".receipt-number span").innerText();
     if (!/V-\d{6}/.test(numero)) throw new Error(`número de comprobante: ${numero}`);
     await comprobante.locator("text=Cerrar").click();
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
-    return `comprobante ${numero.replace("N.º ", "")}`;
+    return `comprobante ${numero.replace("N.º ", "")} con 2 productos`;
   }],
   ["Teclado: ventanas de confirmación y comprobante (RNF-012)", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);

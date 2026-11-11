@@ -25,6 +25,7 @@ const COLUMNAS = {
     porProducto: [["Producto", "producto", 40], ["Unidades", "unidades", 14, FORMATO_UNIDADES], ["Total vendido", "total", 18, FORMATO_DINERO]],
     detalle: [
       ["Fecha", "fecha", 18, FORMATO_FECHA],
+      ["Venta", "numero", 12],
       ["Cliente", "cliente", 32],
       ["Producto", "producto", 40],
       ["Cantidad", "cantidad", 12, FORMATO_UNIDADES],

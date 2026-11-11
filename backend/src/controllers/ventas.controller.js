@@ -12,21 +12,21 @@ async function listar(req, res) {
 
 async function registrar(req, res) {
   try {
-    const { cliente, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete } = req.body;
-    if (!cliente || !inventario_id || !cantidad_paquetes || !unidades_paquete || !precio_paquete) {
+    // CR-022: { cliente, items: [{ inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete }] };
+    // también acepta el formato anterior, con un solo producto en el cuerpo
+    const { cliente, items, inventario_id } = req.body || {};
+    if (!cliente || (!Array.isArray(items) && !inventario_id)) {
       return res
         .status(400)
-        .json({
-          mensaje: "cliente, variante, paquetes, unidades por paquete y precio por paquete son obligatorios",
-        });
+        .json({ mensaje: "El cliente y al menos un producto (variante, paquetes, unidades por paquete y precio) son obligatorios" });
     }
     const venta = await ventasService.registrar(req.body, req.usuario.id);
     res.status(201).json(venta);
   } catch (error) {
-    log.error("Error al atender la petición", { error });
+    if (!error.statusCode) log.error("Error al atender la petición", { error });
     res
-      .status(400)
-      .json({ mensaje: error.message || "Error al registrar la venta" });
+      .status(error.statusCode || 500)
+      .json({ mensaje: error.statusCode ? error.message : "Error al registrar la venta" });
   }
 }
 

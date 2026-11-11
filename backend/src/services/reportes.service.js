@@ -62,23 +62,28 @@ async function detalleProduccion(periodo, ahora = new Date()) {
 
 async function detalleVentas(periodo, ahora = new Date()) {
   const rango = limitesPeriodo(periodo, ahora);
+  // CR-022: una fila por producto vendido, con la venta a la que pertenece (para abrir su comprobante)
   const [detalle] = await pool.query(
-    `SELECT id, fecha, cliente, producto, cantidad, precio_unitario, total
-     FROM ventas
-     WHERE fecha >= ? AND fecha < ?
-     ORDER BY fecha DESC, id DESC`,
+    `SELECT d.id, v.id AS venta_id, CONCAT('V-', LPAD(v.id, 6, '0')) AS numero, v.fecha, v.cliente,
+            d.producto, d.cantidad, d.precio_unitario, d.total
+     FROM ventas_detalle d
+     JOIN ventas v ON v.id = d.venta_id
+     WHERE v.fecha >= ? AND v.fecha < ?
+     ORDER BY v.fecha DESC, v.id DESC, d.id`,
     [rango.desde, rango.hasta],
   );
   const [resumen] = await pool.query(
-    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(cantidad), 0) AS unidades,
-            COALESCE(SUM(total), 0) AS total_vendido
-     FROM ventas WHERE fecha >= ? AND fecha < ?`,
-    [rango.desde, rango.hasta],
+    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(v.total), 0) AS total_vendido,
+            COALESCE((SELECT SUM(d.cantidad) FROM ventas_detalle d JOIN ventas v2 ON v2.id = d.venta_id
+                      WHERE v2.fecha >= ? AND v2.fecha < ?), 0) AS unidades
+     FROM ventas v WHERE v.fecha >= ? AND v.fecha < ?`,
+    [rango.desde, rango.hasta, rango.desde, rango.hasta],
   );
   const [porProducto] = await pool.query(
-    `SELECT producto, SUM(cantidad) AS unidades, SUM(total) AS total
-     FROM ventas WHERE fecha >= ? AND fecha < ?
-     GROUP BY producto ORDER BY total DESC`,
+    `SELECT d.producto, SUM(d.cantidad) AS unidades, SUM(d.total) AS total
+     FROM ventas_detalle d JOIN ventas v ON v.id = d.venta_id
+     WHERE v.fecha >= ? AND v.fecha < ?
+     GROUP BY d.producto ORDER BY total DESC`,
     [rango.desde, rango.hasta],
   );
   return { periodo, ...rango, resumen: resumen[0], porProducto, detalle };
@@ -170,23 +175,25 @@ async function resumenVentas({ desde, hasta } = {}) {
   const condiciones = [];
   const valores = [];
   if (desde) {
-    condiciones.push("fecha >= ?");
+    condiciones.push("v.fecha >= ?");
     valores.push(desde);
   }
   if (hasta) {
-    condiciones.push("fecha <= ?");
+    condiciones.push("v.fecha <= ?");
     valores.push(hasta);
   }
   const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
 
   const [totales] = await pool.query(
-    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(total), 0) AS total_vendido
-     FROM ventas ${where}`,
+    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(v.total), 0) AS total_vendido
+     FROM ventas v ${where}`,
     valores
   );
+  // CR-022: las unidades y el total por producto salen de las líneas de cada venta
   const [porProducto] = await pool.query(
-    `SELECT producto, SUM(cantidad) AS unidades, SUM(total) AS total
-     FROM ventas ${where} GROUP BY producto ORDER BY total DESC`,
+    `SELECT d.producto, SUM(d.cantidad) AS unidades, SUM(d.total) AS total
+     FROM ventas_detalle d JOIN ventas v ON v.id = d.venta_id
+     ${where} GROUP BY d.producto ORDER BY total DESC`,
     valores
   );
 

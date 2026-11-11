@@ -141,17 +141,26 @@ CREATE TABLE IF NOT EXISTS inventario (
 CREATE TABLE IF NOT EXISTS ventas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   cliente VARCHAR(120) NOT NULL,
+  total DECIMAL(12,2) NOT NULL DEFAULT 0,
+  usuario_id INT NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+-- CR-022: líneas de la venta (un producto por línea); el total de la venta es la suma de sus líneas
+CREATE TABLE IF NOT EXISTS ventas_detalle (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  venta_id INT NOT NULL,
+  inventario_id INT NULL,
   producto VARCHAR(255) NOT NULL,
   cantidad DECIMAL(10,2) NOT NULL,
   precio_unitario DECIMAL(12,4) NOT NULL,
-  inventario_id INT NULL,
   cantidad_paquetes INT NOT NULL,
   unidades_paquete INT NOT NULL,
   precio_paquete DECIMAL(12,2) NOT NULL,
   total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_paquetes * precio_paquete) STORED,
-  usuario_id INT NULL,
-  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_ventas_detalle_venta (venta_id),
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
   FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE SET NULL
 );
 
