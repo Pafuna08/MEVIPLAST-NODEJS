@@ -100,13 +100,14 @@ export function ReportDetail({ data, onExportExcel, onReceipt }) {
         ) : (
           <>
             {data.detalle.length > 0 && <p className="panel-note">Haz clic en una venta para ver su comprobante e imprimirlo o guardarlo en PDF.</p>}
-            <DataTable columns={["Fecha", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total", "Comprobante"]} rows={data.detalle.map((item) => ({
+            <DataTable columns={["Fecha", "Venta", "Cliente", "Producto", "Cantidad", "Precio unitario", "Total", "Comprobante"]} rows={data.detalle.map((item) => ({
               key: item.id,
               className: "clickable-row",
-              onClick: () => onReceipt(item.id),
-              cells: <><td>{item.fecha}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td><td><button className="link-button" type="button" aria-label={`Ver el comprobante de la venta a ${sanitizeText(item.cliente)}`} onClick={(event) => {
+              // CR-022: cada fila es un producto; el comprobante es el de su venta
+              onClick: () => onReceipt(item.venta_id ?? item.id),
+              cells: <><td>{item.fecha}</td><td>{sanitizeText(item.numero || "")}</td><td>{sanitizeText(item.cliente)}</td><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td><td>{money(item.precio_unitario)}</td><td>{money(item.total)}</td><td><button className="link-button" type="button" aria-label={`Ver el comprobante de la venta a ${sanitizeText(item.cliente)}`} onClick={(event) => {
                 event.stopPropagation();
-                onReceipt(item.id);
+                onReceipt(item.venta_id ?? item.id);
               }}>Ver</button></td></>,
             }))} />
           </>

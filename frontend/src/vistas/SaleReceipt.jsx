@@ -2,9 +2,11 @@ import React from "react";
 import { dateTimeFormat, money, number, packagesLabel, sanitizeText } from "../comun/formato.js";
 import { Dialogo } from "../comun/Dialogo.jsx";
 
-// Comprobante imprimible de una venta (RF-023)
+const variantOf = (item) => [item.medida, item.calibre && `calibre ${item.calibre}`, item.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
+
+// Comprobante imprimible de una venta (RF-023), con una fila por producto (CR-022)
 export function SaleReceipt({ sale, onClose }) {
-  const variante = [sale.medida, sale.calibre && `calibre ${sale.calibre}`, sale.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
+  const items = Array.isArray(sale.items) && sale.items.length ? sale.items : [sale];
   return (
     <Dialogo onClose={() => onClose()} labelledBy="receipt-title" overlayClassName="receipt-overlay" className="receipt">
         <header className="receipt-header">
@@ -26,13 +28,18 @@ export function SaleReceipt({ sale, onClose }) {
         <table className="receipt-table">
           <thead><tr><th>Producto</th><th>Presentación</th><th>Unidades</th><th>Precio por paquete</th><th>Total</th></tr></thead>
           <tbody>
-            <tr>
-              <td><strong>{sanitizeText(sale.familia || sale.producto)}</strong>{variante && <small>{variante}</small>}</td>
-              <td>{packagesLabel(sale)}</td>
-              <td>{number(sale.cantidad)}</td>
-              <td>{money(sale.precio_paquete)}</td>
-              <td>{money(sale.total)}</td>
-            </tr>
+            {items.map((item, index) => {
+              const variante = variantOf(item);
+              return (
+                <tr key={item.id ?? index}>
+                  <td><strong>{sanitizeText(item.familia || item.producto)}</strong>{variante && <small>{variante}</small>}</td>
+                  <td>{packagesLabel(item)}</td>
+                  <td>{number(item.cantidad)}</td>
+                  <td>{money(item.precio_paquete)}</td>
+                  <td>{money(item.total)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         <p className="receipt-total"><span>Total</span><strong>{money(sale.total)}</strong></p>

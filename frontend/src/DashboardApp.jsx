@@ -69,17 +69,23 @@ function irreversibleSummary(view, payload, data) {
     };
   }
   if (view === "ventas") {
-    const item = data.inventory.find((row) => Number(row.id) === Number(payload.inventario_id));
-    const packages = Number(payload.cantidad_paquetes) || 0;
-    const perPackage = Number(payload.unidades_paquete) || 0;
+    // CR-022: una línea del resumen por producto y el total de la venta
+    const items = Array.isArray(payload.items) ? payload.items : [payload];
+    const total = items.reduce((sum, item) => sum + (Number(item.cantidad_paquetes) || 0) * (Number(item.precio_paquete) || 0), 0);
     return {
       title: "Confirmar venta",
       lines: [
         ["Cliente", sanitizeText(payload.cliente)],
-        ["Producto", safeProductName(item?.producto) || `#${payload.inventario_id}`],
-        ["Presentación", `${packagesLabel({ cantidad_paquetes: packages, unidades_paquete: perPackage })} = ${number(packages * perPackage)} unidades`],
-        ["Precio por paquete", money(payload.precio_paquete)],
-        ["Total", money(packages * (Number(payload.precio_paquete) || 0))],
+        ...items.map((sale, index) => {
+          const item = data.inventory.find((row) => Number(row.id) === Number(sale.inventario_id));
+          const packages = Number(sale.cantidad_paquetes) || 0;
+          const perPackage = Number(sale.unidades_paquete) || 0;
+          return [
+            items.length > 1 ? `Producto ${index + 1}` : "Producto",
+            `${safeProductName(item?.producto) || `#${sale.inventario_id}`} · ${packagesLabel({ cantidad_paquetes: packages, unidades_paquete: perPackage })} = ${number(packages * perPackage)} unidades · ${money(packages * (Number(sale.precio_paquete) || 0))}`,
+          ];
+        }),
+        ["Total", money(total)],
       ],
     };
   }
@@ -244,6 +250,17 @@ export default function DashboardApp() {
     event.preventDefault();
     const form = event.currentTarget;
     const payload = sanitizePayload(Object.fromEntries(new FormData(form)));
+    const summary = irreversibleSummary(activeView, payload, data);
+    if (summary) {
+      setPendingSave({ form, payload, ...summary });
+      return;
+    }
+    await save(form, payload);
+  }
+
+  // Formularios que arman su propio cuerpo (la venta con varias líneas, CR-022)
+  async function submitPayload(form, rawPayload) {
+    const payload = sanitizePayload(rawPayload);
     const summary = irreversibleSummary(activeView, payload, data);
     if (summary) {
       setPendingSave({ form, payload, ...summary });
@@ -471,6 +488,7 @@ export default function DashboardApp() {
     token,
     navigate,
     submitForm,
+    submitPayload,
     saving,
     toggleUser,
     unlockUser,
@@ -620,6 +638,7 @@ function renderView({
   token,
   navigate,
   submitForm,
+  submitPayload,
   saving,
   toggleUser,
   unlockUser,
@@ -646,7 +665,7 @@ function renderView({
   if (view === "asignar") return <Assign data={data} lines={lines} onSubmit={submitForm} saving={saving} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
-  if (view === "ventas") return <Sales data={data} lines={lines} onSubmit={submitForm} saving={saving} onReceipt={openReceipt} />;
+  if (view === "ventas") return <Sales data={data} lines={lines} onSubmitSale={submitPayload} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports role={role} />;
   if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;

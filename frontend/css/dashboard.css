@@ -905,6 +905,67 @@ th {
   margin: 0;
   color: var(--navy);
 }
+/* Venta con varios productos (CR-022) */
+.sale-line-editor {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafb;
+}
+.sale-line-editor legend {
+  padding: 0 6px;
+  color: var(--navy);
+  font-weight: 800;
+}
+.sale-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.sale-line-stock {
+  color: var(--steel);
+  font-size: 0.82rem;
+}
+.sale-cart {
+  grid-column: 1 / -1;
+  overflow-x: auto;
+}
+.sale-cart table {
+  min-width: 600px;
+}
+.sale-cart tfoot th {
+  color: var(--navy);
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sale-cart-empty {
+  margin: 0;
+  color: var(--steel);
+  font-size: 0.85rem;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .sale-line-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Órdenes del administrador: tabla compacta con filtros y detalle en una ventana */
 .order-filters {
   display: flex;
