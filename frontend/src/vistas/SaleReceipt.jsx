@@ -5,7 +5,7 @@ import { Dialogo } from "../comun/Dialogo.jsx";
 const variantOf = (item) => [item.medida, item.calibre && `calibre ${item.calibre}`, item.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
 
 // Comprobante imprimible de una venta (RF-023), con una fila por producto (CR-022)
-export function SaleReceipt({ sale, onClose }) {
+export function SaleReceipt({ sale, onClose, onOpenPdf }) {
   const items = Array.isArray(sale.items) && sale.items.length ? sale.items : [sale];
   return (
     <Dialogo onClose={() => onClose()} labelledBy="receipt-title" overlayClassName="receipt-overlay" className="receipt">
@@ -44,9 +44,10 @@ export function SaleReceipt({ sale, onClose }) {
         </table>
         <p className="receipt-total"><span>Total</span><strong>{money(sale.total)}</strong></p>
         <p className="receipt-note">Documento de control interno. No es una factura electrónica.</p>
+        <p className="receipt-hint">«Abrir PDF» lo abre en otra pestaña; desde allí lo imprimes o lo descargas con los botones del visor.</p>
         <div className="confirm-actions receipt-actions">
           <button className="confirm-cancel" type="button" onClick={onClose}>Cerrar</button>
-          <button className="confirm-delete" type="button" onClick={() => window.print()}>Imprimir / guardar PDF</button>
+          <button className="confirm-delete" type="button" onClick={() => onOpenPdf(sale.id)}>Abrir PDF</button>
         </div>
       </Dialogo>
   );

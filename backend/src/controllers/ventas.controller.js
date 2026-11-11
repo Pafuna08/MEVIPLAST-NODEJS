@@ -1,4 +1,5 @@
 const ventasService = require("../services/ventas.service");
+const { generarComprobantePdf } = require("../services/comprobantePdf.service");
 const log = require("../utils/logger").crearLogger("ventas");
 
 async function listar(req, res) {
@@ -45,4 +46,26 @@ async function comprobante(req, res) {
   }
 }
 
-module.exports = { listar, registrar, comprobante };
+// El comprobante en PDF, para abrirlo en una pestaña e imprimirlo o descargarlo desde el visor del navegador
+async function comprobantePdf(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ mensaje: "Identificador de venta inválido" });
+  }
+  try {
+    const venta = await ventasService.obtenerComprobante(id, req.usuario);
+    if (!venta) return res.status(404).json({ mensaje: "Venta no encontrada" });
+    const pdf = await generarComprobantePdf(venta);
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="comprobante-${venta.numero}.pdf"`,
+      "Cache-Control": "no-store",
+    });
+    res.send(pdf);
+  } catch (error) {
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el PDF del comprobante" });
+  }
+}
+
+module.exports = { listar, registrar, comprobante, comprobantePdf };

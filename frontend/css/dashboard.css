@@ -952,6 +952,9 @@ th {
   color: var(--steel);
   font-size: 0.85rem;
 }
+.nowrap {
+  white-space: nowrap;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1111,6 +1114,16 @@ tbody tr.clickable-row:hover {
 .empty {
   padding: 20px;
   color: var(--steel);
+}
+/* La tabla del comprobante cabe en la ventana: sin el ancho mínimo de las tablas del panel */
+.receipt .receipt-table {
+  min-width: 0;
+}
+.receipt-hint {
+  margin: 0 22px 12px;
+  color: var(--steel);
+  font-size: 0.8rem;
+  text-align: right;
 }
 .receipt {
   width: min(680px, 100%);
