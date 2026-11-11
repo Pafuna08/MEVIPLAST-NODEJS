@@ -17,19 +17,23 @@ const {
   migracionesPendientes,
 } = require("./schema");
 require("dotenv").config();
+const { datosConexion, zonaHoraria } = require("./conexion");
 
-const servidor = {
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3306,
-};
+// Mismos datos de conexión que el servidor (SSL y zona horaria si están configurados)
+const servidor = datosConexion();
 
 async function main() {
+  // Sin datos DEMO hace falta la contraseña del administrador: se revisa antes de crear nada
+  const sinDemo = String(process.env.DB_DEMO || "true").trim().toLowerCase() === "false";
+  if (sinDemo && (process.env.ADMIN_PASSWORD || "").length < 10) {
+    throw new Error("Con DB_DEMO=false indica ADMIN_PASSWORD con al menos 10 caracteres");
+  }
   const connection = await mysql.createConnection({
     ...servidor,
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
     multipleStatements: true,
   });
+  const zona = zonaHoraria();
+  if (zona) await connection.query("SET time_zone = ?", [zona]);
 
   const nombreBase = validarNombreBase(process.env.DB_NAME || "meviplast_db");
   const [existentes] = await connection.query(
@@ -44,12 +48,112 @@ async function main() {
   await connection.changeUser({ database: nombreBase });
   await connection.query(leerEsquema());
 
-  // Migracion segura para instalaciones creadas antes de los campos de avance.
-  await connection.query(`ALTER TABLE produccion
-    ADD COLUMN IF NOT EXISTS prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
-    ADD COLUMN IF NOT EXISTS cantidad_producida DECIMAL(10,2) NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS observaciones VARCHAR(500) NULL`);
+  // Migracion segura para instalaciones creadas antes de los campos de avance. Solo agrega las columnas
+  // que falten (ADD COLUMN IF NOT EXISTS es de MariaDB; MySQL 8, el de la nube, no lo tiene).
+  const [columnasProduccion] = await connection.query(
+    "SELECT column_name AS nombre FROM information_schema.columns WHERE table_schema = ? AND table_name = 'produccion'",
+    [nombreBase],
+  );
+  const columnasActuales = new Set(columnasProduccion.map((fila) => fila.nombre));
+  const faltantes = [
+    ["prioridad", "ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media'"],
+    ["cantidad_producida", "DECIMAL(10,2) NOT NULL DEFAULT 0"],
+    ["observaciones", "VARCHAR(500) NULL"],
+  ].filter(([columna]) => !columnasActuales.has(columna));
+  if (faltantes.length) {
+    await connection.query(`ALTER TABLE produccion ${faltantes.map(([columna, tipo]) => `ADD COLUMN ${columna} ${tipo}`).join(", ")}`);
+  }
 
+  // DB_DEMO=false (servidor público o piloto): sin cuentas ni datos de ejemplo, solo el administrador
+  // con la contraseña de ADMIN_PASSWORD. Por defecto se siembran los datos DEMO (local y pruebas).
+  if (sinDemo) {
+    await crearSoloAdministrador(connection);
+  } else {
+    await sembrarDemo(connection);
+  }
+
+  const migracionesPath = path.join(__dirname, "..", "..", "sql", "migrations");
+  const archivosMigracion = fs.existsSync(migracionesPath)
+    ? fs.readdirSync(migracionesPath).filter((file) => file.endsWith(".sql"))
+    : [];
+  const crearTablaMigraciones = () =>
+    connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(255) NOT NULL UNIQUE,
+      aplicada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+  // Una base nueva ya tiene el esquema final de schema.sql: las migraciones
+  // solo sirven para bases anteriores, así que se registran como aplicadas.
+  if (baseNueva && archivosMigracion.length) {
+    await crearTablaMigraciones();
+    for (const migracion of archivosMigracion) {
+      await connection.query(
+        "INSERT IGNORE INTO schema_migrations (nombre) VALUES (?)",
+        [migracion],
+      );
+    }
+    console.log(
+      `Base nueva: schema.sql ya incluye las ${archivosMigracion.length} migraciones; quedaron registradas en schema_migrations.`,
+    );
+  }
+
+  if (
+    fs.existsSync(migracionesPath) &&
+    process.env.DB_APPLY_MIGRATIONS === "true"
+  ) {
+    if (process.env.DB_BACKUP_CONFIRMED !== "true") {
+      throw new Error(
+        "Confirma un respaldo verificado con DB_BACKUP_CONFIRMED=true antes de aplicar migraciones",
+      );
+    }
+    await crearTablaMigraciones();
+    const migraciones = [...archivosMigracion].sort();
+    for (const migracion of migraciones) {
+      const [aplicadas] = await connection.query(
+        "SELECT id FROM schema_migrations WHERE nombre = ?",
+        [migracion],
+      );
+      if (aplicadas.length) continue;
+      const sql = fs.readFileSync(
+        path.join(migracionesPath, migracion),
+        "utf8",
+      );
+      await connection.query(sql);
+      await connection.query(
+        "INSERT INTO schema_migrations (nombre) VALUES (?)",
+        [migracion],
+      );
+      console.log(`Migracion aplicada: ${migracion}`);
+    }
+  } else if (!baseNueva && archivosMigracion.length) {
+    const [tabla] = await connection.query(
+      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'schema_migrations'",
+      [nombreBase],
+    );
+    const [registradas] = tabla.length
+      ? await connection.query("SELECT nombre FROM schema_migrations")
+      : [[]];
+    const pendientes = migracionesPendientes(
+      archivosMigracion,
+      registradas.map((fila) => fila.nombre),
+    );
+    if (pendientes.length) {
+      console.warn(
+        `Migraciones pendientes omitidas (${pendientes.length}): ${pendientes.join(", ")}. Revisa un respaldo verificado y configura DB_APPLY_MIGRATIONS=true y DB_BACKUP_CONFIRMED=true para autorizarlas.`,
+      );
+    } else {
+      console.log("Sin migraciones pendientes.");
+    }
+  }
+
+  console.log("Base de datos inicializada correctamente.");
+  await connection.end();
+  process.exit(0);
+}
+
+// Cuentas demo por rol, materias primas, órdenes y existencias DEMO (bases locales y de prueba)
+async function sembrarDemo(connection) {
   const usuariosDemo = [
     {
       nombre: "Administrador",
@@ -214,85 +318,24 @@ async function main() {
     await connection.query(fs.readFileSync(semillaDemo, "utf8"));
     console.log("Existencias DEMO cargadas.");
   }
+}
 
-  const migracionesPath = path.join(__dirname, "..", "..", "sql", "migrations");
-  const archivosMigracion = fs.existsSync(migracionesPath)
-    ? fs.readdirSync(migracionesPath).filter((file) => file.endsWith(".sql"))
-    : [];
-  const crearTablaMigraciones = () =>
-    connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      nombre VARCHAR(255) NOT NULL UNIQUE,
-      aplicada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-  // Una base nueva ya tiene el esquema final de schema.sql: las migraciones
-  // solo sirven para bases anteriores, así que se registran como aplicadas.
-  if (baseNueva && archivosMigracion.length) {
-    await crearTablaMigraciones();
-    for (const migracion of archivosMigracion) {
-      await connection.query(
-        "INSERT IGNORE INTO schema_migrations (nombre) VALUES (?)",
-        [migracion],
-      );
-    }
-    console.log(
-      `Base nueva: schema.sql ya incluye las ${archivosMigracion.length} migraciones; quedaron registradas en schema_migrations.`,
-    );
+// Solo el administrador, con una contraseña propia: para una base que verá gente de afuera
+async function crearSoloAdministrador(connection) {
+  const password = process.env.ADMIN_PASSWORD || "";
+  if (password.length < 10) {
+    throw new Error("Con DB_DEMO=false indica ADMIN_PASSWORD con al menos 10 caracteres");
   }
-
-  if (
-    fs.existsSync(migracionesPath) &&
-    process.env.DB_APPLY_MIGRATIONS === "true"
-  ) {
-    if (process.env.DB_BACKUP_CONFIRMED !== "true") {
-      throw new Error(
-        "Confirma un respaldo verificado con DB_BACKUP_CONFIRMED=true antes de aplicar migraciones",
-      );
-    }
-    await crearTablaMigraciones();
-    const migraciones = [...archivosMigracion].sort();
-    for (const migracion of migraciones) {
-      const [aplicadas] = await connection.query(
-        "SELECT id FROM schema_migrations WHERE nombre = ?",
-        [migracion],
-      );
-      if (aplicadas.length) continue;
-      const sql = fs.readFileSync(
-        path.join(migracionesPath, migracion),
-        "utf8",
-      );
-      await connection.query(sql);
-      await connection.query(
-        "INSERT INTO schema_migrations (nombre) VALUES (?)",
-        [migracion],
-      );
-      console.log(`Migracion aplicada: ${migracion}`);
-    }
-  } else if (!baseNueva && archivosMigracion.length) {
-    const [tabla] = await connection.query(
-      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'schema_migrations'",
-      [nombreBase],
-    );
-    const [registradas] = tabla.length
-      ? await connection.query("SELECT nombre FROM schema_migrations")
-      : [[]];
-    const pendientes = migracionesPendientes(
-      archivosMigracion,
-      registradas.map((fila) => fila.nombre),
-    );
-    if (pendientes.length) {
-      console.warn(
-        `Migraciones pendientes omitidas (${pendientes.length}): ${pendientes.join(", ")}. Revisa un respaldo verificado y configura DB_APPLY_MIGRATIONS=true y DB_BACKUP_CONFIRMED=true para autorizarlas.`,
-      );
-    } else {
-      console.log("Sin migraciones pendientes.");
-    }
+  const [existe] = await connection.query("SELECT id FROM usuarios WHERE usuario = 'admin'");
+  if (existe.length) {
+    console.log("El usuario 'admin' ya existe, se omite.");
+    return;
   }
-
-  console.log("Base de datos inicializada correctamente.");
-  await connection.end();
-  process.exit(0);
+  await connection.query(
+    "INSERT INTO usuarios (nombre, usuario, correo, password_hash, rol) VALUES ('Administrador', 'admin', ?, ?, 'admin')",
+    [process.env.ADMIN_EMAIL || null, await bcrypt.hash(password, 10)],
+  );
+  console.log("Usuario 'admin' creado sin datos DEMO; crea las demás cuentas desde el panel.");
 }
 
 main().catch((error) => {

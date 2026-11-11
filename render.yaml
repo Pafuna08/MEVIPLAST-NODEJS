@@ -1,0 +1,62 @@
+# Despliegue en Render (plan gratuito) de MEVIPLAST: el panel y la API en un solo servicio web.
+# La base MySQL va fuera de Render (Render no ofrece MySQL): un MySQL 8 administrado con conexión cifrada,
+# por ejemplo Aiven. Pasos completos en docs/operations/despliegue-render.md.
+# Las variables marcadas con «sync: false» son secretos: se escriben en el panel de Render, nunca aquí.
+services:
+  - type: web
+    name: meviplast
+    runtime: node
+    plan: free
+    region: virginia
+    branch: develop
+    autoDeploy: true
+    buildCommand: npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm run build --prefix frontend
+    startCommand: cd backend && node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      # Hora de Colombia para el servidor (reportes por día) y para las fechas que guarda MySQL
+      - key: TZ
+        value: America/Bogota
+      - key: DB_TIME_ZONE
+        value: "-05:00"
+      - key: DB_NAME
+        value: meviplast_db
+      - key: DB_SSL
+        value: "true"
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # Certificado CA de la base (texto PEM; los saltos de línea pueden escribirse como \n)
+      - key: DB_SSL_CA
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: LOG_LEVEL
+        value: info
+      # Dirección pública del servicio (https://meviplast.onrender.com o la que asigne Render), para los
+      # enlaces de recuperación de contraseña
+      - key: FRONTEND_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
