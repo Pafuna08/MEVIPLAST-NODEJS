@@ -188,6 +188,15 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
     assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.supervisor)).status, 403, "CR-021");
     assert.equal((await llamar("GET", "/ventas/999999/comprobante", tokens.admin)).status, 404);
+    // El comprobante en PDF, para abrirlo en otra pestaña
+    const pdf = await fetch(`${base}/ventas/${venta.body.id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.vendedor}` } });
+    assert.equal(pdf.status, 200);
+    assert.equal(pdf.headers.get("content-type"), "application/pdf");
+    assert.match(pdf.headers.get("content-disposition"), /inline; filename="comprobante-V-\d{6}\.pdf"/);
+    assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+    const pdfSupervisor = await fetch(`${base}/ventas/${venta.body.id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.supervisor}` } });
+    assert.equal(pdfSupervisor.status, 403, "CR-021");
+    assert.equal((await fetch(`${base}/ventas/999999/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.admin}` } })).status, 404);
 
     // RF-028: el detalle del periodo se descarga en Excel con los mismos datos
     const descargar = (ruta, token) => fetch(`${base}${ruta}`, { headers: { Authorization: `Bearer ${token}` } });
