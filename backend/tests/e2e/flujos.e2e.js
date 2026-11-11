@@ -219,6 +219,8 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       ["POST", "/ventas", ["admin", "vendedor"]],
       ["GET", "/reportes/produccion", ["admin", "supervisor"]],
       ["GET", "/reportes/auditoria", ["admin"]],
+      ["GET", "/lineas", ["admin", "supervisor", "almacenista", "vendedor"]],
+      ["POST", "/lineas", ["admin"]],
     ];
     for (const [metodo, ruta, permitidos] of matriz) {
       assert.equal((await llamar(metodo, ruta, null, metodo === "POST" ? {} : undefined)).status, 401, `${ruta} sin token`);
@@ -644,5 +646,34 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       { medida: "T15", producto: "Cargadera · T15 · calibre 3 · Negro", cantidad: 70 });
     const [[quedan]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario WHERE familia = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM plantillas_produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') AS n");
     assert.equal(Number(quedan.n), 0, "no queda ninguna Cargadera en «15 x 20»");
+  });
+
+  await t.test("CR-020: el administrador crea una línea nueva y se usa en órdenes, inventario y ventas", async () => {
+    const antes = await llamar("GET", "/lineas", tokens.vendedor);
+    assert.equal(antes.status, 200);
+    assert.deepEqual(antes.body.slice(0, 6), ["Adhesivo PP", "Adhesivo Seguridad", "Sencilla PP", "Bolsas para la basura", "Cargadera", "Troquel riñón"]);
+    assert.equal((await llamar("POST", "/lineas", tokens.supervisor, { nombre: "Bolsa de regalo" })).status, 403, "solo el administrador");
+    assert.equal((await llamar("POST", "/lineas", tokens.admin, { nombre: "<b>x</b>" })).status, 400);
+    const creada = await llamar("POST", "/lineas", tokens.admin, { nombre: "  bolsa   de regalo " });
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.nombre, "Bolsa de regalo");
+    const repetida = await llamar("POST", "/lineas", tokens.admin, { nombre: "BOLSA DE REGALO" });
+    assert.equal(repetida.status, 409);
+    assert.equal((await llamar("POST", "/lineas", tokens.admin, { nombre: "troquel rinon" })).status, 409, "la intercalación ignora tildes");
+    assert.ok((await llamar("GET", "/lineas", tokens.almacenista)).body.includes("Bolsa de regalo"));
+
+    // La línea nueva se mide en «ancho x largo» (RN-025) y sirve en órdenes e inventario
+    const orden = await llamar("POST", "/produccion", tokens.admin, { producto: "Bolsa de regalo", medida: "20x30", calibre: "2", color: "Rojo", cantidad: 30, prioridad: "media", materia_prima_id: bobina });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    assert.equal((await llamar("POST", "/produccion", tokens.admin, { producto: "Bolsa de regalo", medida: "T20", calibre: "2", color: "Rojo", cantidad: 30, prioridad: "media", materia_prima_id: bobina })).status, 400);
+    assert.ok((await llamar("GET", "/produccion", tokens.admin)).body.some((o) => o.id === orden.body.id), "la orden aparece en la lista");
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Bolsa de regalo", medida: "20 x 30", calibre: "2", color: "Rojo", cantidad: 100 });
+    assert.equal(ingreso.status, 201, JSON.stringify(ingreso.body));
+    const variante = (await llamar("GET", "/inventario", tokens.vendedor)).body.find((i) => i.familia === "Bolsa de regalo");
+    assert.equal(variante?.producto, "Bolsa de regalo · 20 x 30 · calibre 2 · Rojo");
+    const venta = await llamar("POST", "/ventas", tokens.vendedor, { cliente: "Cliente E2E", inventario_id: variante.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 });
+    assert.equal(venta.status, 201, JSON.stringify(venta.body));
+    const [[auditada]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'CREAR_LINEA_PRODUCTO' AND detalle LIKE '%Bolsa de regalo%'");
+    assert.equal(Number(auditada.n), 1);
   });
 });

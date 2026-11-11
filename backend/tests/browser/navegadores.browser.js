@@ -273,6 +273,7 @@ const FLUJOS = [
     for (const nombre of ["materia_prima_id", "tipo"]) {
       if ((await form.locator(`select[name=${nombre}]`).inputValue()) !== "") problemas.push(`${nombre} llega con una opción elegida`);
     }
+    if (await form.locator("option[value=__crear__]").count()) problemas.push("el almacenista ve «Crear nuevo material»");
     await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("compra");
     await form.locator("input[name=cantidad]").fill("25");
@@ -349,6 +350,60 @@ const FLUJOS = [
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
     return "ingreso guardado, también de Cargadera en talla T25";
+  }],
+  ["Administrador: crear línea y material desde los selectores (CR-020)", async (navegador, nombre) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "admin");
+    await pagina.goto(`${URL_BASE}/dashboard.html#produccion`);
+    await pagina.waitForLoadState("networkidle");
+    const form = formulario(pagina, "Nueva orden de producción");
+    const producto = form.locator("select[name=producto]");
+    const ventana = pagina.locator(".create-modal");
+    // Esc cierra la ventana sin crear y el selector queda en «Selecciona una línea»
+    await producto.selectOption("__crear__");
+    await ventana.waitFor({ timeout: 10000 });
+    await pagina.keyboard.press("Escape");
+    await ventana.waitFor({ state: "hidden", timeout: 10000 });
+    if ((await producto.inputValue()) !== "") problemas.push("tras cancelar, el selector no volvió a «Selecciona»");
+    // Línea nueva (una por navegador, porque comparten la base): queda elegida y se mide en ancho x largo
+    const linea = `Bolsa ${nombre}`;
+    await producto.selectOption("__crear__");
+    // Espacios de más y minúscula inicial: se guarda limpio, con mayúscula inicial
+    await ventana.locator("input[name=nombre]").fill(`  bolsa   ${nombre} `);
+    await ventana.locator("button[type=submit]").click();
+    await ventana.waitFor({ state: "hidden", timeout: 10000 });
+    if ((await producto.inputValue()) !== linea) problemas.push(`la línea nueva no quedó elegida (${await producto.inputValue()})`);
+    await form.locator("input[name=medida]").waitFor({ timeout: 10000 });
+    // Material nuevo: mismas reglas de «Registrar material»; queda elegido
+    const medida = { Edge: "61 x 91", Chrome: "62 x 92", Firefox: "63 x 93" }[nombre] || "64 x 94";
+    const materia = form.locator("select[name=materia_prima_id]");
+    await materia.selectOption("__crear__");
+    await ventana.waitFor({ timeout: 10000 });
+    await ventana.locator("select[name=tipo]").selectOption("PEBD");
+    await ventana.locator("input[name=medida]").fill("abc");
+    await ventana.locator("input[name=calibre]").fill("2");
+    await ventana.locator("select[name=color]").selectOption("Rojo");
+    await ventana.locator("input[name=peso_rollo]").fill("40");
+    await ventana.locator("button[type=submit]").click();
+    // Una medida inventada no pasa: la ventana sigue abierta con el aviso
+    await ventana.locator(".form-error").waitFor({ timeout: 10000 });
+    await ventana.locator("input[name=medida]").fill(medida);
+    await ventana.locator("button[type=submit]").click();
+    await ventana.waitFor({ state: "hidden", timeout: 10000 });
+    const elegida = await materia.locator("option:checked").textContent();
+    if (!elegida.includes(medida)) problemas.push(`el material nuevo no quedó elegido (${elegida})`);
+    // La orden con la línea y el material nuevos se guarda
+    await form.locator("input[name=medida]").fill("20 x 30");
+    await form.locator("input[name=calibre]").fill("2");
+    await form.locator("select[name=color]").selectOption("Rojo");
+    await form.locator("input[name=cantidad]").fill("10");
+    await form.locator("select[name=prioridad]").selectOption("media");
+    await form.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Registro guardado");
+    await pagina.locator(".order-row", { hasText: linea }).first().waitFor({ timeout: 10000 });
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `línea «${linea}» y bobina ${medida} creadas y usadas en una orden`;
   }],
   ["Administrador: reporte y descarga a Excel", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
