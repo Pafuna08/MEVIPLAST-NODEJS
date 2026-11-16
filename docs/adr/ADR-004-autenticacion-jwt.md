@@ -6,7 +6,7 @@
 
 ## Contexto
 
-El sistema tiene cinco roles (administrador, supervisor, operario, almacenista y vendedor), y cada uno ve y modifica cosas distintas. La API la consumen dos clientes: el login y el sitio público en HTML y JavaScript, y el panel en React (ADR-001). Se necesitaba identificar al usuario en cada petición y comprobar su rol en el servidor, no solo ocultar opciones en la pantalla.
+El sistema tiene cinco roles (administrador, supervisor, operario, almacenista y vendedor), y cada uno ve y modifica cosas distintas. La API la consume la aplicación React: el inicio de sesión y la recuperación de cuenta, y el panel (ADR-001). Se necesitaba identificar al usuario en cada petición y comprobar su rol en el servidor, no solo ocultar opciones en la pantalla.
 
 ## Opciones
 

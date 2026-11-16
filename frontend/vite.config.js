@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
       emptyOutDir: true,
       rollupOptions: {
-        input: resolve(__dirname, "dashboard.html"),
+        input: resolve(__dirname, "index.html"),
       },
     },
   };

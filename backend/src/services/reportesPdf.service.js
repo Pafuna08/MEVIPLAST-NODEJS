@@ -5,7 +5,7 @@ const { COLUMNAS, FORMATOS, cargarDatos } = require("./reportesExcel.service");
 
 // Reporte detallado en PDF (RF-028): las mismas columnas y datos que el Excel, para abrirlo en una
 // pestaña e imprimirlo o descargarlo con el visor del navegador.
-const LOGO = path.join(__dirname, "..", "..", "..", "frontend", "assets", "logo-meviplast.png");
+const LOGO = path.join(__dirname, "..", "..", "..", "frontend", "public", "assets", "logo-meviplast.png");
 const AZUL = "#0b2545";
 const ROJO = "#d02c3a";
 const GRIS = "#5f6e81";

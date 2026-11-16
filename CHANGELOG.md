@@ -36,6 +36,8 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Security
 
+- El servidor publica solo el build de React (DEF-028, observación del instructor). Antes Express servía toda la carpeta `frontend`, y desde el navegador se podían abrir `js/login.js`, el código fuente del panel (`/src/...`), `package.json`, `vite.config.js` y `node_modules`. El sitio público, el inicio de sesión y la recuperación de cuenta pasaron a React (`frontend/src/paginas`) y forman una sola aplicación con el panel; las imágenes pasaron a `frontend/public/assets`. Se conservan las direcciones `/`, `/login.html`, `/recuperar.html` (los enlaces de los correos siguen sirviendo) y `/dashboard.html`; cualquier otra responde 404. Una prueba de rutas verifica que esos archivos ya no se publican (EV-2026-11-16-01).
+
 - El supervisor ya no ve ventas (CR-021): la API responde 403 a sus consultas de la lista de ventas, los comprobantes, el reporte de ventas y su Excel. En Reportes solo le aparecen producción y rendimiento de operarios, y su Inicio muestra las órdenes finalizadas en lugar del total vendido. Los precios, totales y clientes son información comercial del administrador; el supervisor sigue viendo las existencias para planear (EV-2026-11-11-02).
 
 - Un administrador ya no puede quitarse su propio rol, desactivar su cuenta ni eliminarla, y el sistema nunca se queda sin un administrador activo: esos cambios responden 400. Antes la API lo permitía y el sistema podía quedar sin nadie que administre usuarios; en la tabla de usuarios, la fila propia muestra «Tu cuenta» en lugar de «Desactivar» (DEF-021, EV-2026-11-09-06).

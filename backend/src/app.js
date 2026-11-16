@@ -5,6 +5,7 @@ const apiRoutes = require("./routes");
 const { sanitizarObjeto } = require("./utils/sanitizar");
 const { crearLogger, registrarPeticiones } = require("./utils/logger");
 const { validarLongitudes } = require("./middlewares/longitudes.middleware");
+const { servirFrontend } = require("./utils/frontend");
 
 const log = crearLogger("app");
 const app = express();
@@ -36,10 +37,8 @@ app.use((req, res, next) => {
 // API REST (todos los modulos: seguridad, materia prima, produccion, inventario, ventas, reportes)
 app.use("/api", registrarPeticiones, validarLongitudes, apiRoutes);
 
-// El build React tiene prioridad; el resto del sitio estático permanece disponible.
-const frontendPath = path.join(__dirname, "..", "..", "frontend");
-app.use(express.static(path.join(frontendPath, "dist")));
-app.use(express.static(frontendPath));
+// Solo se publica el build de React; el código fuente y la configuración del frontend no se sirven
+app.use(servirFrontend(path.join(__dirname, "..", "..", "frontend", "dist")));
 
 // Manejo de rutas de API no encontradas
 app.use("/api", (req, res) => {

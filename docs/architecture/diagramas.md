@@ -26,7 +26,7 @@ flowchart LR
   NAV[Navegador del usuario]
   subgraph SRV[Equipo servidor · Node.js 22]
     WEB[Sitio público y login<br/>HTML, CSS y JS]
-    SPA[Panel de trabajo<br/>React 19 + Vite 6, frontend/dist]
+    SPA[Sitio, login y panel<br/>React 19 + Vite 6, frontend/dist]
     API[API REST<br/>Express 4, /api]
   end
   DB[(MySQL / MariaDB<br/>meviplast_db)]

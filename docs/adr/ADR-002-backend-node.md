@@ -19,6 +19,6 @@ Usar Node.js con Express y MySQL para el backend, siguiendo la recomendación de
 
 ## Consecuencias
 
-- Todo el producto usa un solo lenguaje: el backend en Express, el panel en React con Vite (ADR-001) y el sitio público en JavaScript.
+- Todo el producto usa un solo lenguaje: el backend en Express, el sitio público, el inicio de sesión y el panel en React con Vite (ADR-001).
 - No se cuenta con el panel de administración ni el ORM que trae Django: las validaciones, las consultas SQL parametrizadas y las migraciones se escriben a mano (`backend/src/services`, `backend/sql/migrations`).
 - Las restricciones tecnológicas y el cronograma del acta v1.0 quedaron desactualizados. Se corrigieron en la Formulación y Constitución (MEV-DOC-01) como el cambio CR-001.

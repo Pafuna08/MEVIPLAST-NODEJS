@@ -45,7 +45,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .btn-login { min-height: 40px; padding: 8px 15px; border-color: var(--red); color: var(--white); background: transparent; }
 .btn-login:hover { background: var(--red); }
 
-.hero { position: relative; min-height: calc(92vh - 74px); margin-top: 74px; display: grid; align-items: center; overflow: hidden; color: var(--white); background: url("../assets/hero-industrial.png") center/cover no-repeat; }
+.hero { position: relative; min-height: calc(92vh - 74px); margin-top: 74px; display: grid; align-items: center; overflow: hidden; color: var(--white); background: url("/assets/hero-industrial.png") center/cover no-repeat; }
 .hero-overlay { position: absolute; inset: 0; background: rgba(0, 18, 43, .58); }
 .hero-content { position: relative; z-index: 1; padding-top: 44px; padding-bottom: 75px; }
 .eyebrow { margin: 0 0 12px; color: var(--red); font-weight: 800; font-size: .78rem; text-transform: uppercase; letter-spacing: .16em; }
