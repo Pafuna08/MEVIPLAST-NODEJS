@@ -101,6 +101,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Fixed
 
+- Mensajes de la API sin tilde: el login decía «Usuario o contrasena incorrectos» y producción mostraba «Orden de produccion no encontrada». Se corrigieron los 11 mensajes y una prueba (`mensajes.test.js`) revisa que los mensajes que ve el usuario lleven tildes y ñ.
 - En el celular, la columna del correo de la tabla de usuarios se encogía al ancho de una letra y el correo se leía letra por letra; ahora conserva un ancho mínimo, pasa a una segunda línea si es largo y el botón «Cambiar» queda debajo. Se revisaron las 8 vistas del administrador a 390 px de ancho: ninguna otra celda se encoge y ninguna página se sale de la pantalla.
 
 - La conexión a MySQL falla si un valor pegado en el panel de la nube trae un salto de línea al final (en Render, `DB_HOST` con «

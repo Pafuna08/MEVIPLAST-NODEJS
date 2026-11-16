@@ -194,7 +194,7 @@ async function asignarOperario(id, responsableId, actor) {
       [id],
     );
     const orden = ordenes[0];
-    if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (!orden) throw new Error("Orden de producción no encontrada");
     if (
       actor.rol === "supervisor" &&
       orden.supervisor_id &&
@@ -265,7 +265,7 @@ async function actualizarOrden(id, datos, actor) {
       [id],
     );
     const orden = filas[0];
-    if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (!orden) throw new Error("Orden de producción no encontrada");
     if (
       actor?.rol === "supervisor" &&
       orden.supervisor_id &&
@@ -369,7 +369,7 @@ async function cambiarEstado(id, estado, actor) {
       [id],
     );
     const orden = filas[0];
-    if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (!orden) throw new Error("Orden de producción no encontrada");
     if (
       actor.rol === "operario" &&
       Number(orden.responsable_id) !== Number(actor.id)
@@ -434,7 +434,7 @@ async function registrarAvance(id, { cantidad, observaciones }, actor) {
       [id],
     );
     const orden = ordenes[0];
-    if (!orden) throw new Error("Orden de produccion no encontrada");
+    if (!orden) throw new Error("Orden de producción no encontrada");
     if (Number(orden.responsable_id) !== Number(actor.id)) {
       throw new Error("Solo puedes registrar avance en tus tareas asignadas");
     }
