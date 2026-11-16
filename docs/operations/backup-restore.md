@@ -35,6 +35,8 @@ Get-Content $file -Raw -Encoding utf8 | & $mysql -u root --default-character-set
 
 El 2026-10-27 se ensayó el respaldo y la restauración completos: 11 tablas sin diferencias de conteo (evidencia en [`../evidence/EV-2026-10-27.md`](../evidence/EV-2026-10-27.md)). Falta acordar el RPO y el RTO con el cliente.
 
+La base de la versión de demostración (MySQL 8.4 en Aiven) se respalda con otro procedimiento, descrito en [`despliegue-render.md`](despliegue-render.md), sección 5. El respaldo del 2026-11-16 se restauró en una base local desechable: 13 tablas con las mismas filas y el total de las ventas igual a la suma de su detalle.
+
 ## Registros del servidor y archivo de la auditoría (CR-016)
 
 El servidor escribe archivos planos diarios en `backend/logs` (o en `LOG_DIR`):

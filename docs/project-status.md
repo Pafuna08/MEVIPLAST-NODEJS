@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Corte: 09/11/2026, rama `develop` con los PR #1 a #68 fusionados. Sin etiqueta de liberación. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (desde el PR #53) está en curso.
+Corte: 16/11/2026, rama `develop` con los PR #1 a #98 fusionados. Sin etiqueta de liberación. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (desde el PR #53) está en curso.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 130 unitarias, 24 E2E con MySQL, prueba de carga y 18 flujos en cada uno de Edge, Chrome y Firefox (54); cobertura de 70,8 % con unitarias y 88,5 % con E2E, medida en CI.
-- Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versión 2.1 al PR #68, pendiente de la revisión de Carlos y del instructor, más la Rúbrica Integral de Evaluación); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 134 unitarias, 24 E2E con MySQL, prueba de carga y 18 flujos en cada uno de Edge, Chrome y Firefox (54); cobertura de 73,5 % con unitarias y 90,2 % con E2E, medida en CI.
+- Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versiones 2.4 a 2.6 al PR #98, más la Rúbrica Integral de Evaluación; Carlos revisó hasta la 2.2 y las siguientes, igual que la aprobación del instructor, están pendientes); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json).
 - Datos: [`data/schema.md`](data/schema.md) y diagrama entidad-relación [`data/er.md`](data/er.md).
@@ -17,7 +17,7 @@ Las 25 historias tienen código: 20 implementadas y 5 parciales. MEVIPLAST aprob
 
 ## Pendiente antes de `v1.0.0`
 
-- Que Carlos Herrera revise los PR #51 a #68; los PR #12 a #50 los aprobó el 03/11/2026. La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
+- Que Carlos Herrera revise los PR #95 en adelante. Ya aprobó en GitHub 75 PR (#12 a #54, #59 y #64 a #94) y dio visto bueno a 8 más en su commit de fusión (#55 a #58 y #60 a #63). La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
 - Decisión del equipo de crear la etiqueta `v1.0.0` y el PR de `develop` a `main`.
 
 ## Limitaciones conocidas de la entrega
@@ -25,5 +25,6 @@ Las 25 historias tienen código: 20 implementadas y 5 parciales. MEVIPLAST aprob
 - Sin sesión de aceptación con usuarios de MEVIPLAST: la usabilidad (RNF-006) no se midió con ellos.
 - La recuperación por correo se probó con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04), no con un servidor de correo corporativo de MEVIPLAST.
 - Las pruebas de carga y de navegadores se hicieron en un equipo del equipo de desarrollo, no en el servidor de MEVIPLAST; la disponibilidad no se midió.
+- La versión de demostración (https://meviplast.onrender.com, CR-023) usa el plan gratuito de Render, que se duerme sin uso, y una base de Aiven pagada con créditos de prueba que vencen hacia el 11/12/2026; sin un medio de pago, Aiven apaga la base. Hay un respaldo del 16/11/2026 restaurado de prueba sin diferencias ([`operations/despliegue-render.md`](operations/despliegue-render.md), sección 5).
 
 Este archivo describe el código y sus pruebas, no la aprobación del instructor ni la aceptación del cliente. Los documentos Word y Excel del paquete documental están en [`Documentacion_Proyecto_ADSO`](Documentacion_Proyecto_ADSO/LEEME.md), por indicación del instructor.

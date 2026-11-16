@@ -25,16 +25,13 @@ flowchart LR
 flowchart LR
   NAV[Navegador del usuario]
   subgraph SRV[Equipo servidor · Node.js 22]
-    WEB[Sitio público y login<br/>HTML, CSS y JS]
-    SPA[Sitio, login y panel<br/>React 19 + Vite 6, frontend/dist]
+    SPA[Sitio, login, recuperación y panel<br/>React 19 + Vite 6, solo frontend/dist]
     API[API REST<br/>Express 4, /api]
   end
   DB[(MySQL / MariaDB<br/>meviplast_db)]
   SMTP[(Servidor SMTP)]
-  NAV -->|HTTP| WEB
   NAV -->|HTTP| SPA
   SPA -->|JSON + Bearer JWT| API
-  WEB -->|JSON| API
   API -->|mysql2, transacciones| DB
   API -->|nodemailer| SMTP
 ```
@@ -87,18 +84,19 @@ sequenceDiagram
   participant M as auth.middleware
   participant S as ventas.service
   participant D as MySQL
-  V->>P: Llena la venta y confirma
-  P->>A: POST /api/ventas (Bearer JWT)
+  V->>P: Agrega uno o varios productos y confirma
+  P->>A: POST /api/ventas con items (Bearer JWT)
   A->>A: Sanitiza y valida largos
   A->>M: verificarToken y verificarRol(admin, vendedor)
   M->>S: registrar(datos, usuario)
-  S->>S: Valida RN-018 y CR-018 (paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y $100 000 000)
-  S->>D: BEGIN y SELECT inventario FOR UPDATE
-  alt Stock suficiente
-    S->>D: INSERT ventas, UPDATE inventario, INSERT movimientos_inventario
+  S->>S: Valida RN-018, CR-018 y CR-022 (hasta 20 productos sin repetir, paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes, total hasta $100 000 000)
+  S->>D: BEGIN y SELECT inventario de todas las variantes FOR UPDATE (en orden de id)
+  alt Stock suficiente en todos los productos
+    S->>D: INSERT ventas (encabezado y total)
+    S->>D: Por producto: INSERT ventas_detalle, UPDATE inventario, INSERT movimientos_inventario
     S->>D: COMMIT
     S-->>P: 201 con la venta (comprobante)
-  else Stock insuficiente
+  else Stock insuficiente en algún producto
     S->>D: ROLLBACK
     S-->>P: 400 «Stock insuficiente en inventario para esta venta»
   end
@@ -123,4 +121,13 @@ flowchart LR
   MYSQL --> BK
   NODE -->|STARTTLS| SMTP
   GH -.->|git clone / pull de una versión etiquetada| HOST
+  subgraph NUBE[Demostración en internet · CR-023]
+    RENDER[Render<br/>servicio web meviplast, HTTPS]
+    AIVEN[(Aiven<br/>MySQL 8.4 con TLS)]
+  end
+  INSTR[Instructor y equipo] -->|https://meviplast.onrender.com| RENDER
+  RENDER -->|DB_SSL| AIVEN
+  GH -.->|Auto-Deploy de cada fusión en develop| RENDER
 ```
+
+La operación de la empresa sigue en su red local (EXC-02); la demostración en Render es para el instructor y el equipo.
