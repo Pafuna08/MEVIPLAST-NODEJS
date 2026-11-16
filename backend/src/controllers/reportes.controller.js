@@ -8,7 +8,7 @@ async function produccion(req, res) {
     res.json(await reportesService.resumenProduccion());
   } catch (error) {
     log.error("Error al atender la petición", { error });
-    res.status(500).json({ mensaje: "Error al generar reporte de produccion" });
+    res.status(500).json({ mensaje: "Error al generar el reporte de producción" });
   }
 }
 

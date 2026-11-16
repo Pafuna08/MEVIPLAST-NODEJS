@@ -7,7 +7,7 @@ async function listar(req, res) {
     res.json(await produccionService.listar(req.usuario));
   } catch (error) {
     log.error("Error al atender la petición", { error });
-    res.status(500).json({ mensaje: "Error al listar produccion" });
+    res.status(500).json({ mensaje: "Error al listar la producción" });
   }
 }
 
@@ -87,7 +87,7 @@ async function crear(req, res) {
     res.status(201).json(nuevo);
   } catch (error) {
     log.error("Error al atender la petición", { error });
-    res.status(400).json({ mensaje: error.message || "Error al crear orden de produccion" });
+    res.status(400).json({ mensaje: error.message || "Error al crear la orden de producción" });
   }
 }
 
@@ -117,7 +117,7 @@ async function cambiarEstado(req, res) {
     if (!validos.includes(estado)) {
       return res
         .status(400)
-        .json({ mensaje: `estado debe ser uno de: ${validos.join(", ")}` });
+        .json({ mensaje: `El estado debe ser uno de: ${validos.join(", ")}` });
     }
     const actualizado = await produccionService.cambiarEstado(
       req.params.id,
@@ -129,7 +129,7 @@ async function cambiarEstado(req, res) {
     log.error("Error al atender la petición", { error });
     res
       .status(400)
-      .json({ mensaje: error.message || "Error al cambiar estado de produccion" });
+      .json({ mensaje: error.message || "Error al cambiar el estado de la orden de producción" });
   }
 }
 
@@ -187,7 +187,7 @@ async function eliminar(req, res) {
   } catch (error) {
     log.error("Error al atender la petición", { error });
     if (error.statusCode) return res.status(error.statusCode).json({ mensaje: error.message });
-    res.status(500).json({ mensaje: "Error al eliminar orden de produccion" });
+    res.status(500).json({ mensaje: "Error al eliminar la orden de producción" });
   }
 }
 

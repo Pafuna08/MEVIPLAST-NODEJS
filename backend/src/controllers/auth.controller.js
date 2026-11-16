@@ -7,7 +7,7 @@ async function iniciarSesion(req, res) {
     const { usuario, password } = req.body;
 
     if (!usuario || !password) {
-      return res.status(400).json({ mensaje: "Usuario y contrasena son obligatorios" });
+      return res.status(400).json({ mensaje: "Usuario y contraseña son obligatorios" });
     }
 
     const resultado = await authService.login(usuario, password);

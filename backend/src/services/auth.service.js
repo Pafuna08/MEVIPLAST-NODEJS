@@ -12,7 +12,7 @@ const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // RN-024: tras MAX_INTENTOS fallidos consecutivos la cuenta se bloquea MINUTOS_BLOQUEO minutos
 const MAX_INTENTOS = Number(process.env.LOGIN_MAX_INTENTOS) || 5;
 const MINUTOS_BLOQUEO = Number(process.env.LOGIN_BLOQUEO_MINUTOS) || 15;
-const MENSAJE_CREDENCIALES = "Usuario o contrasena incorrectos";
+const MENSAJE_CREDENCIALES = "Usuario o contraseña incorrectos";
 const MENSAJE_BLOQUEO = `La cuenta está bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${MINUTOS_BLOQUEO} minutos o solicita el desbloqueo al administrador.`;
 
 function crearTransportadorCorreo() {
