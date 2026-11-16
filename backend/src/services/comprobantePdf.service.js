@@ -4,7 +4,7 @@ const PDFDocument = require("pdfkit");
 
 // Comprobante de venta en PDF (RF-023): se abre en una pestaña con el visor del navegador, que ya
 // trae imprimir y descargar; así nadie depende de saber «Guardar como PDF» en el diálogo de impresión.
-const LOGO = path.join(__dirname, "..", "..", "..", "frontend", "assets", "logo-meviplast.png");
+const LOGO = path.join(__dirname, "..", "..", "..", "frontend", "public", "assets", "logo-meviplast.png");
 const AZUL = "#0b2545";
 const ROJO = "#d02c3a";
 const GRIS = "#5f6e81";

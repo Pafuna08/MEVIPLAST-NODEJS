@@ -25,15 +25,6 @@ export default [
     },
   },
   {
-    files: ["js/**/*.js"],
-    languageOptions: { ecmaVersion: 2022, sourceType: "script", globals: globals.browser },
-    rules: {
-      // Scripts clásicos del sitio público: `status` es una constante propia, no window.status
-      "no-redeclare": ["error", { builtinGlobals: false }],
-      "no-unused-vars": ["error", { caughtErrors: "none" }],
-    },
-  },
-  {
     files: ["vite.config.js"],
     languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.node },
   },

@@ -562,7 +562,7 @@ const FLUJOS = [
 ];
 
 async function main() {
-  if (!fs.existsSync(path.join(__dirname, "..", "..", "..", "frontend", "dist", "dashboard.html"))) {
+  if (!fs.existsSync(path.join(__dirname, "..", "..", "..", "frontend", "dist", "index.html"))) {
     throw new Error("Falta frontend/dist: ejecuta npm run build --prefix frontend");
   }
   console.log(`1. Preparando ${DB}…`);
