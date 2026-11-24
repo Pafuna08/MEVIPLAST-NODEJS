@@ -205,7 +205,13 @@ export default function DashboardApp() {
     setSidebarOpen(false);
   }
 
-  function logout() {
+  async function logout() {
+    // HU-020: el servidor invalida el token; si no responde, igual se cierra la sesión en el navegador
+    try {
+      await fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    } catch {
+      // sin conexión: el token vence solo a las 8 h
+    }
     localStorage.removeItem("meviplastToken");
     localStorage.removeItem("meviplastSession");
     window.location.replace("/login.html");

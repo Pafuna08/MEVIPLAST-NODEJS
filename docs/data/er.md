@@ -16,6 +16,7 @@ erDiagram
         TINYINT activo
         INT intentos_fallidos
         DATETIME bloqueado_hasta
+        INT sesion_version "sube al cerrar sesión"
         DATETIME creado_en
     }
     tokens_recuperacion {
