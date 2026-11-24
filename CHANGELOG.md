@@ -4,6 +4,10 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ## Unreleased - 2026-10-27
 
+### Security
+
+- Correcciones de la auditoría de seguridad (skill security-audit de Cloudflare, run-1): la recuperación de contraseña y el recordatorio de usuario solo responden a una coincidencia exacta del correo y envían el mensaje a la dirección guardada (antes, la collation sin tildes permitía que «ana@émpresa.com» recibiera el enlace de «ana@empresa.com»); el correo SMTP exige TLS (`requireTLS`) cuando `SMTP_SECURE` no es `true`, así que sin STARTTLS no se envían la clave ni el token; `db:init` siembra las cuentas DEMO solo en una base nueva o con `DB_DEMO=true` explícito, nunca al migrar una base existente.
+
 ### Added
 
 - Documentación de la API con Swagger UI (CR-024, pedido del instructor): `/api-docs` publica el contrato `docs/api/openapi.json` (56 operaciones por módulo, con roles y requisitos) y `/api-docs/openapi.json` lo entrega en JSON. «Authorize» recibe el token de `POST /auth/login` y «Try it out» llama a la API real con sus mismos roles y validaciones. Dependencia `swagger-ui-express` (MIT), que trae los archivos de Swagger UI sin cargarlos de internet; `API_DOCS=off` la desactiva. La lógica de la API no cambia (CP-103, EV-2026-11-23-01).
