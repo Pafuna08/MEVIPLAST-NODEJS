@@ -23,4 +23,8 @@
 | Contrato OpenAPI | 57 operaciones; se agregó `POST /auth/logout` |
 | Render después del despliegue | `/api/health` responde `{"estado":"ok","baseDatos":"ok"}` y `POST /api/auth/logout` sin token responde 401 |
 
+## Complemento: pantalla del reporte de inventario (PR #112)
+
+Al revisar la demostración se vio que el reporte de HU-023 solo existía en la API. Se agregó la pantalla **Reportes → Reporte de inventario → Ver existencias**. Verificación en Edge sobre una copia desechable de `meviplast_db`: el administrador y el supervisor ven 10 productos y 7 materias primas (1 con stock bajo); el vendedor no puede abrir el reporte. Lint y build del frontend aprobados.
+
 No se registraron compras ni datos nuevos en la base de la nube; las comprobaciones en Render fueron consultas y cierres de sesión.
