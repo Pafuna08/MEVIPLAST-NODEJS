@@ -64,7 +64,10 @@ export default function Login() {
           loginAt: new Date().toISOString(),
         }),
       );
-      window.location.href = rol ? "/dashboard.html" : "/";
+      // Sin la contraseña en memoria y sin dejar el formulario en el historial (equipo compartido)
+      setPassword("");
+      setUsuario("");
+      window.location.replace(rol ? "/dashboard.html" : "/");
     } catch {
       setEstado("No fue posible conectar con el servidor.");
     }

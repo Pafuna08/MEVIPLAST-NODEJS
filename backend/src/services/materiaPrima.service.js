@@ -220,12 +220,16 @@ async function registrarMovimiento(
       if (!produccion_id)
         throw new Error("El consumo debe asociarse a una orden");
       const [ordenes] = await connection.query(
-        "SELECT id, materia_prima_id, estado FROM produccion WHERE id = ? FOR UPDATE",
+        "SELECT id, materia_prima_id, estado, supervisor_id FROM produccion WHERE id = ? FOR UPDATE",
         [produccion_id],
       );
       const orden = ordenes[0];
       if (!orden || Number(orden.materia_prima_id) !== Number(id)) {
         throw new Error("La materia prima no está asociada a esa orden");
+      }
+      // Mismo alcance que /api/produccion: el supervisor solo trabaja con sus órdenes o las sin asignar
+      if (actor?.rol === "supervisor" && orden.supervisor_id != null && Number(orden.supervisor_id) !== Number(actor.id)) {
+        throw new Error("La orden pertenece a otro supervisor");
       }
       if (["cancelado", "finalizado"].includes(orden.estado)) {
         throw new Error("La orden no admite más consumos");

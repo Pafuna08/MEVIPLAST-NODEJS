@@ -10,9 +10,11 @@ const LARGO_MAX = 60;
 
 // RN-012 / CR-020: líneas de la tabla lineas_producto, en el orden en que se crearon.
 // Sin la tabla (base sin la migración 20261110_lineas_producto.sql) quedan las seis de la reunión inicial.
-async function listar() {
+// conexion: la de la transacción que llama, si la hay. Pedir otra conexión al pool dentro de una
+// transacción abierta puede agotarlo y bloquear la API (auditoría de seguridad run-1).
+async function listar(conexion = pool) {
   try {
-    const [filas] = await pool.query("SELECT nombre FROM lineas_producto ORDER BY id");
+    const [filas] = await conexion.query("SELECT nombre FROM lineas_producto ORDER BY id");
     const nombres = Array.isArray(filas) ? filas.map((fila) => fila?.nombre).filter(Boolean) : [];
     return nombres.length ? nombres : [...productosTerminados];
   } catch (error) {
@@ -22,8 +24,8 @@ async function listar() {
 }
 
 // Para validar una línea: las seis de base no se borran, así que con ellas no hace falta consultar la tabla
-async function paraValidar(nombre) {
-  return productosTerminados.includes(nombre) ? productosTerminados : listar();
+async function paraValidar(nombre, conexion = pool) {
+  return productosTerminados.includes(nombre) ? productosTerminados : listar(conexion);
 }
 
 function normalizarNombre(valor) {
