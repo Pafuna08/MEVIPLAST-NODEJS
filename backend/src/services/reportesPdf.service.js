@@ -89,6 +89,9 @@ function generar(datos, config, tipo, periodo, ahora, { comprimir = true } = {})
     doc.fillColor(AZUL).font("Helvetica-Bold").fontSize(15).text(`Reporte de ${config.titulo.toLowerCase()} ${periodo}`, izquierda, 40, { width: ancho, align: "right" });
     doc.fillColor(GRIS).font("Helvetica").fontSize(9)
       .text(`Del ${datos.desde} al ${datos.hastaInclusivo} · Generado el ${fechaLarga.format(ahora)}`, izquierda, 60, { width: ancho, align: "right" });
+    // HU-004: el filtro aplicado se muestra bajo el encabezado
+    const filtro = [datos.filtros?.operario && `Operario: ${datos.filtros.operario}`, datos.filtros?.producto && `Producto: ${datos.filtros.producto}`].filter(Boolean).join(" · ");
+    if (filtro) doc.fillColor(GRIS).font("Helvetica").fontSize(9).text(filtro, izquierda, 72, { width: ancho, align: "right" });
     doc.moveTo(izquierda, 86).lineTo(izquierda + ancho, 86).lineWidth(1.5).strokeColor(ROJO).stroke();
 
     // Tarjetas de resumen
@@ -174,10 +177,10 @@ function generar(datos, config, tipo, periodo, ahora, { comprimir = true } = {})
   });
 }
 
-async function pdfDetalle(tipo, periodo, ahora = new Date(), opciones = {}) {
+async function pdfDetalle(tipo, periodo, ahora = new Date(), opciones = {}, filtros = {}) {
   const config = COLUMNAS[tipo];
   if (!config) throw new Error("El reporte debe ser de producción, ventas o rendimiento");
-  const datos = await cargarDatos(tipo, periodo, ahora);
+  const datos = await cargarDatos(tipo, periodo, ahora, filtros);
   return {
     buffer: await generar(datos, config, tipo, periodo, ahora, opciones),
     nombreArchivo: `reporte-${tipo}-${periodo}-${datos.desde}.pdf`,

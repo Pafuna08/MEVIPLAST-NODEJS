@@ -86,18 +86,18 @@ function hojaTabla(libro, nombre, columnas, filas) {
 }
 
 // Datos del reporte del periodo; el Excel y el PDF usan los mismos (RF-028)
-function cargarDatos(tipo, periodo, ahora) {
+function cargarDatos(tipo, periodo, ahora, filtros = {}) {
   const config = COLUMNAS[tipo];
   if (config.cargar) return config.cargar(periodo, ahora);
   return tipo === "produccion"
-    ? reportesService.detalleProduccion(periodo, ahora)
+    ? reportesService.detalleProduccion(periodo, ahora, filtros)
     : reportesService.detalleVentas(periodo, ahora);
 }
 
-async function libroDetalle(tipo, periodo, ahora = new Date()) {
+async function libroDetalle(tipo, periodo, ahora = new Date(), filtros = {}) {
   const config = COLUMNAS[tipo];
   if (!config) throw new Error("El reporte debe ser de producción, ventas o rendimiento");
-  const datos = await cargarDatos(tipo, periodo, ahora);
+  const datos = await cargarDatos(tipo, periodo, ahora, filtros);
 
   const libro = new ExcelJS.Workbook();
   libro.creator = "MEVIPLAST";
@@ -109,6 +109,9 @@ async function libroDetalle(tipo, periodo, ahora = new Date()) {
   resumen.addRow(["Desde", datos.desde]);
   resumen.addRow(["Hasta", datos.hastaInclusivo]);
   resumen.addRow(["Generado", fechaLocal(ahora)]).getCell(2).numFmt = FORMATO_FECHA;
+  // HU-004: el filtro aplicado queda escrito en el libro
+  if (datos.filtros?.operario) resumen.addRow(["Operario", datos.filtros.operario]);
+  if (datos.filtros?.producto) resumen.addRow(["Producto", datos.filtros.producto]);
   resumen.addRow([]);
   for (const [etiqueta, valor, numFmt] of config.resumen(datos.resumen)) {
     // Sin meta no hay porcentaje: la celda queda vacía en lugar de 0

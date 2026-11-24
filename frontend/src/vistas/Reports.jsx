@@ -1,5 +1,5 @@
 import React from "react";
-import { DataTable, Intro, Panel } from "../comun/componentes.jsx";
+import { DataTable, Field, Intro, Panel } from "../comun/componentes.jsx";
 import { money, number, percentFormat, safeProductName, sanitizeText } from "../comun/formato.js";
 
 export function Reports({ role }) {
@@ -66,6 +66,7 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
           </div>
         }
       />
+      {reporteTipo === "produccion" && data.opciones && <ProductionFilters data={data} />}
       {reporteTipo === "rendimiento" ? <PerformanceReport data={data} /> : <>
       <section className="stats-grid">
         {reporteTipo === "produccion" ? (
@@ -116,6 +117,39 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
       </Panel>
       </>}
     </>
+  );
+}
+
+// HU-004: filtra el historial de producción del periodo por operario y por producto.
+// Los filtros quedan en la dirección, así que Excel y PDF descargan lo mismo que se ve.
+function ProductionFilters({ data }) {
+  const actual = data.filtros || {};
+  function aplicar(clave, valor) {
+    const url = new URL(window.location.href);
+    if (valor) url.searchParams.set(clave, valor);
+    else url.searchParams.delete(clave);
+    window.location.assign(url.toString());
+  }
+  const productos = data.opciones.productos.includes(actual.producto) || !actual.producto
+    ? data.opciones.productos
+    : [...data.opciones.productos, actual.producto];
+  return (
+    <section className="panel report-filters" aria-label="Filtros del historial de producción">
+      <div className="data-form">
+        <Field label="Operario">
+          <select value={actual.operario_id ? String(actual.operario_id) : ""} onChange={(event) => aplicar("operario_id", event.target.value)}>
+            <option value="">Todos los operarios</option>
+            {data.opciones.operarios.map((operario) => <option key={operario.id} value={operario.id}>{sanitizeText(operario.nombre)}</option>)}
+          </select>
+        </Field>
+        <Field label="Producto">
+          <select value={actual.producto || ""} onChange={(event) => aplicar("producto", event.target.value)}>
+            <option value="">Todos los productos</option>
+            {productos.map((producto) => <option key={producto} value={producto}>{safeProductName(producto) || "Producto no válido"}</option>)}
+          </select>
+        </Field>
+      </div>
+    </section>
   );
 }
 
