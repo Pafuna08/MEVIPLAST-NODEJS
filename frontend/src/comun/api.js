@@ -43,6 +43,9 @@ export async function loadView(view, role, token) {
     const params = new URLSearchParams(window.location.search);
     const tipo = params.get("reporte");
     const periodo = params.get("periodo");
+    if (tipo === "inventario") {
+      return api("/api/reportes/inventario", token);
+    }
     if (tipo === "rendimiento") {
       return api(`/api/reportes/rendimiento?periodo=${encodeURIComponent(periodo)}`, token);
     }
