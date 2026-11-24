@@ -11,6 +11,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Added
 
+- Reportes completos (HU-004 y HU-023): el detalle de producción se filtra por operario y por producto (pantalla, Excel y PDF; `operario_id` y `producto` en `/api/reportes/produccion/detalle*`), y el reporte de inventario (`/api/reportes/inventario`) incluye las materias primas con su alerta de stock bajo.
 - Documentación de la API con Swagger UI (CR-024, pedido del instructor): `/api-docs` publica el contrato `docs/api/openapi.json` (56 operaciones por módulo, con roles y requisitos) y `/api-docs/openapi.json` lo entrega en JSON. «Authorize» recibe el token de `POST /auth/login` y «Try it out» llama a la API real con sus mismos roles y validaciones. Dependencia `swagger-ui-express` (MIT), que trae los archivos de Swagger UI sin cargarlos de internet; `API_DOCS=off` la desactiva. La lógica de la API no cambia (CP-103, EV-2026-11-23-01).
 
 - Despliegue en Render (`render.yaml`) con la base en un MySQL 8 administrado (Aiven): conexión cifrada con `DB_SSL` y el certificado en `DB_SSL_CA` o `DB_SSL_CA_FILE`, zona horaria de la empresa con `DB_TIME_ZONE` (y `TZ` en el servidor) para que fechas y reportes por día queden en hora de Colombia, y `db:init` con `DB_DEMO=false` y `ADMIN_PASSWORD` para crear solo el administrador, sin las cuentas demo. Guía en `docs/operations/despliegue-render.md`. En local nada cambia.
