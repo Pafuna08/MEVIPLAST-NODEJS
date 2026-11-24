@@ -8,7 +8,7 @@ La fuente ejecutable es [`../../backend/sql/schema.sql`](../../backend/sql/schem
 | `tokens_recuperacion` | Enlaces de recuperación de contraseña | Solo se guarda el hash SHA-256 del token; vence en 30 minutos y se usa una vez; se borra en cascada con el usuario |
 | `auditoria`     | Acciones registradas                      | Usuario opcional; conserva el registro al eliminar usuario            |
 | `materia_prima` | Existencia y especificaciones de bobinas PEBD, PEAD y PP | Medida, calibre, color y peso por rollo |
-| `movimientos_materia_prima` | Ledger de materia prima | Compras, ajustes de entrada/salida y consumos asociados a una orden; no se puede borrar una materia prima con movimientos (ADR-003) |
+| `movimientos_materia_prima` | Ledger de materia prima | Compras (con costo y número de factura opcionales, HU-010), ajustes de entrada/salida y consumos asociados a una orden; no se puede borrar una materia prima con movimientos (ADR-003) |
 | `lineas_producto` | Líneas de producto terminado | Las seis de RN-012 y las que agrega el administrador (CR-020); nombre único sin importar mayúsculas ni tildes; no se borran |
 | `produccion`    | Orden y avance acumulado                  | Supervisor asignado y operario responsable; línea con medida, calibre y color (variante que recibe el avance); registra observaciones (la columna `lote`, sin uso, se eliminó con la migración `20261109_drop_unused_columns.sql`) |
 | `plantillas_produccion` | Recetas/órdenes frecuentes reutilizables | El administrador mantiene plantillas para crear órdenes con datos sugeridos; una por variante (línea, medida, calibre y color) |

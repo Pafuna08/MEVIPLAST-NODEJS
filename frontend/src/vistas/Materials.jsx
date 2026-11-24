@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { DataTable, Field, FormPanel, Intro, Panel, orderVariant } from "../comun/componentes.jsx";
 import { CREATE_OPTION } from "../comun/constantes.js";
 import { MATERIAL_LIMITS, MATERIAL_REQUIRED, MaterialFields, NewMaterialDialog } from "../comun/CrearOpcion.jsx";
-import { number, safeProductName, sanitizeText } from "../comun/formato.js";
+import { money, number, safeProductName, sanitizeText } from "../comun/formato.js";
 
 export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
   const canCreate = role === "admin";
@@ -52,6 +52,10 @@ export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
           </select>
         </Field>}
         <Field label="Cantidad (kg)"><input name="cantidad" type="number" /></Field>
+        {movementType === "compra" && <>
+          <Field label="Costo total (opcional)"><input name="costo" type="number" placeholder="Pesos" /></Field>
+          <Field label="N.º de factura (opcional)"><input name="factura" maxLength={40} /></Field>
+        </>}
         <Field label="Observaciones"><input name="observaciones" /></Field>
       </FormPanel>}
       {canCreate && <FormPanel title="Registrar material" onSubmit={onSubmit} saving={saving} obligatorios={MATERIAL_REQUIRED} limites={MATERIAL_LIMITS}>
@@ -69,9 +73,9 @@ export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
         key: item.id,
         cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{item.peso_rollo === null || item.peso_rollo === undefined ? "—" : `${number(item.peso_rollo)} kg`}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad)}</td></>,
       }))} /></Panel>
-      {data.movements.length > 0 && <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Registrado por"]} rows={data.movements.map((movement) => ({
+      {data.movements.length > 0 && <Panel title="Movimientos recientes"><DataTable columns={["Fecha", "Material", "Movimiento", "Cantidad", "Costo", "Factura", "Registrado por"]} rows={data.movements.map((movement) => ({
         key: movement.id,
-        cells: <><td>{movement.fecha}</td><td>{sanitizeText(movement.materia_prima)}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{sanitizeText(movement.registrado_por || "Sistema")}</td></>,
+        cells: <><td>{movement.fecha}</td><td>{sanitizeText(movement.materia_prima)}</td><td>{sanitizeText(movement.tipo)}</td><td>{number(movement.cantidad)}</td><td>{movement.costo === null || movement.costo === undefined ? "—" : money(movement.costo)}</td><td>{sanitizeText(movement.factura || "—")}</td><td>{sanitizeText(movement.registrado_por || "Sistema")}</td></>,
       }))} /></Panel>}
     </>
   );

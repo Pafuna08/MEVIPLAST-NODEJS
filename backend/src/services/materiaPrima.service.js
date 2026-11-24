@@ -1,7 +1,7 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
 const { normalizarMedida, normalizarCalibre, normalizarColor } = require("../utils/variantes");
-const { LIMITES, decimal } = require("../utils/numeros");
+const { LIMITES, decimal, errorDeDato } = require("../utils/numeros");
 
 const tiposEntrada = new Set(["compra", "ajuste_entrada"]);
 const tiposPermitidos = new Set([
@@ -194,14 +194,35 @@ async function listarMovimientos(materiaPrimaId) {
   return filas;
 }
 
+// HU-010 / RF-015: una compra puede llevar su costo total (pesos) y el número de factura del proveedor.
+// Los dos son opcionales y solo valen para compras.
+const FORMATO_FACTURA = /^[A-Za-z0-9][A-Za-z0-9 ./-]{0,39}$/;
+function datosCompra(tipo, costo, factura) {
+  const vacio = (valor) => valor === undefined || valor === null || valor === "";
+  if (tipo !== "compra") {
+    if (!vacio(costo) || !vacio(factura)) throw errorDeDato("El costo y la factura solo se registran en las compras");
+    return { costo: null, factura: null };
+  }
+  const costoNumerico = vacio(costo) ? null : decimal(costo, "El costo", LIMITES.VENTA_MAX, { prefijo: "$" });
+  let numeroFactura = null;
+  if (!vacio(factura)) {
+    numeroFactura = typeof factura === "string" ? factura.trim() : "";
+    if (!FORMATO_FACTURA.test(numeroFactura)) {
+      throw errorDeDato("El número de factura admite hasta 40 letras, números, espacios, punto, guion o barra");
+    }
+  }
+  return { costo: costoNumerico, factura: numeroFactura };
+}
+
 async function registrarMovimiento(
   id,
-  { tipo, cantidad, observaciones, produccion_id },
+  { tipo, cantidad, observaciones, produccion_id, costo, factura },
   actor,
 ) {
   if (!tiposPermitidos.has(tipo))
     throw new Error("Tipo de movimiento no válido");
   const cantidadNumerica = decimal(cantidad, "La cantidad", LIMITES.KG_MAX);
+  const compra = datosCompra(tipo, costo, factura);
 
   const connection = await pool.getConnection();
   let transactionStarted = false;
@@ -246,13 +267,15 @@ async function registrarMovimiento(
       [delta, id],
     );
     const [resultado] = await connection.query(
-      "INSERT INTO movimientos_materia_prima (materia_prima_id, usuario_id, produccion_id, tipo, cantidad, observaciones) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO movimientos_materia_prima (materia_prima_id, usuario_id, produccion_id, tipo, cantidad, costo, factura, observaciones) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
         actor.id,
         produccionId,
         tipo,
         cantidadNumerica,
+        compra.costo,
+        compra.factura,
         observaciones || null,
       ],
     );
@@ -270,7 +293,7 @@ async function registrarMovimiento(
     usuarioId: actor.id,
     accion: tipo.toUpperCase(),
     tabla: "materia_prima",
-    detalle: `Movimiento ${movimientoId} por ${cantidadNumerica} unidades en material ${id}`,
+    detalle: `Movimiento ${movimientoId} por ${cantidadNumerica} unidades en material ${id}${compra.factura ? ` (factura ${compra.factura})` : ""}`,
   });
   return { material: await obtenerPorId(id), movimientoId };
 }

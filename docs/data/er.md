@@ -118,6 +118,8 @@ erDiagram
         INT produccion_id FK
         ENUM tipo "compra, ajuste_entrada, ajuste_salida, consumo_produccion"
         DECIMAL cantidad
+        DECIMAL costo
+        VARCHAR factura
         VARCHAR observaciones
         DATETIME fecha
     }
