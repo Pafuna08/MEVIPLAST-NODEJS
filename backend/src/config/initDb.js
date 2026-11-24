@@ -65,11 +65,16 @@ async function main() {
   }
 
   // DB_DEMO=false (servidor público o piloto): sin cuentas ni datos de ejemplo, solo el administrador
-  // con la contraseña de ADMIN_PASSWORD. Por defecto se siembran los datos DEMO (local y pruebas).
+  // con la contraseña de ADMIN_PASSWORD. Los datos DEMO (cuentas con contraseñas públicas) se siembran solo
+  // en una base nueva, o en una existente si DB_DEMO=true lo pide de forma explícita (auditoría de seguridad
+  // run-1): migrar una base en uso nunca crea esas cuentas por olvidar DB_DEMO=false.
+  const demoExplicito = String(process.env.DB_DEMO || "").trim().toLowerCase() === "true";
   if (sinDemo) {
     await crearSoloAdministrador(connection);
-  } else {
+  } else if (baseNueva || demoExplicito) {
     await sembrarDemo(connection);
+  } else {
+    console.log("Base existente: no se crean cuentas DEMO (usa DB_DEMO=true para sembrarlas)");
   }
 
   const migracionesPath = path.join(__dirname, "..", "..", "sql", "migrations");
