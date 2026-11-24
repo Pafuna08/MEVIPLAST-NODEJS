@@ -11,6 +11,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Added
 
+- Compras con costo y factura (HU-010): al registrar una compra de materia prima se pueden indicar el costo total y el número de factura del proveedor (opcionales; solo en compras), que se muestran en los movimientos. Migración `20261124_compras_costo_factura.sql` (columnas `costo` y `factura` en `movimientos_materia_prima`).
 - Reportes completos (HU-004 y HU-023): el detalle de producción se filtra por operario y por producto (pantalla, Excel y PDF; `operario_id` y `producto` en `/api/reportes/produccion/detalle*`), y el reporte de inventario (`/api/reportes/inventario`) incluye las materias primas con su alerta de stock bajo.
 - Documentación de la API con Swagger UI (CR-024, pedido del instructor): `/api-docs` publica el contrato `docs/api/openapi.json` (56 operaciones por módulo, con roles y requisitos) y `/api-docs/openapi.json` lo entrega en JSON. «Authorize» recibe el token de `POST /auth/login` y «Try it out» llama a la API real con sus mismos roles y validaciones. Dependencia `swagger-ui-express` (MIT), que trae los archivos de Swagger UI sin cargarlos de internet; `API_DOCS=off` la desactiva. La lógica de la API no cambia (CP-103, EV-2026-11-23-01).
 
