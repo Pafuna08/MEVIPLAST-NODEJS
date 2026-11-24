@@ -3,7 +3,7 @@
 Corte: 16/11/2026, rama `develop` con los PR #1 a #98 fusionados. Sin etiqueta de liberación. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (desde el PR #53) está en curso.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 148 unitarias, 24 E2E con MySQL, prueba de carga y 18 flujos en cada uno de Edge, Chrome y Firefox (54); cobertura de 73,5 % con unitarias y 90,2 % con E2E, medida en CI.
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 158 unitarias, 24 E2E con MySQL, prueba de carga y 18 flujos en cada uno de Edge, Chrome y Firefox (54); cobertura de 76,6 % con unitarias y 91,3 % con E2E (medida el 24/11/2026).
 - Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versiones 2.4 a 2.6 al PR #98, más la Rúbrica Integral de Evaluación; Carlos revisó hasta la 2.2 y las siguientes, igual que la aprobación del instructor, están pendientes); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json), publicado con Swagger UI en `/api-docs` (CR-024).
@@ -13,7 +13,7 @@ Corte: 16/11/2026, rama `develop` con los PR #1 a #98 fusionados. Sin etiqueta d
 - Manual de usuario: [`user-guide.md`](user-guide.md).
 - Revisión documental anterior: [`adso-review-2026-10-20.md`](adso-review-2026-10-20.md) (histórica, describe `develop` en `f89abcb`).
 
-Las 25 historias tienen código: 20 implementadas y 5 parciales. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes; las preguntas del Acta de Aceptación por Rol (MEV-ACT-01) se resolvieron por esa delegación el 08/11/2026 (DEF-007 y HU-022 incluidos). La sesión de aceptación con usuarios de la empresa no se realizó y el acta no tiene firma del cliente.
+Las 25 historias están implementadas (25 de 25) y los 29 requisitos funcionales también (29 de 29): el 24/11/2026 se completaron HU-004, HU-010, HU-020 y HU-023 (PR #107 a #109) y HU-017 quedó cerrada por la decisión CR-025 (permisos fijos por rol). MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes; las preguntas del Acta de Aceptación por Rol (MEV-ACT-01) se resolvieron por esa delegación el 08/11/2026 (DEF-007 y HU-022 incluidos). La sesión de aceptación con usuarios de la empresa no se realizó y el acta no tiene firma del cliente.
 
 ## Pendiente antes de `v1.0.0`
 

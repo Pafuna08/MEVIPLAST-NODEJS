@@ -1,27 +1,27 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop`, commit `d86f1e0` (08/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop`, commit `7623b25` (24/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`decisiones-por-delegacion.md`](decisiones-por-delegacion.md)); la sesión de aceptación por rol con usuarios de la empresa no se realizó.
 
-Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 implementados y 2 parciales de 29.
+Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 29 (desde el 24/11/2026: HU-004, HU-010, HU-020 y HU-023 en los PR #107 a #109, y HU-017 por la decisión CR-025).
 
 ## Historias de usuario (por rol)
 
 | ID | Rol | Historia | RF | Estado | Observación |
 |---|---|---|---|---|---|
 | HU-006 | Administrador | Registrar materias primas | RF-014 | Implementado | Catálogo de bobinas PEBD, PEAD y PP con medida, calibre, color de la lista (RN-025) y peso de rollo. |
-| HU-017 | Administrador | Gestionar roles y permisos | RF-002 | Parcial | Cinco roles fijos; el administrador asigna el rol. Los permisos por rol están en el código, no son configurables. |
+| HU-017 | Administrador | Gestionar roles y permisos | RF-002 | Implementado | Cinco roles fijos (CR-002); el administrador crea usuarios y les asigna, cambia o retira el rol. Los permisos de cada rol son fijos y se aplican en el servidor en cada ruta (CR-025, decisión del equipo por delegación); CP-111. |
 | HU-009 | Administrador | Consultar disponibilidad de insumos | RF-017 | Implementado | Listado y alerta de bajo stock (cantidad ≤ stock mínimo). El stock mínimo inicia en 0 y debe configurarse. |
-| HU-010 | Administrador | Registrar compras de materiales | RF-015 | Parcial | Movimiento tipo compra con fecha y usuario; no registra costo ni número de factura. |
+| HU-010 | Administrador | Registrar compras de materiales | RF-015 | Implementado | Movimiento tipo compra con fecha y usuario, y costo total y número de factura opcionales, solo en compras (PR #108); CP-109. |
 | HU-011 | Administrador | Registrar productos terminados | RF-018 | Implementado | Catálogo de 6 líneas con variantes (medida, calibre, color) con formato RN-025 (Cargadera por tallas T15 a T30, CR-019); el administrador agrega líneas desde la nueva orden (CR-020); ingresos y salidas manuales con ledger; la salida exige motivo; sin ubicación (CR-015). |
 | HU-022 | Administrador | Consultar rendimiento de operarios | RF-027 | Implementado | % de cumplimiento de la meta por operario y periodo (diario, semanal, mensual, anual), para administrador y supervisor, con Excel. Indicador elegido por el equipo con la delegación de MEVIPLAST: producido ÷ meta de las órdenes asignadas y creadas en el periodo, sin las canceladas. |
-| HU-023 | Administrador | Generar reporte de inventario | RF-026 | Parcial | Lista existencias de producto terminado; no incluye materias primas en el mismo reporte. |
+| HU-023 | Administrador | Generar reporte de inventario | RF-026 | Implementado | Existencias de producto terminado y materias primas con su alerta de stock bajo en el mismo reporte (PR #107); CP-108. |
 | HU-015 | Administrador | Generar reportes de ventas | RF-025 | Implementado | Resumen y detalle por periodo diario, semanal, mensual y anual. |
 | HU-025 | Administrador | Exportar reportes | RF-028 | Implementado | PDF generado por el servidor, que se abre en otra pestaña con «Abrir PDF» (PR #90), y Excel con «Descargar Excel» (PR #28). |
 | HU-001 | Supervisor | Asignar tareas de producción | RF-007, RF-008, RF-013 | Implementado | La orden del administrador queda pendiente para los supervisores; el que asigna el operario la toma y, si falta, el administrador asigna (CR-014). Plantillas frecuentes disponibles. Toda orden y plantilla indican su materia prima (RN-026). |
 | HU-008 | Supervisor | Registrar consumo de materiales | RF-016 | Implementado | Consumo explícito asociado a una orden activa que usa esa materia prima; no es automático. Probado en E2E (CP-062) y en navegadores (CP-033). |
-| HU-004 | Supervisor | Consultar historial de producción | RF-024 | Parcial | Detalle por periodo calendario; falta filtro por operario y producto. |
+| HU-004 | Supervisor | Consultar historial de producción | RF-024 | Implementado | Detalle por periodo calendario filtrado por operario y por producto, en pantalla, Excel y PDF (PR #107); CP-107. |
 | HU-005 | Supervisor | Modificar órdenes de producción | RF-012 | Implementado | Solo órdenes pendientes sin avance; campos editables restringidos. |
 | HU-021 | Supervisor | Generar reporte de producción | RF-024 | Implementado | Resumen por estado y detalle de unidades producidas por periodo. |
 | HU-002 | Operario | Consultar tareas asignadas | RF-009 | Implementado | El operario solo recibe las órdenes cuyo responsable es su cuenta. «Mis tareas» muestra solo las abiertas, con «Iniciar» y «Registrar avance». |
@@ -34,17 +34,17 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | HU-016 | Todos los roles | Iniciar sesión | RF-001 | Implementado | JWT con expiración de 8 h; contraseñas con bcrypt; mensaje de error genérico. El token deja de servir si el usuario se desactiva o cambia de rol (CP-053, CP-054). |
 | HU-018 | Todos los roles | Recuperar contraseña | RF-003 | Implementado | Enlace por correo de un solo uso, vigente 30 min. Requiere SMTP configurado. Probado con un servidor SMTP local (CP-061) y con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04). |
 | HU-019 | Todos los roles | Bloquear intentos fallidos | RF-004 | Implementado | 5 intentos seguidos bloquean 15 minutos (configurable); el administrador desbloquea. Probado con MySQL real (CP-051). |
-| HU-020 | Todos los roles | Cerrar sesión | RF-005 | Parcial | Elimina la sesión del navegador. El token no se revoca al cerrar sesión, pero el servidor lo rechaza si el usuario se desactiva o cambia de rol (DEF-011) y vence a las 8 h. |
+| HU-020 | Todos los roles | Cerrar sesión | RF-005 | Implementado | Cerrar sesión revoca el token en el servidor (`POST /api/auth/logout`): el mismo token responde 401 (PR #109). El servidor también lo rechaza si el usuario se desactiva o cambia de rol (DEF-011) y vence a las 8 h; CP-110. |
 
 ## Requisitos funcionales, API y pruebas
 
 | RF | Nombre | Estado | Versión | API | Casos de prueba |
 |---|---|---|---|---|---|
 | RF-001 | Autenticar usuario | Implementado | MVP | API-01 | CP-027 (pendiente), CP-046 |
-| RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054, CP-089 (siempre queda un administrador activo, DEF-021) |
+| RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054, CP-089 (siempre queda un administrador activo, DEF-021), CP-111 (permisos fijos por rol, CR-025) |
 | RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061 |
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051 |
-| RF-005 | Cerrar sesión | Parcial | MVP | — | — |
+| RF-005 | Cerrar sesión | Implementado | MVP | API-01 | CP-110 (el token queda revocado en el servidor) |
 | RF-006 | Registrar auditoría | Implementado | MVP | — | CP-083 (inicios de sesión en el archivo de accesos, CR-016) |
 | RF-007 | Crear orden de producción | Implementado | MVP | API-06 | CP-028, CP-048, CP-069, CP-075, CP-086 (materia prima obligatoria, RN-026), CP-090 (meta entera hasta 1 000 000, DEF-022) |
 | RF-008 | Asignar orden a operario | Implementado | MVP | API-07 | CP-016, CP-028, CP-075 |
@@ -54,7 +54,7 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-012 | Editar orden pendiente | Implementado | MVP | API-06 | CP-011, CP-012, CP-071 |
 | RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013, CP-072 |
 | RF-014 | Registrar materia prima | Implementado | MVP | API-04 | CP-007, CP-008, CP-048, CP-087 (color de la lista, RN-025), CP-090 (kg hasta 100 000 y bobina única, DEF-022) |
-| RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062 |
+| RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062, CP-109 (costo y factura de la compra) |
 | RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062 |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
 | RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078, CP-081, CP-082, CP-090 (unidades enteras hasta 1 000 000, DEF-022), CP-095 (tallas de Cargadera, CR-019), CP-096 (líneas nuevas, CR-020) |
@@ -63,9 +63,9 @@ Historias: 20 implementadas y 5 parciales de 25. Requisitos funcionales: 27 impl
 | RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031, CP-098 (todo o nada con varios productos) |
 | RF-022 | Consultar historial de ventas | Implementado | MVP | API-09 | CP-026 |
 | RF-023 | Generar comprobante de venta | Implementado | MVP | API-09 | CP-055, CP-056, CP-057, CP-097 (desde el reporte de ventas; el supervisor no lo ve, CR-021), CP-099 (PDF en otra pestaña) |
-| RF-024 | Reporte de producción por periodo | Implementado | MVP | API-10 | CP-017, CP-018, CP-028 |
+| RF-024 | Reporte de producción por periodo | Implementado | MVP | API-10 | CP-017, CP-018, CP-028, CP-107 (filtro por operario y producto) |
 | RF-025 | Reporte de ventas por periodo | Implementado | MVP | API-10 | CP-019, CP-028 |
-| RF-026 | Reporte de inventario | Parcial | MVP | API-10 | — |
+| RF-026 | Reporte de inventario | Implementado | MVP | API-10 | CP-108 (producto terminado y materias primas) |
 | RF-027 | Rendimiento por operario | Implementado | MVP | API-10 | CP-079, CP-080 |
 | RF-028 | Exportar reportes | Implementado | MVP | API-10 | CP-058, CP-059, CP-060, CP-100 (PDF en otra pestaña) |
 | RF-029 | Consultar bitácora de auditoría | Implementado | MVP | API-11 | CP-068, CP-083, CP-084 (filtros, páginas y archivo, CR-016) |
