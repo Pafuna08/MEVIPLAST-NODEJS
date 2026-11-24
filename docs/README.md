@@ -6,7 +6,7 @@
 - [Decisiones del equipo por delegación del cliente](requirements/decisiones-por-delegacion.md)
 - [Manual de usuario](user-guide.md)
 - [Arquitectura](architecture/overview.md) y [diagramas DIA-001 a DIA-005](architecture/diagramas.md)
-- [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json)
+- [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json), que la aplicación publica con Swagger UI en `/api-docs`
 - [Esquema de datos](data/schema.md) y [diagrama entidad-relación](data/er.md)
 - [Estrategia de pruebas](testing/strategy.md)
 - [Índice de evidencias](evidence/README.md)

@@ -6,6 +6,7 @@ const { sanitizarObjeto } = require("./utils/sanitizar");
 const { crearLogger, registrarPeticiones } = require("./utils/logger");
 const { validarLongitudes } = require("./middlewares/longitudes.middleware");
 const { servirFrontend } = require("./utils/frontend");
+const { servirDocumentacionApi } = require("./utils/apiDocs");
 
 const log = crearLogger("app");
 const app = express();
@@ -36,6 +37,9 @@ app.use((req, res, next) => {
 
 // API REST (todos los modulos: seguridad, materia prima, produccion, inventario, ventas, reportes)
 app.use("/api", registrarPeticiones, validarLongitudes, apiRoutes);
+
+// Documentación de la API con Swagger UI en /api-docs, a partir de docs/api/openapi.json (API_DOCS=off la apaga)
+app.use(servirDocumentacionApi());
 
 // Solo se publica el build de React; el código fuente y la configuración del frontend no se sirven
 app.use(servirFrontend(path.join(__dirname, "..", "..", "frontend", "dist")));

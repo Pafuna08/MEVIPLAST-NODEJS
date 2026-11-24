@@ -2,6 +2,19 @@
 
 Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Responden 401 si falta el token, si está vencido o es inválido, o si el usuario fue desactivado, eliminado o cambió de rol desde que inició sesión; el panel cierra la sesión al recibir 401. Responden 403 cuando el rol no tiene permiso para la ruta. Los roles y respuestas siguientes se derivan de los routers y middleware del backend. El contrato formal está en [`openapi.json`](openapi.json) (OpenAPI 3.0.3): cuerpos de petición, códigos de respuesta y roles por ruta (`x-roles`). La prueba `backend/tests/openapi.test.js` falla si el contrato y las rutas registradas en Express no coinciden.
 
+## Documentación interactiva (Swagger UI)
+
+El mismo servidor publica el contrato con Swagger UI (CR-024, pedido del instructor):
+
+| Dónde | Swagger UI | Contrato en JSON |
+| --- | --- | --- |
+| Equipo local | http://localhost:3000/api-docs | http://localhost:3000/api-docs/openapi.json |
+| Demostración en Render | https://meviplast.onrender.com/api-docs | https://meviplast.onrender.com/api-docs/openapi.json |
+
+La página se arma con `openapi.json`, el archivo que vigila `openapi.test.js`, así que no se desfasa de las rutas. Agrupa las 56 operaciones por módulo y muestra, en cada una, sus parámetros, cuerpo, respuestas, roles (`x-roles`) y requisito (`x-requisitos`). Para probar: `POST /auth/login`, copiar el `token`, pulsar **Authorize** y pegarlo; «Try it out» envía las peticiones con ese token y la API aplica los mismos roles y validaciones que al panel. Las peticiones son reales: en la demostración, lo que se registre queda en la base.
+
+Los archivos de Swagger UI vienen con la dependencia `swagger-ui-express` (no se cargan de internet), así que la página también funciona en la red local de la empresa. `API_DOCS=off` la desactiva y `/api-docs` responde 404. La prueba `backend/tests/api-docs.test.js` lo verifica (CP-103).
+
 | Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
 | ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
 | GET         | `/health`                                                            | Público                                | Verificar que la API y la base de datos respondan (200 / 503) |

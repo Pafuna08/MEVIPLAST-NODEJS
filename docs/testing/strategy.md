@@ -65,8 +65,9 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-134 pruebas unitarias y de rutas con `node:test` (134 aprobadas el 2026-11-16), en 30 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+138 pruebas unitarias y de rutas con `node:test` (138 aprobadas el 2026-11-23), en 31 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
+- `api-docs.test.js` (4): Swagger UI se publica en `/api-docs` con sus archivos locales y el mismo contrato `docs/api/openapi.json`; la API sigue igual (401 sin token, 404 fuera de ruta y nada nuevo dentro de `/api`); `API_DOCS=off` no la publica, y sin el archivo del contrato la aplicación arranca y `/api-docs` responde 404 (CR-024, CP-103).
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
