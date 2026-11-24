@@ -20,7 +20,8 @@ test("las respuestas prohíben mostrarse en marcos de otro sitio y no anuncian E
   t.after(() => new Promise((resolve) => server.close(resolve)));
   await once(server, "listening");
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const ruta of ["/dashboard.html", "/api/usuarios", "/api-docs/"]) {
+  // /api-docs/ es HTML servido por la aplicación (el build del panel no existe en el CI)
+  for (const ruta of ["/api/usuarios", "/api-docs/"]) {
     const respuesta = await fetch(`${base}${ruta}`);
     assert.equal(respuesta.headers.get("x-frame-options"), "DENY", ruta);
     assert.match(respuesta.headers.get("content-security-policy") || "", /frame-ancestors 'none'/, ruta);
