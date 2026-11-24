@@ -31,33 +31,93 @@ function limitesPeriodo(periodo, ahora = new Date()) {
   return { desde: formato(inicio), hasta: formato(fin), hastaInclusivo: formato(new Date(fin.getTime() - 86400000)) };
 }
 
-async function detalleProduccion(periodo, ahora = new Date()) {
+// HU-004 / RF-024: filtros opcionales del historial de producción por operario y por producto
+function filtrosProduccion({ operario_id, producto } = {}) {
+  const filtros = { operarioId: null, producto: null };
+  if (operario_id !== undefined && operario_id !== null && operario_id !== "") {
+    const id = Number(operario_id);
+    if (!Number.isInteger(id) || id <= 0) throw filtroInvalido("El operario del filtro no es válido");
+    filtros.operarioId = id;
+  }
+  if (producto !== undefined && producto !== null && producto !== "") {
+    if (typeof producto !== "string" || !producto.trim() || producto.length > 200) {
+      throw filtroInvalido("El producto del filtro no es válido");
+    }
+    filtros.producto = producto.trim();
+  }
+  return filtros;
+}
+
+async function detalleProduccion(periodo, ahora = new Date(), filtrosPedidos = {}) {
   const rango = limitesPeriodo(periodo, ahora);
+  const filtros = filtrosProduccion(filtrosPedidos);
+  const base = "mi.tipo = 'produccion' AND mi.fecha >= ? AND mi.fecha < ?";
+  let condicion = base;
+  const valores = [rango.desde, rango.hasta];
+  if (filtros.operarioId) {
+    condicion += " AND mi.usuario_id = ?";
+    valores.push(filtros.operarioId);
+  }
+  if (filtros.producto) {
+    condicion += " AND i.producto = ?";
+    valores.push(filtros.producto);
+  }
   const [detalle] = await pool.query(
     `SELECT mi.id, mi.fecha, mi.cantidad, mi.produccion_id AS orden_id,
             i.producto, u.nombre AS operario
      FROM movimientos_inventario mi
      JOIN inventario i ON i.id = mi.inventario_id
      LEFT JOIN usuarios u ON u.id = mi.usuario_id
-     WHERE mi.tipo = 'produccion' AND mi.fecha >= ? AND mi.fecha < ?
+     WHERE ${condicion}
      ORDER BY mi.fecha DESC, mi.id DESC`,
-    [rango.desde, rango.hasta],
+    valores,
   );
   const [resumen] = await pool.query(
     `SELECT COUNT(*) AS movimientos, COALESCE(SUM(mi.cantidad), 0) AS unidades
      FROM movimientos_inventario mi
-     WHERE mi.tipo = 'produccion' AND mi.fecha >= ? AND mi.fecha < ?`,
-    [rango.desde, rango.hasta],
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE ${condicion}`,
+    valores,
   );
   const [porProducto] = await pool.query(
     `SELECT i.producto, SUM(mi.cantidad) AS unidades
      FROM movimientos_inventario mi
      JOIN inventario i ON i.id = mi.inventario_id
-     WHERE mi.tipo = 'produccion' AND mi.fecha >= ? AND mi.fecha < ?
+     WHERE ${condicion}
      GROUP BY i.producto ORDER BY unidades DESC`,
+    valores,
+  );
+  // Opciones de los filtros: operarios y productos con producción en el periodo, sin filtrar
+  const [operarios] = await pool.query(
+    `SELECT DISTINCT u.id, u.nombre
+     FROM movimientos_inventario mi
+     JOIN usuarios u ON u.id = mi.usuario_id
+     WHERE ${base}
+     ORDER BY u.nombre`,
     [rango.desde, rango.hasta],
   );
-  return { periodo, ...rango, resumen: resumen[0], porProducto, detalle };
+  const [productos] = await pool.query(
+    `SELECT DISTINCT i.producto
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE ${base}
+     ORDER BY i.producto`,
+    [rango.desde, rango.hasta],
+  );
+  const operario = operarios.find((fila) => fila.id === filtros.operarioId);
+  return {
+    periodo,
+    ...rango,
+    filtros: {
+      operario_id: filtros.operarioId,
+      operario: filtros.operarioId ? operario?.nombre || `#${filtros.operarioId}` : null,
+      producto: filtros.producto,
+    },
+    opciones: { operarios, productos: productos.map((fila) => fila.producto) },
+    resumen: resumen[0],
+    porProducto,
+    detalle,
+  };
 }
 
 async function detalleVentas(periodo, ahora = new Date()) {
@@ -200,9 +260,17 @@ async function resumenVentas({ desde, hasta } = {}) {
   return { resumen: totales[0], porProducto };
 }
 
+// HU-023 / RF-026: existencias de producto terminado y de materias primas en el mismo reporte
 async function resumenInventario() {
-  const [filas] = await pool.query("SELECT producto, cantidad FROM inventario ORDER BY cantidad ASC");
-  return filas;
+  const [productos] = await pool.query("SELECT producto, cantidad FROM inventario ORDER BY cantidad ASC");
+  const [materiasPrimas] = await pool.query(
+    `SELECT nombre, cantidad, unidad, stock_minimo, cantidad <= stock_minimo AS bajo_stock
+     FROM materia_prima ORDER BY cantidad ASC`,
+  );
+  return {
+    productos,
+    materias_primas: materiasPrimas.map((fila) => ({ ...fila, bajo_stock: Boolean(Number(fila.bajo_stock)) })),
+  };
 }
 
 function filtroInvalido(mensaje) {

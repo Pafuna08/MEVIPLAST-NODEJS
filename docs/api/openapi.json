@@ -2504,6 +2504,26 @@
                 "anual"
               ]
             }
+          },
+          {
+            "name": "operario_id",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este operario",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "producto",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este producto (nombre completo de la variante)",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
           }
         ],
         "responses": {
@@ -2539,7 +2559,7 @@
           "Reportes"
         ],
         "summary": "Detalle de producción en PDF",
-        "x-requisitos": "RF-028",
+        "x-requisitos": "RF-028, RF-024",
         "parameters": [
           {
             "name": "periodo",
@@ -2553,6 +2573,26 @@
                 "mensual",
                 "anual"
               ]
+            }
+          },
+          {
+            "name": "operario_id",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este operario",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "producto",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este producto (nombre completo de la variante)",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
             }
           }
         ],
@@ -2591,7 +2631,7 @@
           "Reportes"
         ],
         "summary": "Detalle de producción en Excel",
-        "x-requisitos": "RF-028",
+        "x-requisitos": "RF-028, RF-024",
         "parameters": [
           {
             "name": "periodo",
@@ -2605,6 +2645,26 @@
                 "mensual",
                 "anual"
               ]
+            }
+          },
+          {
+            "name": "operario_id",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este operario",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "producto",
+            "in": "query",
+            "required": false,
+            "description": "HU-004: solo los registros de este producto (nombre completo de la variante)",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
             }
           }
         ],
@@ -2969,7 +3029,7 @@
         "tags": [
           "Reportes"
         ],
-        "summary": "Existencias de producto terminado",
+        "summary": "Existencias de producto terminado y de materias primas",
         "x-requisitos": "RF-026",
         "responses": {
           "200": {
@@ -2977,7 +3037,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "productos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "materias_primas": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -2992,7 +3066,8 @@
         "x-roles": [
           "admin",
           "supervisor"
-        ]
+        ],
+        "description": "HU-023: productos (producto, cantidad) y materias_primas (nombre, cantidad, unidad, stock_minimo, bajo_stock)."
       }
     },
     "/reportes/auditoria": {
@@ -3130,14 +3205,14 @@
               }
             }
           },
+          "400": {
+            "description": "Un filtro tiene un formato inválido"
+          },
           "401": {
             "$ref": "#/components/responses/SesionInvalida"
           },
           "403": {
             "$ref": "#/components/responses/SinPermiso"
-          },
-          "400": {
-            "description": "Un filtro tiene un formato inválido"
           }
         },
         "x-roles": [

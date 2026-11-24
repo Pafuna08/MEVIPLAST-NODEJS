@@ -29,6 +29,15 @@ export async function api(url, token, options = {}) {
   return data;
 }
 
+// HU-004: filtros del historial de producción que viajan en la dirección (?operario_id=&producto=)
+export function filtrosReporte(params = new URLSearchParams(window.location.search)) {
+  if (params.get("reporte") !== "produccion") return "";
+  return ["operario_id", "producto"]
+    .filter((clave) => params.get(clave))
+    .map((clave) => `&${clave}=${encodeURIComponent(params.get(clave))}`)
+    .join("");
+}
+
 export async function loadView(view, role, token) {
   if (view === "reporte-detalle") {
     const params = new URLSearchParams(window.location.search);
@@ -38,7 +47,7 @@ export async function loadView(view, role, token) {
       return api(`/api/reportes/rendimiento?periodo=${encodeURIComponent(periodo)}`, token);
     }
     const recurso = tipo === "produccion" ? "produccion" : "ventas";
-    return api(`/api/reportes/${recurso}/detalle?periodo=${encodeURIComponent(periodo)}`, token);
+    return api(`/api/reportes/${recurso}/detalle?periodo=${encodeURIComponent(periodo)}${filtrosReporte(params)}`, token);
   }
   if (view === "inicio") {
     const orders = await api("/api/produccion", token);

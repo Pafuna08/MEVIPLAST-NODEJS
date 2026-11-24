@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api, loadView, readSession } from "./comun/api.js";
+import { api, filtrosReporte, loadView, readSession } from "./comun/api.js";
 import { orderVariant } from "./comun/componentes.jsx";
 import { finishedProductFamilies, movementTypeNames, roleViews, viewTitles } from "./comun/constantes.js";
 import { money, number, packagesLabel, safeProductName, sanitizePayload, sanitizeText } from "./comun/formato.js";
@@ -212,7 +212,7 @@ export default function DashboardApp() {
   async function downloadReportExcel() {
     try {
       const ruta = requestedReport === "rendimiento" ? "rendimiento/excel" : `${requestedReport}/detalle/excel`;
-      const response = await fetch(`/api/reportes/${ruta}?periodo=${requestedPeriod}`, {
+      const response = await fetch(`/api/reportes/${ruta}?periodo=${requestedPeriod}${filtrosReporte()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 401) {
@@ -281,7 +281,7 @@ export default function DashboardApp() {
   // El reporte del periodo en PDF (RF-028)
   function openReportPdf() {
     const ruta = requestedReport === "rendimiento" ? "rendimiento/pdf" : `${requestedReport}/detalle/pdf`;
-    return openPdf(`/api/reportes/${ruta}?periodo=${requestedPeriod}`, "El reporte");
+    return openPdf(`/api/reportes/${ruta}?periodo=${requestedPeriod}${filtrosReporte()}`, "El reporte");
   }
 
   async function openReceipt(id) {

@@ -14,9 +14,10 @@ async function produccion(req, res) {
 
 async function detalleProduccion(req, res) {
   try {
-    res.json(await reportesService.detalleProduccion(req.query.periodo));
+    const { operario_id, producto } = req.query;
+    res.json(await reportesService.detalleProduccion(req.query.periodo, undefined, { operario_id, producto }));
   } catch (error) {
-    if (error.message.startsWith("El periodo")) {
+    if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
       return res.status(400).json({ mensaje: error.message });
     }
     log.error("Error al atender la petición", { error });
@@ -83,14 +84,15 @@ async function auditoria(req, res) {
 function exportarExcel(tipo) {
   return async (req, res) => {
     try {
-      const { buffer, nombreArchivo } = await reportesExcel.libroDetalle(tipo, req.query.periodo);
+      const { operario_id, producto } = req.query;
+      const { buffer, nombreArchivo } = await reportesExcel.libroDetalle(tipo, req.query.periodo, undefined, { operario_id, producto });
       res.set({
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${nombreArchivo}"`,
       });
       res.send(buffer);
     } catch (error) {
-      if (error.message.startsWith("El periodo")) {
+      if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
         return res.status(400).json({ mensaje: error.message });
       }
       log.error("Error al atender la petición", { error });
@@ -103,7 +105,8 @@ function exportarExcel(tipo) {
 function exportarPdf(tipo) {
   return async (req, res) => {
     try {
-      const { buffer, nombreArchivo } = await reportesPdf.pdfDetalle(tipo, req.query.periodo);
+      const { operario_id, producto } = req.query;
+      const { buffer, nombreArchivo } = await reportesPdf.pdfDetalle(tipo, req.query.periodo, undefined, {}, { operario_id, producto });
       res.set({
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${nombreArchivo}"`,
@@ -111,7 +114,7 @@ function exportarPdf(tipo) {
       });
       res.send(buffer);
     } catch (error) {
-      if (error.message.startsWith("El periodo")) {
+      if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
         return res.status(400).json({ mensaje: error.message });
       }
       log.error("Error al atender la petición", { error });
