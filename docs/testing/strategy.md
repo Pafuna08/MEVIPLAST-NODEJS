@@ -112,12 +112,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-16, sobre `develop` al PR #98:
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-24, sobre `develop` al PR #109 (158 unitarias y 24 E2E):
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 73,5 % | 83,2 % | 71,8 % |
-| Unitarias + E2E | 90,2 % | 83,1 % | 93,1 % |
+| Unitarias | 76,6 % | 83,2 % | 75,0 % |
+| Unitarias + E2E | 91,3 % | 83,7 % | 94,1 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

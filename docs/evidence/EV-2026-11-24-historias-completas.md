@@ -19,6 +19,7 @@
 | --- | --- |
 | Pruebas unitarias y de rutas en `develop` | 158 de 158, en 36 archivos |
 | CI de los PR #107, #108 y #109 | `validate` y `e2e` aprobados (24 E2E) |
+| Cobertura de líneas en `backend/src` (local, MySQL de XAMPP) | 76,6 % con unitarias; 91,3 % con unitarias y E2E (182 de 182 pruebas) |
 | Contrato OpenAPI | 57 operaciones; se agregó `POST /auth/logout` |
 | Render después del despliegue | `/api/health` responde `{"estado":"ok","baseDatos":"ok"}` y `POST /api/auth/logout` sin token responde 401 |
 
