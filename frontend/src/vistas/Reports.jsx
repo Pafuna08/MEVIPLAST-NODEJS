@@ -15,7 +15,7 @@ export function Reports({ role }) {
     url.search = "";
     url.hash = "";
     url.searchParams.set("reporte", tipo);
-    url.searchParams.set("periodo", periodo);
+    if (periodo) url.searchParams.set("periodo", periodo);
     window.location.assign(url.toString());
   }
   return (
@@ -43,13 +43,52 @@ export function Reports({ role }) {
             </div>
           </Panel>
         ))}
+        {/* HU-023 / RF-026: las existencias son de hoy, por eso este reporte no lleva periodo */}
+        <Panel title="Reporte de inventario" className="report-category">
+          <p>Consulta las existencias actuales de producto terminado y de materias primas, con las que están por debajo del mínimo.</p>
+          <div className="report-periods">
+            <button className="report-period-button" type="button" onClick={() => abrirReporte("inventario")}>Ver existencias</button>
+          </div>
+        </Panel>
       </section>
+    </>
+  );
+}
+
+// HU-023 / RF-026: producto terminado y materias primas en el mismo reporte
+function InventoryReport({ data }) {
+  const productos = data.productos || [];
+  const materias = data.materias_primas || [];
+  const unidades = productos.reduce((total, item) => total + Number(item.cantidad || 0), 0);
+  const bajos = materias.filter((item) => item.bajo_stock).length;
+  return (
+    <>
+      <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
+      <Intro title="Reporte de inventario" description="Existencias actuales de producto terminado y de materias primas, de menor a mayor cantidad." />
+      <section className="stats-grid">
+        <article className="stat-card"><div className="stat-head"><span>Producto terminado</span></div><strong>{number(unidades)}</strong><small>Unidades en {number(productos.length)} referencias</small></article>
+        <article className="stat-card"><div className="stat-head"><span>Materias primas</span></div><strong>{number(materias.length)}</strong><small>Bobinas registradas</small></article>
+        <article className="stat-card"><div className="stat-head"><span>Con stock bajo</span></div><strong>{number(bajos)}</strong><small>Materias primas en el mínimo o por debajo</small></article>
+      </section>
+      <Panel title="Producto terminado">
+        <DataTable columns={["Producto", "Existencia"]} empty="No hay producto terminado registrado." rows={productos.map((item, indice) => ({
+          key: `${item.producto}-${indice}`,
+          cells: <><td>{safeProductName(item.producto) || "Producto no válido"}</td><td>{number(item.cantidad)}</td></>,
+        }))} />
+      </Panel>
+      <Panel title="Materias primas">
+        <DataTable columns={["Material", "Existencia", "Stock mínimo", "Estado"]} empty="No hay materias primas registradas." rows={materias.map((item, indice) => ({
+          key: `${item.nombre}-${indice}`,
+          cells: <><td>{sanitizeText(item.nombre)}</td><td>{number(item.cantidad)} {sanitizeText(item.unidad || "")}</td><td>{number(item.stock_minimo)} {sanitizeText(item.unidad || "")}</td><td>{item.bajo_stock ? <span className="status alert">Stock bajo</span> : <span className="status success">Suficiente</span>}</td></>,
+        }))} />
+      </Panel>
     </>
   );
 }
 
 export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
   const reporteTipo = new URLSearchParams(window.location.search).get("reporte");
+  if (reporteTipo === "inventario") return <InventoryReport data={data} />;
   const titulo = { produccion: "producción", ventas: "ventas", rendimiento: "rendimiento de operarios" }[reporteTipo];
   const periodoNombre = data.periodo.charAt(0).toUpperCase() + data.periodo.slice(1);
   const fechas = `${data.desde} - ${data.hastaInclusivo}`;

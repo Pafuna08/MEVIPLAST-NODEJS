@@ -104,10 +104,12 @@ export default function DashboardApp() {
   const requestedReport = reportParams.get("reporte");
   const requestedPeriod = reportParams.get("periodo");
   // CR-021: el reporte de ventas es solo del administrador
+  // HU-023: el reporte de inventario muestra las existencias de hoy, sin periodo
   const isReportDetail =
-    ["produccion", "ventas", "rendimiento"].includes(requestedReport) &&
+    (requestedReport === "inventario" && ["Administrador", "Supervisor"].includes(role)) ||
+    (["produccion", "ventas", "rendimiento"].includes(requestedReport) &&
     ["diario", "semanal", "mensual", "anual"].includes(requestedPeriod) &&
-    (requestedReport === "ventas" ? role === "Administrador" : ["Administrador", "Supervisor"].includes(role));
+    (requestedReport === "ventas" ? role === "Administrador" : ["Administrador", "Supervisor"].includes(role)));
   const requestedView = window.location.hash.slice(1) || "inicio";
   const activeView = isReportDetail
     ? "reporte-detalle"
