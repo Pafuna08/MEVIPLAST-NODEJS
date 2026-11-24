@@ -904,6 +904,17 @@
                   "observaciones": {
                     "type": "string",
                     "maxLength": 255
+                  },
+                  "costo": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 100000000,
+                    "description": "HU-010: costo total de la compra en pesos (opcional; solo tipo compra)"
+                  },
+                  "factura": {
+                    "type": "string",
+                    "maxLength": 40,
+                    "description": "HU-010: número de factura del proveedor (opcional; solo tipo compra)"
                   }
                 },
                 "required": [

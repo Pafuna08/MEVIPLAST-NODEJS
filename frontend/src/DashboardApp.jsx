@@ -32,6 +32,9 @@ function irreversibleSummary(view, payload, data) {
         ["Bobina", sanitizeText(material?.nombre || `#${payload.materia_prima_id}`)],
         ["Movimiento", movementTypeNames[payload.tipo] + (payload.produccion_id ? ` (orden #${payload.produccion_id})` : "")],
         ["Cantidad", `${units(payload.cantidad)} kg`],
+        // HU-010: costo y factura de la compra, si se escribieron
+        ...(payload.costo ? [["Costo total", money(payload.costo)]] : []),
+        ...(payload.factura ? [["Factura", sanitizeText(payload.factura)]] : []),
         ...(payload.observaciones ? [["Observaciones", sanitizeText(payload.observaciones)]] : []),
       ],
     };

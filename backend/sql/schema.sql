@@ -171,6 +171,8 @@ CREATE TABLE IF NOT EXISTS movimientos_materia_prima (
   produccion_id INT NULL,
   tipo ENUM('compra', 'ajuste_entrada', 'ajuste_salida', 'consumo_produccion') NOT NULL,
   cantidad DECIMAL(10,2) NOT NULL,
+  costo DECIMAL(12,2) NULL,
+  factura VARCHAR(40) NULL,
   observaciones VARCHAR(255) NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_mov_materia_fecha (materia_prima_id, fecha),
