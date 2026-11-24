@@ -53,7 +53,8 @@ test("restablecimiento verifica y consume el token dentro de una transacción", 
       return [[], []];
     },
   });
-  pool.query = async () => [[], []];
+  // Consulta previa al bcrypt: el token existe y está vigente
+  pool.query = async (sql) => (sql.startsWith("SELECT id FROM tokens_recuperacion") ? [[{ id: 4 }], []] : [[], []]);
   t.after(() => {
     pool.getConnection = originalGetConnection;
     pool.query = originalQuery;

@@ -53,7 +53,7 @@ async function salida(req, res) {
 
 async function movimientos(req, res) {
   try {
-    res.json(await inventarioService.listarMovimientos(req.params.id || null));
+    res.json(await inventarioService.listarMovimientos(req.params.id || null, req.usuario?.rol));
   } catch (error) {
     log.error("Error al atender la petición", { error });
     res

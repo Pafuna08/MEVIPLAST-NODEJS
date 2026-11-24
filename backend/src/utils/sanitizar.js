@@ -19,7 +19,7 @@ function sanitizarTexto(valor, maxLongitud = 255) {
     .replace(/&#39;/gi, "'")
     .replace(/&quot;/gi, '"')
     // eslint-disable-next-line no-control-regex -- se eliminan caracteres de control a propósito
-    .replace(/[\u0000-\u001F\u007F]+/g, " ")
+    .replace(/[\u0000-\u001F\u007F\uFFFE\uFFFF]+/g, " ")
     .replace(/\\["']/g, "")
     .replace(/^[\s"'`\\]+|[\s"'`\\]+$/g, "")
     .replace(/\s+/g, " ")

@@ -140,7 +140,7 @@ async function registrar(datos, actorId) {
     for (const linea of lineas) {
       const variante = porId.get(linea.inventarioId);
       const prefijo = lineas.length > 1 ? `Producto ${linea.posicion}: ` : "";
-      if (!variante || !(await lineasService.paraValidar(variante.familia)).includes(variante.familia)) {
+      if (!variante || !(await lineasService.paraValidar(variante.familia, connection)).includes(variante.familia)) {
         throw errorDeDato(`${prefijo}Selecciona una variante de producto válida`);
       }
       if (Number(variante.cantidad) < linea.unidades) {

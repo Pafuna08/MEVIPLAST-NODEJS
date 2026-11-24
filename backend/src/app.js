@@ -19,6 +19,14 @@ const origenesPermitidos = (process.env.CORS_ORIGINS || "")
   .filter(Boolean);
 
 // Middlewares globales
+// Ninguna página se puede mostrar dentro de un marco de otro sitio (clickjacking; auditoría de seguridad run-1)
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
 app.use(cors({ origin: origenesPermitidos.length ? origenesPermitidos : false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

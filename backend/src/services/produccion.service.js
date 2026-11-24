@@ -284,7 +284,7 @@ async function actualizarOrden(id, datos, actor) {
       throw new Error("El producto no puede estar vacío");
     }
     const lineas = producto !== undefined || camposVariante.length
-      ? await lineasService.paraValidar(producto !== undefined ? producto.trim() : orden.producto)
+      ? await lineasService.paraValidar(producto !== undefined ? producto.trim() : orden.producto, connection)
       : [];
     if (producto !== undefined) validarProducto(producto.trim(), lineas);
     const variante = camposVariante.length

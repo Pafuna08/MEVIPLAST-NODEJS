@@ -133,6 +133,17 @@ async function restablecerPassword(token, password) {
   }
 
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  // Una consulta barata descarta los tokens inexistentes antes del bcrypt (auditoría de seguridad run-1);
+  // la transacción de abajo vuelve a comprobarlo con FOR UPDATE.
+  const [vigentes] = await pool.query(
+    "SELECT id FROM tokens_recuperacion WHERE token_hash = ? AND usado_en IS NULL AND expira_en > NOW()",
+    [tokenHash],
+  );
+  if (!vigentes.length) {
+    const error = new Error("El enlace de recuperación no es válido o venció");
+    error.status = 400;
+    throw error;
+  }
   const passwordHash = await bcrypt.hash(password, 10);
   const connection = await pool.getConnection();
   let transactionStarted = false;

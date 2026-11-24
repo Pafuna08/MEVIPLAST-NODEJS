@@ -192,12 +192,14 @@ async function registrarSalida(
   return obtenerPorId(id);
 }
 
-async function listarMovimientos(inventarioId) {
+// CR-021: el cliente de una venta es información comercial del administrador; el supervisor no la recibe
+async function listarMovimientos(inventarioId, rol) {
+  const cliente = rol === "supervisor" ? "NULL" : "v.cliente";
   const condiciones = inventarioId ? "WHERE m.inventario_id = ?" : "";
   const valores = inventarioId ? [inventarioId] : [];
   const [filas] = await pool.query(
     `SELECT m.*, i.producto, u.nombre AS registrado_por, p.id AS orden_id,
-            v.cliente AS cliente_venta
+            ${cliente} AS cliente_venta
      FROM movimientos_inventario m
      JOIN inventario i ON i.id = m.inventario_id
      LEFT JOIN usuarios u ON u.id = m.usuario_id
