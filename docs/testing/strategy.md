@@ -65,11 +65,12 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-148 pruebas unitarias y de rutas con `node:test` (148 aprobadas el 2026-11-24), en 33 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+158 pruebas unitarias y de rutas con `node:test` (158 aprobadas el 2026-11-24), en 36 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `api-docs.test.js` (4): Swagger UI se publica en `/api-docs` con sus archivos locales y el mismo contrato `docs/api/openapi.json`; la API sigue igual (401 sin token, 404 fuera de ruta y nada nuevo dentro de `/api`); `API_DOCS=off` no la publica, y sin el archivo del contrato la aplicación arranca y `/api-docs` responde 404 (CR-024, CP-103).
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
 
+- `auth.logout.test.js` (3): cerrar sesión sube la versión de sesión y el mismo token responde 401; un token emitido antes del cambio (sin versión) sigue valiendo mientras la versión sea 0; cerrar sesión sin token responde 401 (HU-020, CP-110).
 - `auth.lockout.test.js` (5): contador de intentos fallidos, bloqueo en el quinto intento con auditoría, rechazo de una cuenta bloqueada aunque la contraseña sea correcta, reinicio al iniciar sesión y desbloqueo por el administrador.
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
@@ -82,14 +83,16 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
 - `longitudes.test.js` (2): un texto más largo que su columna se rechaza con 400 y la variante respeta el largo de medida, calibre y color.
 - `lineas.test.js` (5): nombre de una línea nueva (limpio, de 3 a 60 caracteres, sin símbolos), lista de la tabla con las seis de base si falta, sin consultar la base para una línea de base, 409 si ya existe sin importar mayúsculas y auditoría, y una línea nueva medida en «ancho x largo» (CR-020).
+- `compras.costo.test.js` (3): la compra guarda costo y factura; sin ellos sigue siendo válida; se rechazan fuera de una compra o con un formato inválido (HU-010, CP-109).
 - `comprobantePdf.test.js` (2): el comprobante en PDF es un documento PDF válido con el número de la venta en el título y una página; con muchas líneas sigue en otra página.
 - `logger.test.js` (4): formato JSON por línea, filtro por `LOG_LEVEL`, campos sensibles ocultos, errores convertidos a texto y registro de cada petición sin el cuerpo.
 - `mensajes.test.js` (1): los mensajes de la API que ve el usuario llevan tildes y ñ (DEF-029).
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `numeros.test.js` (7): lectura estricta de números («2abc», «1e5» y «0x10» no son números), enteros de 1 a 1 000 000, kg con 2 decimales hasta 100 000, metas y avances enteros, ingresos y salidas con tope, bobina única por variante (409) y ventas de 50, 100 o 500 unidades por paquete, hasta 1 000 paquetes y $100 000 000 (DEF-022, CR-018).
-- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 56 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
+- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 57 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
 - `production.service.test.js` (17): edición parcial sin quitar la materia prima (RN-026), plantillas del catálogo con variante y materia prima, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada si no existe).
 - `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
+- `reportes.filtros.test.js` (4): el detalle de producción filtra por operario y producto con valores enlazados, sin filtros no agrega condiciones, un operario inválido responde 400 (HU-004, CP-107) y el reporte de inventario trae las materias primas con su alerta (HU-023, CP-108).
 - `reportesPdf.test.js` (3): el reporte en PDF es un PDF válido con su título y el nombre de archivo del periodo; uno largo sigue en varias páginas; un periodo o un tipo inválidos se rechazan.
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
 - `respuestas-api.test.js` (5): JSON mal formado (400), eliminación solo de órdenes pendientes sin avance (400 y 404), usuario inexistente (404), cantidad o material inválido al editar una bobina (400) y fechas inexistentes en la auditoría (400) (DEF-023).

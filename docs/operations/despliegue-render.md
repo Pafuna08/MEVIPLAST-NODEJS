@@ -62,7 +62,7 @@ Cada fusión en `develop` vuelve a desplegar el servicio (`autoDeploy`). En **Ev
 | Iniciar sesión como `admin` | Entra al panel |
 | Registrar una venta y abrir el comprobante en PDF | La fecha sale en hora de Colombia |
 | Reporte diario | Incluye lo registrado hoy (hora de Colombia) |
-| `https://<servicio>.onrender.com/api-docs` | Swagger UI con las 56 operaciones de la API (CR-024) |
+| `https://<servicio>.onrender.com/api-docs` | Swagger UI con las 57 operaciones de la API (CR-024) |
 
 ## Variables nuevas
 
