@@ -44,7 +44,10 @@ async function servidorSmtp(t) {
   return { puerto: servidor.address().port, sesion };
 }
 
-test("la recuperación de contraseña entrega el correo por SMTP con el enlace de un solo uso", async (t) => {
+// Auditoría de seguridad (run-1): con SMTP_SECURE=false el transporte exige STARTTLS (requireTLS). Un
+// servidor que no lo ofrece (o una respuesta EHLO alterada en el camino) hace fallar el envío: la clave SMTP
+// y el enlace con el token nunca viajan sin cifrar, y el token que no se pudo enviar se borra.
+test("sin STARTTLS el correo de recuperación no se envía: ni AUTH ni token en texto plano", async (t) => {
   const { puerto, sesion } = await servidorSmtp(t);
   const entorno = { ...process.env };
   Object.assign(process.env, {
@@ -56,9 +59,11 @@ test("la recuperación de contraseña entrega el correo por SMTP con el enlace d
     SMTP_FROM: "MEVIPLAST <mevi@prueba.test>",
     FRONTEND_URL: "http://localhost:3000",
   });
+  const consultas = [];
   const originalQuery = pool.query;
-  pool.query = async (sql) => {
-    if (sql.startsWith("SELECT id FROM usuarios")) return [[{ id: 4 }], []];
+  pool.query = async (sql, params) => {
+    consultas.push([sql, params]);
+    if (sql.startsWith("SELECT id, correo FROM usuarios")) return [[{ id: 4, correo: "operario@prueba.test" }], []];
     return [{ affectedRows: 1 }, []];
   };
   t.after(() => {
@@ -66,14 +71,9 @@ test("la recuperación de contraseña entrega el correo por SMTP con el enlace d
     process.env = entorno;
   });
 
-  await authService.solicitarRecuperacion("operario@prueba.test");
+  await assert.rejects(authService.solicitarRecuperacion("operario@prueba.test"));
 
-  assert.ok(sesion.comandos.some((c) => c.startsWith("AUTH")), "se autentica en el servidor SMTP");
-  assert.ok(sesion.comandos.includes("MAIL FROM:<mevi@prueba.test>"));
-  assert.ok(sesion.comandos.includes("RCPT TO:<operario@prueba.test>"));
-  // El asunto lleva "ñ", así que viaja codificado (RFC 2047)
-  assert.match(sesion.mensaje, /^Subject: =\?UTF-8\?Q\?Restablece_tu_contrase=C3=B1a/m);
-  // Quoted-printable parte las líneas largas del cuerpo con "=" al final
-  const cuerpo = sesion.mensaje.replace(/=\r\n/g, "");
-  assert.match(cuerpo, /http:\/\/localhost:3000\/recuperar\.html\?token=3D[a-f0-9]{64}/);
+  assert.equal(sesion.comandos.some((c) => c.startsWith("AUTH")), false, "no se autentica sin TLS");
+  assert.equal(sesion.mensaje, "", "no se envía el mensaje con el token");
+  assert.ok(consultas.some(([sql]) => sql.startsWith("DELETE FROM tokens_recuperacion WHERE usuario_id = ? AND token_hash = ?")), "se borra el token que no se envió");
 });

@@ -26,6 +26,9 @@ function crearTransportadorCorreo() {
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: process.env.SMTP_SECURE === "true",
+    // Auditoría de seguridad (run-1): sin TLS no se envían credenciales ni enlaces; si el servidor no ofrece
+    // STARTTLS o la respuesta EHLO se altera, el envío falla en vez de seguir sin cifrar
+    requireTLS: process.env.SMTP_SECURE !== "true",
     auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
   });
 }
@@ -48,15 +51,22 @@ function validarCorreo(correo) {
   return normalizado;
 }
 
+// Auditoría de seguridad (run-1): la columna correo usa utf8mb4_unicode_ci, que no distingue tildes, así que
+// «ana@émpresa.com» encuentra a «ana@empresa.com». Solo vale la coincidencia exacta y el correo se envía a la
+// dirección guardada, nunca a la que escribió quien lo pide.
+async function buscarPorCorreoExacto(email, columnas) {
+  const [filas] = await pool.query(
+    `SELECT ${columnas}, correo FROM usuarios WHERE correo = ? AND activo = 1`,
+    [email],
+  );
+  return filas.find((fila) => String(fila.correo || "").trim().toLowerCase() === email) || null;
+}
+
 async function solicitarRecuperacion(correo) {
   const email = validarCorreo(correo);
   const transportador = crearTransportadorCorreo();
-  const [usuarios] = await pool.query(
-    "SELECT id FROM usuarios WHERE correo = ? AND activo = 1",
-    [email],
-  );
-  if (!usuarios.length) return RESPUESTA_RECUPERACION;
-  const usuario = usuarios[0];
+  const usuario = await buscarPorCorreoExacto(email, "id");
+  if (!usuario) return RESPUESTA_RECUPERACION;
   const token = crypto.randomBytes(32).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   const enlace = crearEnlaceRecuperacion(token);
@@ -71,7 +81,7 @@ async function solicitarRecuperacion(correo) {
   try {
     await transportador.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
+      to: usuario.correo,
       subject: "Restablece tu contraseña de MEVIPLAST",
       text: `Recibimos una solicitud para cambiar la contraseña de tu cuenta. Abre este enlace antes de 30 minutos: ${enlace}\nSi no solicitaste el cambio, ignora este mensaje.`,
       html: `<p>Recibimos una solicitud para cambiar la contraseña de tu cuenta.</p><p><a href="${enlace}">Restablecer contraseña</a></p><p>El enlace vence en 30 minutos y solo se puede usar una vez. Si no solicitaste el cambio, ignora este mensaje.</p>`,
@@ -89,12 +99,9 @@ async function solicitarRecuperacion(correo) {
 async function recordarUsuario(correo) {
   const email = validarCorreo(correo);
   const transportador = crearTransportadorCorreo();
-  const [usuarios] = await pool.query(
-    "SELECT usuario FROM usuarios WHERE correo = ? AND activo = 1",
-    [email],
-  );
-  if (usuarios.length) {
-    const usuario = usuarios[0].usuario;
+  const cuenta = await buscarPorCorreoExacto(email, "usuario");
+  if (cuenta) {
+    const usuario = cuenta.usuario;
     const htmlUsuario = usuario.replace(/[&<>"']/g, (caracter) => ({
       "&": "&amp;",
       "<": "&lt;",
@@ -104,7 +111,7 @@ async function recordarUsuario(correo) {
     })[caracter]);
     await transportador.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
+      to: cuenta.correo,
       subject: "Tu usuario de MEVIPLAST",
       text: `El usuario asociado a este correo es: ${usuario}\nSi no solicitaste este mensaje, puedes ignorarlo.`,
       html: `<p>El usuario asociado a este correo es: <strong>${htmlUsuario}</strong></p><p>Si no solicitaste este mensaje, puedes ignorarlo.</p>`,
