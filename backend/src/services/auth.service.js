@@ -162,7 +162,7 @@ async function restablecerPassword(token, password) {
     }
     userId = tokens[0].usuario_id;
     await connection.query(
-      "UPDATE usuarios SET password_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ? AND activo = 1",
+      "UPDATE usuarios SET password_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL, sesion_version = sesion_version + 1 WHERE id = ? AND activo = 1",
       [passwordHash, userId],
     );
     const [updated] = await connection.query(
@@ -195,7 +195,7 @@ async function restablecerPassword(token, password) {
 
 async function login(usuario, password) {
   const [filas] = await pool.query(
-    "SELECT id, nombre, usuario, password_hash, rol, activo, intentos_fallidos, bloqueado_hasta, bloqueado_hasta > NOW() AS bloqueado FROM usuarios WHERE usuario = ?",
+    "SELECT id, nombre, usuario, password_hash, rol, activo, intentos_fallidos, bloqueado_hasta, bloqueado_hasta > NOW() AS bloqueado, sesion_version FROM usuarios WHERE usuario = ?",
     [usuario],
   );
 
@@ -242,6 +242,7 @@ async function login(usuario, password) {
     id: registro.id,
     usuario: registro.usuario,
     rol: registro.rol,
+    sv: Number(registro.sesion_version ?? 0),
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "8h",
@@ -260,7 +261,13 @@ async function login(usuario, password) {
   };
 }
 
+// HU-020 / RF-005: cerrar sesión revoca en el servidor todos los tokens emitidos a ese usuario
+async function cerrarSesion(usuarioId) {
+  await pool.query("UPDATE usuarios SET sesion_version = sesion_version + 1 WHERE id = ?", [usuarioId]);
+}
+
 module.exports = {
+  cerrarSesion,
   login,
   solicitarRecuperacion,
   recordarUsuario,

@@ -301,6 +301,46 @@
         "security": []
       }
     },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Cerrar sesión",
+        "description": "HU-020: revoca en el servidor todos los tokens del usuario (sube su versión de sesión).",
+        "x-requisitos": "RF-005",
+        "responses": {
+          "200": {
+            "description": "Sesión cerrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario",
+          "vendedor",
+          "almacenista"
+        ]
+      }
+    },
     "/usuarios": {
       "get": {
         "tags": [

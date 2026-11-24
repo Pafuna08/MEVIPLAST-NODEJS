@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   activo TINYINT(1) NOT NULL DEFAULT 1,
   intentos_fallidos INT NOT NULL DEFAULT 0,
   bloqueado_hasta DATETIME NULL,
+  sesion_version INT NOT NULL DEFAULT 0,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_usuarios_correo (correo)
 );

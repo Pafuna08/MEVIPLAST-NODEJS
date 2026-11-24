@@ -24,9 +24,13 @@ async function verificarToken(req, res, next) {
   }
 
   try {
-    const [usuarios] = await pool.query("SELECT activo, rol FROM usuarios WHERE id = ?", [payload.id]);
+    const [usuarios] = await pool.query("SELECT activo, rol, sesion_version FROM usuarios WHERE id = ?", [payload.id]);
     const usuario = usuarios[0];
-    if (!usuario || !Number(usuario.activo) || usuario.rol !== payload.rol) {
+    // HU-020: al cerrar sesión (o restablecer la contraseña) sube sesion_version y los tokens anteriores
+    // dejan de servir. Los tokens sin «sv» y las filas sin la columna cuentan como versión 0.
+    const versionToken = Number(payload.sv ?? 0);
+    const versionActual = Number(usuario?.sesion_version ?? 0);
+    if (!usuario || !Number(usuario.activo) || usuario.rol !== payload.rol || versionToken !== versionActual) {
       return res.status(401).json({ mensaje: MENSAJE_SESION_INVALIDA });
     }
   } catch (error) {

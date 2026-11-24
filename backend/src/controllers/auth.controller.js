@@ -66,7 +66,18 @@ async function restablecerPassword(req, res) {
   }
 }
 
+async function cerrarSesion(req, res) {
+  try {
+    await authService.cerrarSesion(req.usuario.id);
+    res.json({ mensaje: "Sesión cerrada" });
+  } catch (error) {
+    log.error("Error al cerrar la sesión", { error });
+    res.status(500).json({ mensaje: "No se pudo cerrar la sesión" });
+  }
+}
+
 module.exports = {
+  cerrarSesion,
   iniciarSesion,
   solicitarRecuperacion,
   recordarUsuario,
