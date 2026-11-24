@@ -62,6 +62,7 @@ Cada fusión en `develop` vuelve a desplegar el servicio (`autoDeploy`). En **Ev
 | Iniciar sesión como `admin` | Entra al panel |
 | Registrar una venta y abrir el comprobante en PDF | La fecha sale en hora de Colombia |
 | Reporte diario | Incluye lo registrado hoy (hora de Colombia) |
+| `https://<servicio>.onrender.com/api-docs` | Swagger UI con las 56 operaciones de la API (CR-024) |
 
 ## Variables nuevas
 
@@ -73,6 +74,7 @@ Cada fusión en `develop` vuelve a desplegar el servicio (`autoDeploy`). En **Ev
 | `TZ` | Zona horaria del servidor Node (Render: `America/Bogota`), para los reportes por día |
 | `DB_DEMO` | `false` para que `db:init` no siembre cuentas ni datos de ejemplo |
 | `ADMIN_PASSWORD`, `ADMIN_EMAIL` | Contraseña (mínimo 10 caracteres) y correo del `admin` cuando `DB_DEMO=false` |
+| `API_DOCS` | `off` para no publicar Swagger UI en `/api-docs`; sin la variable se publica |
 
 En local nada cambia: sin estas variables la conexión es la de XAMPP y `db:init` siembra los datos DEMO.
 

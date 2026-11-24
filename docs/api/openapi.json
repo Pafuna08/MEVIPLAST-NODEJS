@@ -3,7 +3,7 @@
   "info": {
     "title": "API MEVIPLAST",
     "version": "1.0.0",
-    "description": "Contrato de la API REST de MEVIPLAST. Todas las rutas protegidas exigen `Authorization: Bearer <token>`. `x-roles` indica los roles que admite cada ruta según `backend/src/routes`; algunas reglas por propiedad (p. ej., el vendedor solo ve sus ventas) se aplican en los servicios. La prueba `backend/tests/openapi.test.js` verifica que este contrato tenga exactamente las rutas registradas en Express."
+    "description": "Contrato de la API REST de MEVIPLAST. Todas las rutas protegidas exigen `Authorization: Bearer <token>`. `x-roles` indica los roles que admite cada ruta según `backend/src/routes`; algunas reglas por propiedad (p. ej., el vendedor solo ve sus ventas) se aplican en los servicios. La prueba `backend/tests/openapi.test.js` verifica que este contrato tenga exactamente las rutas registradas en Express.\n\n**Cómo probar desde esta página (Swagger UI, `/api-docs`):** ejecuta `POST /auth/login` con un usuario y su contraseña, copia el `token` de la respuesta, pulsa **Authorize** y pégalo. Desde ese momento «Try it out» envía las peticiones con ese token, así que la API responde según el rol de ese usuario (403 si no le corresponde). El token se olvida al recargar la página. Las peticiones son reales: lo que se registre queda en la base de datos."
   },
   "servers": [
     {
