@@ -30,8 +30,8 @@ Los archivos de Swagger UI vienen con la dependencia `swagger-ui-express` (no se
 | POST        | `/materia-prima`                                                     | Admin                                  | Crear material y registrar saldo inicial |
 | PUT         | `/materia-prima/{id}`                                                | Admin, almacenista                     | Actualizar datos (no cantidad)          |
 | DELETE      | `/materia-prima/{id}`                                                | Admin                                  | Eliminar material                      |
-| GET         | `/materia-prima/movimientos`, `/materia-prima/{id}/movimientos`     | Admin, supervisor, almacenista         | Consultar ledger de materias primas    |
-| POST        | `/materia-prima/movimientos`                                         | Admin, almacenista; consumo: admin/supervisor | Compra (con costo y factura opcionales, HU-010), ajuste o consumo asociado a orden |
+| GET         | `/materia-prima/movimientos`, `/materia-prima/{id}/movimientos`     | Admin, almacenista (el supervisor no, CR-026) | Consultar ledger de materias primas    |
+| POST        | `/materia-prima/movimientos`                                         | Admin, almacenista; consumo: admin/supervisor (el supervisor, desde Seguimiento: CR-026) | Compra (con costo y factura opcionales, HU-010), ajuste o consumo asociado a orden |
 | GET         | `/produccion`                                                        | Admin; supervisor limitado a órdenes entregadas; operario limitado a sus órdenes | Consultar órdenes (abiertas primero, por prioridad) |
 | GET         | `/lineas`                                                            | Admin, supervisor, almacenista, vendedor | Líneas de producto terminado: las seis de RN-012 y las que agregó el administrador (CR-020) |
 | POST        | `/lineas`                                                            | Admin                                  | Crear una línea; nombre de 3 a 60 caracteres, 409 si ya existe (CR-020) |
