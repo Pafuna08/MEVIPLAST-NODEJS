@@ -9,6 +9,7 @@ import { Advance } from "./vistas/Advance.jsx";
 import { Assign } from "./vistas/Assign.jsx";
 import { Audit } from "./vistas/Audit.jsx";
 import { History } from "./vistas/History.jsx";
+import { Profile } from "./vistas/Profile.jsx";
 import { Home } from "./vistas/Home.jsx";
 import { Inventory } from "./vistas/Inventory.jsx";
 import { Materials } from "./vistas/Materials.jsx";
@@ -97,8 +98,9 @@ function irreversibleSummary(view, payload, data) {
 }
 
 export default function DashboardApp() {
-  const [session] = useState(readSession);
-  const [token] = useState(() => localStorage.getItem("meviplastToken"));
+  // CR-028: «Mi perfil» cambia el nombre, el usuario y la contraseña; la sesión y el token se renuevan sin salir
+  const [session, setSession] = useState(readSession);
+  const [token, setToken] = useState(() => localStorage.getItem("meviplastToken"));
   const role = session && roleViews[session.role] ? session.role : null;
   const config = role ? roleViews[role] : null;
   const reportParams = new URLSearchParams(window.location.search);
@@ -114,7 +116,7 @@ export default function DashboardApp() {
   const requestedView = window.location.hash.slice(1) || "inicio";
   const activeView = isReportDetail
     ? "reporte-detalle"
-    : config?.views.some(([view]) => view === requestedView)
+    : config?.views.some(([view]) => view === requestedView) || (config && requestedView === "perfil")
     ? requestedView
     : config?.views[0]?.[0] || "inicio";
   const [data, setData] = useState(null);
@@ -448,6 +450,43 @@ export default function DashboardApp() {
     }
   }
 
+  // CR-028: guarda la sesión renovada (token y datos del perfil) en el navegador y en el panel
+  function renewSession(newToken, profile) {
+    if (newToken) {
+      localStorage.setItem("meviplastToken", newToken);
+      setToken(newToken);
+    }
+    if (profile) {
+      const next = { ...session, username: profile.usuario, name: profile.nombre };
+      localStorage.setItem("meviplastSession", JSON.stringify(next));
+      setSession(next);
+    }
+  }
+
+  // Devuelven el mensaje de error para la tarjeta del perfil, o null si se guardó
+  async function saveProfile(payload) {
+    try {
+      const result = await api("/api/auth/perfil", token, { method: "PUT", body: JSON.stringify(payload) });
+      renewSession(result.token, result.usuario);
+      setToast("Datos actualizados.");
+      setReloadKey((value) => value + 1);
+      return null;
+    } catch (cause) {
+      return cause.message || "No fue posible guardar tus datos.";
+    }
+  }
+
+  async function changePassword(payload) {
+    try {
+      const result = await api("/api/auth/perfil/password", token, { method: "PUT", body: JSON.stringify(payload) });
+      renewSession(result.token);
+      setToast("Contraseña actualizada.");
+      return null;
+    } catch (cause) {
+      return cause.message || "No fue posible cambiar la contraseña.";
+    }
+  }
+
   // CR-026: consumo de materia prima desde Seguimiento (el supervisor ya no entra a Materias primas).
   // La ventana ya pidió la confirmación; devuelve el mensaje de error para mostrarlo en ella, o null
   async function registerConsumption(payload) {
@@ -589,6 +628,8 @@ export default function DashboardApp() {
     openReportPdf,
     createLine,
     createMaterial,
+    saveProfile,
+    changePassword,
   });
 
   return (
@@ -637,10 +678,11 @@ export default function DashboardApp() {
               <strong>Te damos la bienvenida, {sanitizeText(session.name || session.username, 80)}</strong>
               <span>{role}: {config.welcome}</span>
             </div>
-            <div className="user-menu">
+            {/* CR-028: el avatar abre «Mi perfil» en cualquier rol */}
+            <button className={`user-menu${activeView === "perfil" ? " active" : ""}`} type="button" onClick={() => navigate("perfil")} title="Mi perfil" aria-label={`Mi perfil: ${session.username}, ${role}`}>
               <span className="user-avatar" aria-hidden="true"><Icono nombre="usuario" size={20} /></span>
               <div><strong>{session.username}</strong><span>{role}</span></div>
-            </div>
+            </button>
           </header>
           <main className="main-content" key={activeView}>{content}</main>
         </section>
@@ -737,6 +779,8 @@ function renderView({
   openReportPdf,
   createLine,
   createMaterial,
+  saveProfile,
+  changePassword,
 }) {
   if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} onOpenPdf={openReportPdf} onReceipt={openReceipt} />;
   if (view === "inicio") return <Home data={data} role={role} navigate={navigate} lines={lines} onEditOrder={updateOrder} onAssignOrder={assignOrder} onChangeStatus={updateOrderStatus} />;
@@ -751,6 +795,7 @@ function renderView({
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} lines={lines} onSubmitSale={submitPayload} saving={saving} onReceipt={openReceipt} />;
   if (view === "reportes") return <Reports role={role} />;
+  if (view === "perfil") return <Profile data={data} onSaveProfile={saveProfile} onChangePassword={changePassword} />;
   if (view === "auditoria") return <Audit token={token} />;
   return <section className="panel empty"><h2>{viewTitles[view] || "Sección"}</h2></section>;
 }

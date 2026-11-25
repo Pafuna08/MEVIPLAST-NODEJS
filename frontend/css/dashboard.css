@@ -2633,3 +2633,53 @@ tbody tr:hover td {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* CR-028: el avatar abre «Mi perfil» y la página muestra sus dos tarjetas lado a lado */
+button.user-menu {
+  padding: 6px 10px 6px 6px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+button.user-menu:hover,
+button.user-menu.active {
+  border-color: var(--line);
+  background: #f3f6fb;
+}
+button.user-menu:focus-visible {
+  outline: 3px solid rgba(0, 31, 84, 0.35);
+  outline-offset: 2px;
+}
+.profile-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.profile-layout > .panel {
+  margin-top: 0;
+}
+.profile-card .panel-header h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.profile-card .panel-header h3 .icono {
+  color: var(--navy);
+}
+.data-form.profile-form {
+  grid-template-columns: 1fr;
+}
+.data-form.profile-form > button[type="submit"].primary-action {
+  justify-self: stretch;
+}
+@media (max-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -201,6 +201,44 @@ const FLUJOS = [
     if (problemas.length) throw new Error(problemas.join("; "));
     return `${VISTAS[rol].length} vistas y cierre de sesión`;
   }]),
+  ["Mi perfil: datos y contraseña (CR-028)", async (navegador, nombre) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "vendedor");
+    // El avatar abre «Mi perfil» en cualquier rol
+    await pagina.click(".user-menu");
+    await pagina.locator(".page-intro h2", { hasText: "Mi perfil" }).waitFor({ timeout: 10000 });
+    const datos = pagina.locator("section.profile-card", { hasText: "Datos personales" });
+    if ((await datos.locator("input[name=usuario]").inputValue()) !== "nav_vendedor") problemas.push("el perfil no trae el usuario");
+    await datos.locator("input[name=nombre]").fill(`Vendedor ${nombre}`);
+    await datos.locator("input[name=correo]").fill(`vendedor.${nombre.toLowerCase()}@example.test`);
+    await datos.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Datos actualizados");
+    await pagina.locator(".topbar-welcome", { hasText: `Vendedor ${nombre}` }).waitFor({ timeout: 10000 });
+    // Contraseña: la actual equivocada y la confirmación distinta avisan en la tarjeta
+    const seguridad = pagina.locator("section.profile-card", { hasText: "Seguridad" });
+    const cambiar = async (actual, nueva, confirmacion = nueva) => {
+      await seguridad.locator("input[name=actual]").fill(actual);
+      await seguridad.locator("input[name=nueva]").fill(nueva);
+      await seguridad.locator("input[name=confirmacion]").fill(confirmacion);
+      await seguridad.locator("button[type=submit]").click();
+    };
+    await cambiar(CLAVE, "Otra-clave-123", "Otra-clave-124");
+    await seguridad.locator(".form-error", { hasText: "confirmación" }).waitFor({ timeout: 10000 });
+    await cambiar("clave-equivocada", "Otra-clave-123");
+    await seguridad.locator(".form-error", { hasText: "no es correcta" }).waitFor({ timeout: 10000 });
+    // Se cambia y se deja como estaba; la sesión sigue abierta con el token nuevo
+    await cambiar(CLAVE, "Otra-clave-123");
+    await esperarAviso(pagina, "Contraseña actualizada");
+    await cambiar("Otra-clave-123", CLAVE);
+    await pagina.locator(".toast.show", { hasText: "Contraseña actualizada" }).waitFor({ timeout: 10000 });
+    await pagina.goto(`${URL_BASE}/dashboard.html#ventas`);
+    await formulario(pagina, "Nueva venta").waitFor({ timeout: 10000 });
+    await contexto.close();
+    // El 400 de la contraseña actual equivocada es el rechazo esperado
+    const otros = problemas.filter((p) => p !== "API 400 /api/auth/perfil/password");
+    if (otros.length) throw new Error(otros.join("; "));
+    return "nombre y correo cambiados; contraseña cambiada y restaurada";
+  }],
   ["Vendedor: registrar venta y comprobante", async (navegador, nombre) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "vendedor");

@@ -115,6 +115,7 @@ export const viewTitles = {
   ventas: "Ventas",
   reportes: "Reportes",
   auditoria: "Auditoría",
+  perfil: "Mi perfil",
 };
 
 export const movementTypeNames = {
