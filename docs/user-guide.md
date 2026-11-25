@@ -33,14 +33,13 @@ El backend valida permisos. No compartas contraseña ni token. Si aparece un err
 
 ## Supervisor
 
-- **Inicio:** consultar el resumen, con el acceso **Asignar tarea** y el aviso de las materias primas en stock bajo.
-- **Asignar tareas:** crear órdenes para operarios activos con línea, medida, calibre, color y **materia prima** (obligatoria, RN-026); asociarla no registra consumo.
+- **Inicio:** consultar el resumen, con el acceso **Asignar tareas** y el aviso de las materias primas en stock bajo; «Requiere atención» recuerda que las órdenes sin operario están en Asignar tareas.
+- **Asignar tareas:** arriba, las **órdenes por asignar**: las pendientes sin operario, entre ellas las que crea el administrador (quedan pendientes para los supervisores, CR-014). Un clic en una orden abre su detalle (meta, materia prima y fecha) y los operarios activos con su carga de trabajo («Disponible» o «N órdenes activas»); se elige uno y **Asignar operario**: la orden queda a tu cargo y sale de la lista. **+ Nueva orden** abre el formulario para crear una orden propia y entregarla a un operario, con línea, medida, calibre, color y **materia prima** (obligatoria, RN-026); asociarla no registra consumo.
 - **Operarios:** una tarjeta por operario con sus órdenes activas y el avance de cada una; «Disponible» indica que no tiene órdenes activas.
-- **Seguimiento:** consultar las órdenes, asignar el operario a las pendientes (la orden queda a tu cargo), editarlas mientras no tengan avance y **Cancelar** las abiertas. El estado no se cambia a mano: el operario inicia la orden y se finaliza sola al completar la meta.
+- **Seguimiento:** consultar las órdenes, asignar el operario a las pendientes (la orden sin operario muestra un aviso con **Asignar operario**, que abre la misma ventana de Asignar tareas; la orden queda a tu cargo), editarlas mientras no tengan avance y **Cancelar** las abiertas. **Consumo** registra el consumo de materia prima de una orden abierta (CR-026): la ventana muestra la bobina de la orden y su existencia; se escriben los kilos y una observación opcional, y el resumen pide confirmar (**Revisar** vuelve a los datos). Asociar la materia prima a la orden no consume stock automáticamente. El estado no se cambia a mano: el operario inicia la orden y se finaliza sola al completar la meta.
 - **Reportes:** elegir el periodo y consultar la producción, el rendimiento de los operarios (% de cumplimiento de la meta) y el inventario; imprimirlos o descargarlos en Excel.
-- **Materias primas:** consultar existencias y movimientos, y registrar el consumo de una bobina en una orden activa que la usa (**Registrar movimiento → Consumo en una orden**). Asociar la materia prima a la orden no consume stock automáticamente.
 
-El supervisor no registra ventas (DEF-007) ni las consulta (CR-021): los precios, totales y clientes son información comercial del administrador. Su Inicio muestra las órdenes finalizadas en lugar del total vendido. Sigue viendo las existencias de producto terminado para planear la producción.
+El supervisor no registra ventas (DEF-007) ni las consulta (CR-021): los precios, totales y clientes son información comercial del administrador. Su Inicio muestra las órdenes finalizadas en lugar del total vendido. Sigue viendo las existencias de producto terminado para planear la producción. Tampoco entra a **Materias primas** (CR-026): el historial de compras, con su costo y su factura, es del administrador y del almacenista; el supervisor registra el consumo de sus órdenes desde Seguimiento.
 
 ## Operario
 

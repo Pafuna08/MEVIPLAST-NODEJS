@@ -6,9 +6,10 @@ import { money, number, safeProductName, sanitizeText } from "../comun/formato.j
 
 export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
   const canCreate = role === "admin";
-  // Mismos permisos que la API (materiaPrima.controller · registrarMovimiento)
+  // Mismos permisos que la API (materiaPrima.controller · registrarMovimiento). CR-026: el supervisor
+  // también registra consumos, pero desde Seguimiento; a esta vista solo llegan administrador y almacenista
   const canManageStock = ["admin", "almacenista"].includes(role);
-  const canConsume = ["admin", "supervisor"].includes(role);
+  const canConsume = role === "admin";
   const movementTypes = [
     ...(canManageStock ? [["compra", "Compra"], ["ajuste_entrada", "Ajuste de entrada"], ["ajuste_salida", "Ajuste de salida"]] : []),
     ...(canConsume ? [["consumo_produccion", "Consumo en una orden"]] : []),

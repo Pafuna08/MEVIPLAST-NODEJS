@@ -53,7 +53,7 @@ export function Home({ data, role, navigate, lines = [], onEditOrder, onAssignOr
   const actions = role === "operario"
     ? [["registrar", "Registrar producción", true], ["historial", "Mi historial", false]]
     : role === "supervisor"
-      ? [["asignar", "Asignar tarea", true], ["reportes", "Ver reportes", false]]
+      ? [["asignar", "Asignar tareas", true], ["reportes", "Ver reportes", false]]
       : [["produccion", "+ Nueva orden", false], ["ventas", "+ Registrar venta", false], ["reportes", "Ver reportes", true]];
   const summary = role === "operario"
     ? `Tienes ${active.length} ${active.length === 1 ? "tarea activa" : "tareas activas"}.`
@@ -124,7 +124,7 @@ export function Home({ data, role, navigate, lines = [], onEditOrder, onAssignOr
             {pending > 0 && (
               <li className="attention warning">
                 <Icono nombre="reloj" />
-                <div><strong>{pending} {pending === 1 ? "orden pendiente" : "órdenes pendientes"}</strong><span>{role === "operario" ? "Inícialas desde Mis tareas." : "Esperan supervisor u operario."}</span></div>
+                <div><strong>{pending} {pending === 1 ? "orden pendiente" : "órdenes pendientes"}</strong><span>{role === "operario" ? "Inícialas desde Mis tareas." : role === "supervisor" ? "Las que no tienen operario están en «Asignar tareas»." : "Esperan supervisor u operario."}</span></div>
               </li>
             )}
             {role === "operario" ? (

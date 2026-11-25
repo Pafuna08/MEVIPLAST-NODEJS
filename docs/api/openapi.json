@@ -900,9 +900,9 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
-        ]
+        ],
+        "description": "CR-026: el historial (compras con costo y factura, ajustes y consumos) es del administrador y del almacenista; el supervisor recibe 403 y registra el consumo de sus órdenes con `POST /materia-prima/movimientos` desde Seguimiento."
       },
       "post": {
         "tags": [
@@ -928,7 +928,7 @@
                       "ajuste_salida",
                       "consumo_produccion"
                     ],
-                    "description": "compra y ajustes: admin y almacenista; consumo_produccion: admin y supervisor (si no, 403)"
+                    "description": "compra y ajustes: admin y almacenista; consumo_produccion: admin y supervisor (el supervisor lo registra desde Seguimiento, CR-026); si no, 403"
                   },
                   "cantidad": {
                     "type": "number",
@@ -1199,9 +1199,9 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
-        ]
+        ],
+        "description": "CR-026: el historial (compras con costo y factura, ajustes y consumos) es del administrador y del almacenista; el supervisor recibe 403 y registra el consumo de sus órdenes con `POST /materia-prima/movimientos` desde Seguimiento."
       }
     },
     "/produccion": {

@@ -66,7 +66,7 @@ export const roleViews = {
       ["asignar", "AT", "Asignar tareas"],
       ["operarios", "OP", "Operarios"],
       ["produccion", "SP", "Seguimiento"],
-      ["materia", "MP", "Materias primas"],
+      // CR-026: sin «Materias primas»; el consumo de sus órdenes se registra desde Seguimiento
       ["reportes", "RP", "Reportes"],
     ],
   },
@@ -107,7 +107,7 @@ export const viewTitles = {
   materia: "Materias primas",
   inventario: "Inventario terminado",
   produccion: "Seguimiento de producción",
-  asignar: "Asignar tarea",
+  asignar: "Asignar tareas",
   operarios: "Operarios",
   tareas: "Mis tareas",
   registrar: "Registrar producción",

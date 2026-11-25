@@ -4,7 +4,10 @@ import { CREATE_OPTION } from "../comun/constantes.js";
 import { NewLineDialog, NewMaterialDialog, useSelectAfterRender } from "../comun/CrearOpcion.jsx";
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
+import { Icono } from "../comun/iconos.jsx";
 import { AdminOrders, CancelOrderDialog } from "./AdminOrders.jsx";
+import { AssignDialog, operatorWorkload } from "./Assign.jsx";
+import { ConsumoDialog } from "./ConsumoDialog.jsx";
 
 export function Production({
   data,
@@ -20,8 +23,13 @@ export function Production({
   onDeleteTemplate,
   onCreateLine,
   onCreateMaterial,
+  onConsume,
 }) {
   const [editingOrder, setEditingOrder] = useState(null);
+  // CR-026: orden de la que el supervisor registra el consumo de materia prima
+  const [consumeTarget, setConsumeTarget] = useState(null);
+  // Orden sin operario que el supervisor va a asignar
+  const [assignTarget, setAssignTarget] = useState(null);
   // «+ Crear…» en la nueva orden: qué se crea y el selector que debe quedar con lo creado
   const [creating, setCreating] = useState(null);
   const selectAfterRender = useSelectAfterRender();
@@ -60,7 +68,7 @@ export function Production({
           isAdmin && view === "produccion"
             ? "Crea órdenes, asígnalas a un supervisor o reutiliza una plantilla frecuente."
             : isSupervisor
-              ? "Revisa las órdenes que te asignaron y elige al operario que las ejecutará."
+              ? "Sigue tus órdenes, asigna el operario a las pendientes y registra el consumo de materia prima."
               : canManage
                 ? "Actualiza el estado de las órdenes asignadas."
                 : "Solo se muestran tus tareas asignadas."
@@ -241,6 +249,7 @@ export function Production({
               canEdit={["admin", "supervisor"].includes(role) && order.estado === "pendiente" && Number(order.cantidad_producida || 0) === 0}
               onEdit={setEditingOrder}
               editing={editingOrder?.id === order.id}
+              onConsume={isSupervisor && onConsume ? setConsumeTarget : undefined}
               aligned
             />
             {editingOrder?.id === order.id && (
@@ -267,31 +276,12 @@ export function Production({
                 <button className="primary-action" type="submit">Guardar cambios</button>
               </form>
             )}
-            {(isSupervisor || isAdmin) && !order.responsable_id && order.estado === "pendiente" && (
-              <form
-                className="data-form inline-assign"
-                noValidate
-                onInput={clearInvalid}
-                onSubmit={(event) => {
-                  if (!checkInline(event, ["responsable_id"], `asignar-${order.id}`)) return;
-                  event.preventDefault();
-                  const responsableId = new FormData(event.currentTarget).get("responsable_id");
-                  onAssignOrder(order.id, responsableId);
-                }}
-              >
-                <Field label={isAdmin ? `Asignar operario a la orden #${order.id} (si falta el supervisor)` : `Asignar operario a la orden #${order.id}`}>
-                  <select name="responsable_id" defaultValue="">
-                    <option value="" disabled>Selecciona un operario</option>
-                    {data.operators.map((operator) => (
-                      <option key={operator.id} value={operator.id}>{sanitizeText(operator.nombre)}</option>
-                    ))}
-                  </select>
-                </Field>
-                {inlineWarning.key === `asignar-${order.id}` && <p className="form-error" role="alert">{inlineWarning.text}</p>}
-                <button className="primary-action" type="submit" disabled={!data.operators.length}>
-                  Asignar operario
-                </button>
-              </form>
+            {/* Orden sin operario: la misma ventana de «Asignar tareas», con la carga de cada operario */}
+            {isSupervisor && !order.responsable_id && order.estado === "pendiente" && (
+              <div className="assign-hint">
+                <span><Icono nombre="asignar" size={16} />La orden #{order.id} todavía no tiene operario.</span>
+                <button className="text-action" type="button" onClick={() => setAssignTarget(order)}>Asignar operario</button>
+              </div>
             )}
           </React.Fragment>
         ))}
@@ -305,6 +295,23 @@ export function Production({
             onChangeStatus(cancelTarget.id, "cancelado");
             setCancelTarget(null);
           }}
+        />
+      )}
+      {assignTarget && (
+        <AssignDialog
+          order={assignTarget}
+          operators={data.operators || []}
+          workload={operatorWorkload(orders, data.operators || [])}
+          onClose={() => setAssignTarget(null)}
+          onAssign={onAssignOrder}
+        />
+      )}
+      {consumeTarget && (
+        <ConsumoDialog
+          order={consumeTarget}
+          material={(data.materials || []).find((material) => Number(material.id) === Number(consumeTarget.materia_prima_id))}
+          onClose={() => setConsumeTarget(null)}
+          onConfirm={onConsume}
         />
       )}
       {creating?.kind === "line" && <NewLineDialog onCreate={onCreateLine} onClose={() => setCreating(null)} onCreated={finishCreate} />}

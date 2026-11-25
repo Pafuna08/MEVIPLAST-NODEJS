@@ -81,6 +81,24 @@ test("las lecturas de materias primas y producción respetan los roles", async (
     assert.equal(response.status, 403, `el supervisor no debe ver ${ruta}`);
   }
 
+  // CP-113 · CR-026: el supervisor ya no consulta el historial de materias primas (compras con costo y
+  // factura); sigue listando las bobinas para sus órdenes y viendo el stock bajo
+  for (const ruta of ["/materia-prima/movimientos", "/materia-prima/1/movimientos"]) {
+    assert.equal((await get(ruta, "supervisor")).status, 403, `el supervisor no debe ver ${ruta}`);
+    for (const rol of ["admin", "almacenista"]) {
+      assert.equal((await get(ruta, rol)).status, 200, `${rol} debe ver ${ruta}`);
+    }
+  }
+  for (const ruta of ["/materia-prima", "/materia-prima/bajo-stock"]) {
+    assert.equal((await get(ruta, "supervisor")).status, 200, `el supervisor debe consultar ${ruta}`);
+  }
+  // Y sigue registrando el consumo de sus órdenes (desde Seguimiento), pero no compras: la cantidad inválida
+  // responde 400 sin llegar a la base, lo que prueba que el rol pasó
+  const consumo = await post("/materia-prima/movimientos", "supervisor", { materia_prima_id: 1, tipo: "consumo_produccion", cantidad: "abc" });
+  assert.equal(consumo.status, 400, "el supervisor debe poder registrar consumo");
+  const compra = await post("/materia-prima/movimientos", "supervisor", { materia_prima_id: 1, tipo: "compra", cantidad: 1 });
+  assert.equal(compra.status, 403, "el supervisor no registra compras");
+
   // DEF-007: el supervisor no registra ventas
   for (const rol of ["supervisor", "operario", "almacenista"]) {
     const response = await post("/ventas", rol, {});

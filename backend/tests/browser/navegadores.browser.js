@@ -23,7 +23,7 @@ const CLAVE = "Browser-clave-123";
 const ROLES = ["admin", "supervisor", "operario", "vendedor", "almacenista"];
 const VISTAS = {
   admin: ["inicio", "usuarios", "materia", "inventario", "produccion", "ventas", "reportes", "auditoria"],
-  supervisor: ["inicio", "asignar", "operarios", "produccion", "materia", "reportes"],
+  supervisor: ["inicio", "asignar", "operarios", "produccion", "reportes"],
   operario: ["inicio", "tareas", "registrar", "historial"],
   vendedor: ["ventas"],
   almacenista: ["materia", "inventario"],
@@ -70,6 +70,14 @@ async function prepararBase() {
     await raiz.query(
       "INSERT INTO produccion (producto, cantidad, materia_prima_id, supervisor_id, responsable_id, estado) VALUES ('Cargadera', 100000, ?, ?, ?, 'en_proceso')",
       [bobina.insertId, ids.supervisor, ids.operario],
+    );
+  }
+  // Una orden por navegador como las que crea el administrador: pendiente, sin supervisor ni operario y de
+  // prioridad baja (va después de las anteriores en las tareas del operario); el supervisor la asigna
+  for (let i = 0; i < NAVEGADORES.length; i += 1) {
+    await raiz.query(
+      "INSERT INTO produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad, estado) VALUES ('Troquel riñón', '10 x 15', '2', 'Transparente', 500, ?, 'baja', 'pendiente')",
+      [bobina.insertId],
     );
   }
   return raiz;
@@ -337,25 +345,73 @@ const FLUJOS = [
     if (otros.length) throw new Error(otros.join("; "));
     return "rechazado con «Stock insuficiente»";
   }],
-  ["Supervisor: consumo de materia prima en una orden", async (navegador) => {
+  ["Supervisor: consumo de materia prima desde Seguimiento (CR-026)", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);
     await iniciarSesion(pagina, "supervisor");
+    // CR-026: el supervisor no tiene «Materias primas»; con #materia el panel abre su primera vista
+    if (await pagina.locator(".side-nav a", { hasText: "Materias primas" }).count()) problemas.push("el menú del supervisor muestra Materias primas");
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
-    // Rediseño: el formulario se abre con «+ Registrar movimiento»
-    await pagina.locator(".form-toggles button", { hasText: "+ Registrar movimiento" }).click();
-    const form = formulario(pagina, "Registrar movimiento");
-    await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
-    await form.locator("select[name=tipo]").selectOption("consumo_produccion");
-    const orden = await form.locator("select[name=produccion_id] option").nth(1).innerText().catch(() => "ninguna");
-    if (!orden.startsWith("#")) throw new Error(`sin órdenes para consumir: ${orden}`);
-    await form.locator("select[name=produccion_id]").selectOption({ index: 1 });
-    await form.locator("input[name=cantidad]").fill("5");
-    await guardarConConfirmacion(pagina, form);
-    await esperarAviso(pagina, "Registro guardado");
+    if (await pagina.locator(".page-intro h2", { hasText: "Materias primas" }).count()) problemas.push("#materia abre Materias primas al supervisor");
+    await pagina.goto(`${URL_BASE}/dashboard.html#produccion`);
+    await pagina.waitForLoadState("networkidle");
+    // Una orden sin operario muestra su aviso; «Asignar operario» abre la ventana de asignación y Esc la cierra
+    const aviso = pagina.locator(".assign-hint").first();
+    await aviso.waitFor({ timeout: 10000 });
+    await aviso.locator("button", { hasText: "Asignar operario" }).click();
+    await pagina.locator(".assign-modal").waitFor({ timeout: 10000 });
+    await pagina.keyboard.press("Escape");
+    await pagina.locator(".assign-modal").waitFor({ state: "hidden", timeout: 10000 });
+    const boton = pagina.locator(".order-row .consume-action").first();
+    await boton.waitFor({ timeout: 10000 });
+    await boton.click();
+    const ventana = pagina.locator(".consumo-modal");
+    await ventana.waitFor({ timeout: 10000 });
+    const orden = ((await ventana.locator(".confirm-header p").first().innerText()).match(/#(\d+)/) || [])[1];
+    if (!orden) problemas.push("la ventana no dice la orden");
+    // Sin cantidad avisa y no pasa al resumen
+    await ventana.locator("button[type=submit]").click();
+    await ventana.locator(".form-error", { hasText: "Cantidad" }).waitFor({ timeout: 10000 });
+    await ventana.locator("input[name=cantidad]").fill("5");
+    await ventana.locator("button[type=submit]").click();
+    await ventana.locator(".confirm-summary", { hasText: "Consumo en una orden" }).waitFor({ timeout: 10000 });
+    // «Revisar» vuelve a los datos con lo escrito; «Sí, guardar» registra el consumo
+    await ventana.locator("button", { hasText: "Revisar" }).click();
+    if ((await ventana.locator("input[name=cantidad]").inputValue()) !== "5") problemas.push("«Revisar» no conservó la cantidad");
+    await ventana.locator("button[type=submit]").click();
+    await ventana.locator(".confirm-delete").click();
+    await esperarAviso(pagina, "Consumo registrado");
     await contexto.close();
     if (problemas.length) throw new Error(problemas.join("; "));
-    return `consumo en la orden ${orden.split(" ")[0]}`;
+    return `consumo en la orden #${orden} desde Seguimiento`;
+  }],
+  ["Supervisor: asignar una orden del administrador", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "supervisor");
+    await pagina.goto(`${URL_BASE}/dashboard.html#asignar`);
+    await pagina.waitForLoadState("networkidle");
+    // La orden nueva del supervisor se abre con su botón; arriba quedan las órdenes que esperan operario
+    if (await formulario(pagina, "Nueva orden de producción").count()) problemas.push("el formulario de orden nueva aparece abierto");
+    const fila = pagina.locator(".assign-row", { hasText: "Troquel riñón" }).first();
+    await fila.waitFor({ timeout: 10000 });
+    const orden = (await fila.locator("strong").innerText()).match(/#(\d+)/)[1];
+    await fila.click();
+    const ventana = pagina.locator(".assign-modal");
+    await ventana.waitFor({ timeout: 10000 });
+    if (!(await ventana.textContent()).includes("Pendiente para los supervisores")) problemas.push("el detalle no dice que la orden espera supervisor");
+    // Sin elegir operario avisa y no asigna
+    await ventana.locator("button[type=submit]").click();
+    await ventana.locator(".form-error", { hasText: "operario" }).waitFor({ timeout: 10000 });
+    const opcion = ventana.locator(".operator-option", { hasText: "Navegador operario" });
+    if (!/Disponible|activa/.test(await opcion.locator(".status").innerText())) problemas.push("la opción no muestra la carga del operario");
+    await opcion.click();
+    await ventana.locator("button[type=submit]").click();
+    await esperarAviso(pagina, "Operario asignado");
+    // La orden sale de «Órdenes por asignar»
+    await pagina.locator(".assign-row", { hasText: `#${orden} ·` }).waitFor({ state: "detached", timeout: 10000 });
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `orden #${orden} asignada a Navegador operario`;
   }],
   ["Almacenista: ingreso de inventario", async (navegador, nombre) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);

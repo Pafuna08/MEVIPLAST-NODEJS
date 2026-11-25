@@ -1973,16 +1973,6 @@ tbody tr.clickable-row:hover {
 .page-intro > .form-toggles {
   flex: none;
 }
-/* Seguimiento: el botón de asignar operario queda junto a su selector */
-.data-form.inline-assign {
-  grid-template-columns: minmax(0, 360px) auto;
-  justify-content: start;
-}
-.data-form.inline-assign > button[type="submit"].primary-action {
-  grid-column: auto;
-  justify-self: start;
-}
-
 /* Menú lateral con íconos (sin abreviaturas) */
 .sidebar {
   background: linear-gradient(180deg, #03183a 0%, var(--deep) 55%, #010f24 100%);
@@ -2415,5 +2405,169 @@ tbody tr:hover td {
   .page-icon {
     width: 44px;
     height: 44px;
+  }
+}
+
+/* MEVI-113: Seguimiento con la columna «Consumo» (CR-026) y «Órdenes por asignar» del supervisor */
+.order-row.aligned.with-consume {
+  grid-template-columns: minmax(0, 1fr) 150px 124px 100px 112px 84px 96px;
+  gap: 12px;
+}
+.consume-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.order-progress-row.assign-row {
+  grid-template-columns: minmax(0, 1fr) 130px 120px;
+}
+.assign-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  color: var(--white);
+  background: var(--red);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.assign-row:hover .assign-cta,
+.assign-row:focus-visible .assign-cta {
+  background: #b32330;
+}
+.assign-form {
+  padding: 0 22px;
+}
+.operator-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+.operator-options legend {
+  margin-bottom: 10px;
+  padding: 0;
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.operator-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.operator-option:hover {
+  border-color: #9fb3cc;
+  background: #f8fafd;
+}
+.operator-option.selected {
+  border-color: var(--navy);
+  background: #eef3fb;
+}
+.operator-option:focus-within {
+  outline: 3px solid rgba(0, 31, 84, 0.35);
+  outline-offset: 2px;
+}
+/* El círculo del radio se oculta: la tarjeta entera es la opción (sigue funcionando con teclado) */
+.operator-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.operator-option .operator-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.operator-option-name {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.operator-option-name strong {
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+.operator-option-name small {
+  color: var(--steel);
+  font-size: 0.78rem;
+}
+.assign-form .form-error {
+  margin: 0 0 12px;
+}
+.assign-form .confirm-actions {
+  padding: 0 0 22px;
+}
+.consumo-modal {
+  width: min(560px, 100%);
+}
+.consumo-icon {
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--navy), #2f5d9b);
+}
+.consumo-modal > .form-error {
+  margin: 0 22px 14px;
+}
+/* Seguimiento: aviso de la orden sin operario; «Asignar operario» abre la ventana de asignación */
+.assign-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 10px 20px;
+  padding: 10px 14px;
+  border: 1px dashed #e0b25c;
+  border-radius: 12px;
+  color: #7a4d05;
+  background: #fff8eb;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.assign-hint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.assign-hint .text-action {
+  border-radius: 10px;
+}
+/* En el celular el encabezado va en columna: la base de 380 px del texto se volvía su alto y dejaba
+   un espacio vacío arriba y abajo del título */
+@media (max-width: 780px) {
+  .page-intro-text {
+    flex: none;
+  }
+}
+@media (max-width: 900px) {
+  .order-row.aligned.with-consume {
+    grid-template-columns: minmax(0, 1fr) 150px;
+  }
+  .order-progress-row.assign-row {
+    grid-template-columns: minmax(0, 1fr) 120px;
+  }
+}
+@media (max-width: 560px) {
+  .order-row.aligned.with-consume,
+  .order-progress-row.assign-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

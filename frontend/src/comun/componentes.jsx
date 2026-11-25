@@ -214,7 +214,7 @@ export function VariantFields({ idPrefix, order }) {
   )];
 }
 
-export function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing = false, aligned = false }) {
+export function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing = false, aligned = false, onConsume }) {
   const goal = Number(order.cantidad) || 0;
   const produced = Number(order.cantidad_producida) || 0;
   const progress = goal ? Math.round((produced * 100) / goal) : 0;
@@ -236,14 +236,22 @@ export function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing 
   const cancelButton = canManage && ["pendiente", "en_proceso"].includes(order.estado) && (
     <button className="primary-action compact-action" type="button" onClick={() => onCancel(order)}>Cancelar</button>
   );
+  // CR-026: el supervisor registra en Seguimiento el consumo de materia prima de sus órdenes abiertas
+  const withConsume = canManage && Boolean(onConsume);
+  const consumeButton = withConsume && order.materia_prima_id && ["pendiente", "en_proceso"].includes(order.estado) && (
+    <button className="primary-action secondary compact-action consume-action" type="button" aria-label={`Consumo de materia prima de la orden #${order.id}`} onClick={() => onConsume(order)}>
+      <Icono nombre="materia" size={16} />Consumo
+    </button>
+  );
   // En la lista de gestión cada elemento ocupa su columna aunque falte, para que las filas queden alineadas
   if (aligned) {
     return (
-      <div className={canManage ? "order-row aligned" : "order-row aligned read-only"}>
+      <div className={`order-row aligned${canManage ? "" : " read-only"}${withConsume ? " with-consume" : ""}`}>
         {info}
         <div className="order-cell"><ProgressBar value={progress} label={`Avance de la orden ${order.id}`} /></div>
         <div className="order-cell"><PriorityBadge order={order} /></div>
         <div className="order-cell"><StatusBadge status={order.estado} /></div>
+        {withConsume && <div className="order-cell">{consumeButton}</div>}
         {canManage && <div className="order-cell">{editButton}</div>}
         {canManage && <div className="order-cell">{cancelButton}</div>}
       </div>

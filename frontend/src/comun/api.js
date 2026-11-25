@@ -73,8 +73,9 @@ export async function loadView(view, role, token) {
   }
   if (view === "usuarios") return api("/api/usuarios", token);
   if (view === "materia") {
-    // Las órdenes solo hacen falta para el consumo (admin y supervisor)
-    const canConsume = ["admin", "supervisor"].includes(role.apiRole);
+    // Las órdenes solo hacen falta para el consumo: aquí lo registra el administrador
+    // (CR-026: el supervisor ya no entra a esta vista; registra el consumo desde Seguimiento)
+    const canConsume = role.apiRole === "admin";
     const [materials, movements, orders] = await Promise.all([
       api("/api/materia-prima", token),
       api("/api/materia-prima/movimientos", token),
@@ -111,11 +112,13 @@ export async function loadView(view, role, token) {
     return orders;
   }
   if (view === "asignar") {
-    const [operators, materials] = await Promise.all([
+    // Las órdenes, para «Órdenes por asignar» (las pendientes sin operario) y la carga de cada operario
+    const [operators, materials, orders] = await Promise.all([
       api("/api/produccion/operarios", token),
       api("/api/materia-prima", token),
+      api("/api/produccion", token),
     ]);
-    return { operators, materials };
+    return { operators, materials, orders };
   }
   if (view === "operarios") {
     const [operators, orders] = await Promise.all([

@@ -19,8 +19,8 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 | HU-023 | Administrador | Generar reporte de inventario | RF-026 | Implementado | Existencias de producto terminado y materias primas con su alerta de stock bajo en el mismo reporte (PR #107), en el panel desde «Reportes → Reporte de inventario» (PR #112); CP-108. |
 | HU-015 | Administrador | Generar reportes de ventas | RF-025 | Implementado | Resumen y detalle por periodo diario, semanal, mensual y anual. |
 | HU-025 | Administrador | Exportar reportes | RF-028 | Implementado | PDF generado por el servidor, que se abre en otra pestaña con «Abrir PDF» (PR #90), y Excel con «Descargar Excel» (PR #28). |
-| HU-001 | Supervisor | Asignar tareas de producción | RF-007, RF-008, RF-013 | Implementado | La orden del administrador queda pendiente para los supervisores; el que asigna el operario la toma y, si falta, el administrador asigna (CR-014). Plantillas frecuentes disponibles. Toda orden y plantilla indican su materia prima (RN-026). |
-| HU-008 | Supervisor | Registrar consumo de materiales | RF-016 | Implementado | Consumo explícito asociado a una orden activa que usa esa materia prima; no es automático. Probado en E2E (CP-062) y en navegadores (CP-033). |
+| HU-001 | Supervisor | Asignar tareas de producción | RF-007, RF-008, RF-013 | Implementado | La orden del administrador queda pendiente para los supervisores; el que asigna el operario la toma y, si falta, el administrador asigna (CR-014). En «Asignar tareas» el supervisor ve las órdenes por asignar y elige el operario en una ventana con la carga de cada uno (MEVI-113). Plantillas frecuentes disponibles. Toda orden y plantilla indican su materia prima (RN-026). |
+| HU-008 | Supervisor | Registrar consumo de materiales | RF-016 | Implementado | Consumo explícito asociado a una orden activa que usa esa materia prima; no es automático. Desde el 25/11/2026 el supervisor lo registra en Seguimiento (botón «Consumo»), sin la vista de Materias primas (CR-026). Probado en E2E (CP-062), en navegadores (CP-033) y en rutas (CP-113). |
 | HU-004 | Supervisor | Consultar historial de producción | RF-024 | Implementado | Detalle por periodo calendario filtrado por operario y por producto, en pantalla, Excel y PDF (PR #107); CP-107. |
 | HU-005 | Supervisor | Modificar órdenes de producción | RF-012 | Implementado | Solo órdenes pendientes sin avance; campos editables restringidos. |
 | HU-021 | Supervisor | Generar reporte de producción | RF-024 | Implementado | Resumen por estado y detalle de unidades producidas por periodo. |
@@ -55,7 +55,7 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 | RF-013 | Gestionar plantillas de producción | Implementado | MVP | API-06 | CP-013, CP-072 |
 | RF-014 | Registrar materia prima | Implementado | MVP | API-04 | CP-007, CP-008, CP-048, CP-087 (color de la lista, RN-025), CP-090 (kg hasta 100 000 y bobina única, DEF-022) |
 | RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062, CP-109 (costo y factura de la compra) |
-| RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062 |
+| RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062, CP-113 (CR-026: el supervisor registra el consumo, pero no consulta el historial de movimientos) |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
 | RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078, CP-081, CP-082, CP-090 (unidades enteras hasta 1 000 000, DEF-022), CP-095 (tallas de Cargadera, CR-019), CP-096 (líneas nuevas, CR-020) |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | CP-112 (lista del catálogo e historial de movimientos) |

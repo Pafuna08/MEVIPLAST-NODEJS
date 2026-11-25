@@ -229,7 +229,8 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
     const matriz = [
       ["GET", "/usuarios", ["admin"]],
       ["GET", "/materia-prima", ["admin", "supervisor", "almacenista"]],
-      ["GET", "/materia-prima/movimientos", ["admin", "supervisor", "almacenista"]],
+      // CR-026: el historial de materias primas ya no es del supervisor
+      ["GET", "/materia-prima/movimientos", ["admin", "almacenista"]],
       ["POST", "/materia-prima", ["admin"]],
       ["GET", "/produccion", ["admin", "supervisor", "operario"]],
       ["GET", "/produccion/operarios", ["admin", "supervisor"]],

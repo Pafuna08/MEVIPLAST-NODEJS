@@ -15,14 +15,17 @@ router.get(
   verificarRol("admin", "supervisor", "almacenista"),
   controller.bajoStock,
 );
+// CR-026: el historial de movimientos (compras con costo y factura, ajustes y consumos) es del administrador
+// y del almacenista. El supervisor ya no tiene la vista de Materias primas: sigue listando las bobinas (las
+// elige en sus órdenes), recibe el aviso de stock bajo y registra el consumo de sus órdenes desde Seguimiento
 router.get(
   "/movimientos",
-  verificarRol("admin", "supervisor", "almacenista"),
+  verificarRol("admin", "almacenista"),
   controller.listarMovimientos,
 );
 router.get(
   "/:id/movimientos",
-  verificarRol("admin", "supervisor", "almacenista"),
+  verificarRol("admin", "almacenista"),
   controller.listarMovimientos,
 );
 router.post(
