@@ -30,7 +30,7 @@ export function Reports({ role }) {
   }
   return (
     <>
-      <Intro title="Reportes" description="Elige el periodo una vez y abre el reporte que necesites." />
+      <Intro icon="reportes" title="Reportes" description="Elige el periodo una vez y abre el reporte que necesites." />
       <div className="report-period-picker" role="radiogroup" aria-label="Periodo de los reportes">
         {PERIODOS.map(([valor, etiqueta]) => (
           <button
@@ -77,7 +77,7 @@ function InventoryReport({ data }) {
   return (
     <>
       <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
-      <Intro title="Reporte de inventario" description="Existencias actuales de producto terminado y de materias primas, de menor a mayor cantidad." />
+      <Intro icon="inventario" title="Reporte de inventario" description="Existencias actuales de producto terminado y de materias primas, de menor a mayor cantidad." />
       <section className="stats-grid">
         <article className="stat-card"><div className="stat-head"><span>Producto terminado</span></div><strong>{number(unidades)}</strong><small>Unidades en {number(productos.length)} referencias</small></article>
         <article className="stat-card"><div className="stat-head"><span>Materias primas</span></div><strong>{number(materias.length)}</strong><small>Bobinas registradas</small></article>
@@ -109,6 +109,7 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
     <>
       <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
       <Intro
+        icon={{ produccion: "produccion", ventas: "ventas", rendimiento: "rendimiento" }[reporteTipo]}
         title={`Reporte de ${titulo} ${data.periodo}`}
         description={`${periodoNombre} · ${fechas}`}
         action={

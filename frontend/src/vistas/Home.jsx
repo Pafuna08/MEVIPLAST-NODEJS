@@ -1,11 +1,17 @@
-import React from "react";
-import { Panel, PriorityBadge, StatusBadge, orderVariant } from "../comun/componentes.jsx";
+import React, { useState } from "react";
+import { Panel, PriorityBadge, ProgressBar, StatusBadge, orderVariant } from "../comun/componentes.jsx";
 import { money, number, safeProductName, sanitizeText } from "../comun/formato.js";
 import { BarList, Icono } from "../comun/iconos.jsx";
+import { CancelOrderDialog, OrderDetail } from "./AdminOrders.jsx";
 
 // Rediseño del Inicio: franja de bienvenida con lo urgente, tarjetas con ícono y color,
 // avance de las órdenes en barras, «Requiere atención» y producción por línea.
-export function Home({ data, role, navigate }) {
+export function Home({ data, role, navigate, lines = [], onEditOrder, onAssignOrder, onChangeStatus }) {
+  // Clic en una orden de «Avance de órdenes»: su detalle en una ventana, como en Producción.
+  // El administrador la gestiona ahí mismo (editar, asignar, cancelar); los demás roles solo la consultan.
+  const [selectedId, setSelectedId] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const selected = data.orders.find((order) => order.id === selectedId);
   const active = data.orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
   const produced = data.orders.reduce((sum, order) => sum + Number(order.cantidad_producida || 0), 0);
   // Unidades producidas por línea, de mayor a menor
@@ -82,6 +88,7 @@ export function Home({ data, role, navigate }) {
       </section>
       <div className="dashboard-grid">
         <Panel title="Avance de órdenes" action={<button className="text-action" type="button" onClick={() => navigate(role === "operario" ? "historial" : "produccion")}>Ver todas</button>}>
+          <p className="orders-hint">Haz clic en una orden para ver su detalle{role === "admin" ? ", editarla, asignarle operario o cancelarla" : ""}.</p>
           <ul className="order-progress-list">
             {data.orders.slice(0, 5).map((order) => {
               const goal = Number(order.cantidad) || 0;
@@ -89,12 +96,16 @@ export function Home({ data, role, navigate }) {
               const progress = goal ? Math.min(Math.round((done * 100) / goal), 100) : 0;
               return (
                 <li key={order.id}>
-                  <div className="order-progress-info">
-                    <strong>#{order.id} · {(safeProductName(order.producto) || "Producto no válido") + orderVariant(order)}</strong>
-                    <span>{sanitizeText(order.responsable_nombre || "Sin asignar")} · {number(done)} / {number(goal)}</span>
-                  </div>
-                  <span className="order-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress} aria-label={`Avance de la orden ${order.id}`}><span style={{ width: `${progress}%` }} /></span>
-                  <span className="order-progress-badges"><PriorityBadge order={order} /><StatusBadge status={order.estado} /></span>
+                  {/* Columnas fijas: producto | avance | prioridad | estado, para que todo quede alineado */}
+                  <button className="order-progress-row" type="button" onClick={() => setSelectedId(order.id)}>
+                    <span className="order-progress-info">
+                      <strong>#{order.id} · {(safeProductName(order.producto) || "Producto no válido") + orderVariant(order)}</strong>
+                      <span>{sanitizeText(order.responsable_nombre || "Sin asignar")} · {number(done)} / {number(goal)}</span>
+                    </span>
+                    <span className="order-cell"><ProgressBar value={progress} label={`Avance de la orden ${order.id}`} /></span>
+                    <span className="order-cell"><PriorityBadge order={order} /></span>
+                    <span className="order-cell"><StatusBadge status={order.estado} /></span>
+                  </button>
                 </li>
               );
             })}
@@ -134,6 +145,31 @@ export function Home({ data, role, navigate }) {
         <Panel title="Producción por línea" className="home-lines">
           <BarList label="Unidades producidas por línea" format={number} items={producedByLine.map(([line, units]) => ({ clave: line, etiqueta: line, valor: units }))} />
         </Panel>
+      )}
+      {selected && (
+        <OrderDetail
+          order={selected}
+          data={data}
+          lines={lines}
+          readOnly={role !== "admin"}
+          onClose={() => setSelectedId(null)}
+          onEditOrder={onEditOrder}
+          onAssignOrder={onAssignOrder}
+          onCancel={(order) => {
+            setSelectedId(null);
+            setCancelTarget(order);
+          }}
+        />
+      )}
+      {cancelTarget && (
+        <CancelOrderDialog
+          order={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={() => {
+            onChangeStatus(cancelTarget.id, "cancelado");
+            setCancelTarget(null);
+          }}
+        />
       )}
     </>
   );

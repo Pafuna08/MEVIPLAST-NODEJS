@@ -1951,3 +1951,469 @@ tbody tr.clickable-row:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ===== Rediseño completo 2026-11 (MEVI-112): toda la aplicación con el mismo estilo ===== */
+
+/* Paneles en rejilla: la separación de paneles apilados no aplica (Reportes, Operarios) */
+.report-cards > .panel,
+.operator-grid > .panel {
+  margin-top: 0;
+}
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+/* Inicio: más ancho para «Avance de órdenes», que lleva cuatro columnas */
+.dashboard-grid {
+  grid-template-columns: minmax(0, 2.1fr) minmax(280px, 0.9fr);
+}
+/* Encabezado: el texto se adapta y los botones se quedan a la derecha */
+.page-intro-text {
+  flex: 1 1 380px;
+}
+.page-intro > .form-toggles {
+  flex: none;
+}
+/* Seguimiento: el botón de asignar operario queda junto a su selector */
+.data-form.inline-assign {
+  grid-template-columns: minmax(0, 360px) auto;
+  justify-content: start;
+}
+.data-form.inline-assign > button[type="submit"].primary-action {
+  grid-column: auto;
+  justify-self: start;
+}
+
+/* Menú lateral con íconos (sin abreviaturas) */
+.sidebar {
+  background: linear-gradient(180deg, #03183a 0%, var(--deep) 55%, #010f24 100%);
+}
+.sidebar-brand img {
+  border-radius: 10px;
+}
+.side-nav a {
+  gap: 12px;
+  padding: 7px 10px;
+  border-left: 0;
+  border-radius: 12px;
+  color: #c9d4e6;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.side-nav a:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.07);
+}
+.side-nav a.active {
+  color: var(--white);
+  background: #13305f;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--red);
+}
+.nav-icon {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  color: #c9d4e6;
+  background: rgba(255, 255, 255, 0.07);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.side-nav a:hover .nav-icon {
+  color: var(--white);
+}
+.side-nav a.active .nav-icon {
+  color: var(--white);
+  background: var(--red);
+}
+.sidebar-footer button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+/* Encabezado */
+.topbar {
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+.user-avatar {
+  background: linear-gradient(135deg, var(--navy), #13305f);
+}
+
+/* Encabezado de cada página con su ícono */
+.page-intro {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.page-intro-text {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.page-icon {
+  display: grid;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--white);
+  background: linear-gradient(135deg, var(--deep), #1a3d73);
+  box-shadow: 0 6px 16px rgba(0, 20, 46, 0.18);
+}
+.form-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Botones */
+.primary-action {
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+.primary-action:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+.primary-action:focus-visible,
+.text-action:focus-visible,
+.order-progress-row:focus-visible {
+  outline: 3px solid rgba(29, 78, 216, 0.35);
+  outline-offset: 2px;
+}
+.text-action {
+  border-radius: 8px;
+}
+.text-action.danger {
+  color: #9b1c27;
+  background: var(--white);
+  border-color: #e7b3b8;
+}
+.text-action.danger:hover {
+  color: var(--white);
+  background: #b3202d;
+  filter: none;
+}
+
+/* Formularios */
+.data-form {
+  gap: 16px 18px;
+  padding: 20px;
+}
+.data-form label {
+  gap: 7px;
+  color: #42526b;
+  font-size: 0.8rem;
+}
+.data-form input,
+.data-form select,
+.data-form textarea {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-color: #d5dde8;
+  border-radius: 10px;
+  background: #fbfcfe;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.data-form input:focus,
+.data-form select:focus,
+.data-form textarea:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+/* Guardar de cada formulario: en su propia fila, a la derecha (antes ocupaba una columna entera) */
+.data-form > button[type="submit"].primary-action {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-width: 180px;
+}
+.sale-checkout .data-form > button[type="submit"].sale-submit {
+  justify-self: stretch;
+}
+
+/* Tablas */
+th {
+  color: #5a6a82;
+  background: #f6f8fb;
+}
+td {
+  color: #1f2d44;
+}
+tbody tr {
+  transition: background 0.12s ease;
+}
+tbody tr:hover td {
+  background: #f8fafd;
+}
+.cell-strong {
+  color: var(--navy);
+}
+
+/* Etiquetas de estado, rol, movimiento y acción */
+.status {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+}
+.status.muted {
+  color: #4b5563;
+  background: #eceff3;
+}
+.role-chip,
+.movement-chip,
+.audit-action {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 99px;
+  color: #33415c;
+  background: #eef1f5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.role-admin { color: #9b1c27; background: #fdecee; }
+.role-supervisor { color: #1d4ed8; background: #e8eefb; }
+.role-operario { color: #1b6e46; background: #e3f3ea; }
+.role-vendedor { color: #7a4a00; background: #fdf3e2; }
+.role-almacenista { color: #5b34a8; background: #efe9fa; }
+.movement-compra,
+.movement-ingreso_manual { color: #17603c; background: #e3f3ea; }
+.movement-ajuste_entrada,
+.movement-saldo_inicial { color: #5b34a8; background: #efe9fa; }
+.movement-consumo_produccion,
+.movement-produccion { color: #1d4ed8; background: #e8eefb; }
+.movement-ajuste_salida,
+.movement-salida_manual { color: #7a4a00; background: #fdf3e2; }
+.movement-venta { color: #9b1c27; background: #fdecee; }
+.audit-action { color: #1d4ed8; background: #e8eefb; }
+.stock-cell,
+.state-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Usuarios */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-cell-icon {
+  display: grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--navy);
+  background: #e8eefb;
+}
+.user-cell strong {
+  display: block;
+  color: var(--navy);
+}
+.user-cell small {
+  color: var(--steel);
+}
+
+/* Barra de avance con porcentaje */
+.progress-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.progress-meter .progress-bar {
+  display: block;
+  flex: 1;
+  border-radius: 99px;
+}
+.progress-meter .progress-bar > span {
+  border-radius: 99px;
+  background: #1d4ed8;
+}
+.progress-meter b {
+  min-width: 40px;
+  color: var(--navy);
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+/* Filas de órdenes alineadas: producto | avance | prioridad | estado | editar | cancelar */
+.order-row.aligned {
+  grid-template-columns: minmax(0, 1fr) 170px 130px 104px 90px 100px;
+  gap: 16px;
+}
+.order-row.aligned.read-only {
+  grid-template-columns: minmax(0, 1fr) 170px 130px 104px;
+}
+.order-row {
+  transition: background 0.12s ease;
+}
+.order-row:hover {
+  background: #f8fafd;
+}
+.order-row > div:first-child strong {
+  color: var(--navy);
+}
+.order-cell .status.priority {
+  min-width: 118px;
+  text-align: center;
+}
+.order-cell .status:not(.priority) {
+  min-width: 92px;
+  text-align: center;
+}
+
+/* Inicio: cada orden es un botón que abre su detalle, con las mismas columnas fijas */
+.order-progress-list li {
+  display: block;
+  padding: 0;
+}
+.order-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 126px 100px;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 12px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.order-progress-row:hover {
+  background: #f3f6fb;
+}
+.panel > .orders-hint {
+  padding: 12px 20px 0;
+}
+
+/* Mis tareas */
+.task-row {
+  transition: background 0.12s ease;
+}
+.task-row:hover {
+  background: #f8fafd;
+}
+.task-actions .primary-action {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+}
+.task-progress .progress-bar,
+.task-progress .progress-bar > span {
+  border-radius: 99px;
+}
+
+/* Operarios: una tarjeta por persona */
+.operator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 18px;
+}
+.operator-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+.operator-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.operator-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  color: #1b6e46;
+  background: #e3f3ea;
+}
+.operator-head h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1rem;
+}
+.operator-head > div > span {
+  color: var(--steel);
+  font-size: 0.82rem;
+}
+.operator-orders {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.operator-orders li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+}
+.operator-order-name {
+  color: var(--navy);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.operator-order-units {
+  color: var(--steel);
+  font-size: 0.8rem;
+}
+.operator-orders .progress-meter {
+  grid-column: 1 / -1;
+}
+.operator-card .empty {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ventanas emergentes y avisos */
+.confirm-modal {
+  border: 0;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 20, 46, 0.28);
+}
+.confirm-icon {
+  border-radius: 14px;
+}
+.confirm-actions button {
+  border-radius: 10px;
+}
+.toast {
+  border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+  .order-row.aligned,
+  .order-row.aligned.read-only,
+  .order-progress-row {
+    grid-template-columns: minmax(0, 1fr) 150px;
+  }
+  .order-row.aligned > .order-cell:empty {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .order-row.aligned,
+  .order-row.aligned.read-only,
+  .order-progress-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .page-icon {
+    width: 44px;
+    height: 44px;
+  }
+}

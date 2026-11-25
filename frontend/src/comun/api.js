@@ -60,12 +60,16 @@ export async function loadView(view, role, token) {
     // CR-021: solo el administrador ve el resumen de ventas
     // Rediseño: «Requiere atención» avisa de las materias primas en stock bajo; si la consulta
     // falla, el Inicio se muestra igual, sin ese aviso
-    const [inventory, sales, lowStock] = await Promise.all([
+    // El administrador gestiona la orden desde el Inicio (editar o asignar): materiales y operarios, como en Producción
+    const isAdmin = role.apiRole === "admin";
+    const [inventory, sales, lowStock, materials, operators] = await Promise.all([
       api("/api/inventario", token),
-      role.apiRole === "admin" ? api("/api/reportes/ventas", token) : null,
+      isAdmin ? api("/api/reportes/ventas", token) : null,
       ["admin", "supervisor", "almacenista"].includes(role.apiRole) ? api("/api/materia-prima/bajo-stock", token).catch(() => []) : [],
+      isAdmin ? api("/api/materia-prima", token).catch(() => []) : [],
+      isAdmin ? api("/api/produccion/operarios", token).catch(() => []) : [],
     ]);
-    return { orders, inventory, sales, lowStock };
+    return { orders, inventory, sales, lowStock, materials, operators };
   }
   if (view === "usuarios") return api("/api/usuarios", token);
   if (view === "materia") {

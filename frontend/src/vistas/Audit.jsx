@@ -63,7 +63,7 @@ export function Audit({ token }) {
 
   return (
     <>
-      <Intro title="Auditoría" description="Acciones registradas en el sistema: quién hizo qué y cuándo. Elige qué buscar; por defecto se muestran los últimos 7 días." />
+      <Intro icon="auditoria" title="Auditoría" description="Acciones registradas en el sistema: quién hizo qué y cuándo. Elige qué buscar; por defecto se muestran los últimos 7 días." />
       <section className="panel form-panel">
         <header className="panel-header"><h3>Buscar en la auditoría</h3></header>
         <form className="data-form audit-filters" noValidate onSubmit={search}>
@@ -98,11 +98,10 @@ export function Audit({ token }) {
       {!result && !error && <p className="empty" role="status">Cargando auditoría...</p>}
       {result && (
         <Panel title={`Eventos encontrados (${number(result.total)})`}>
-          <DataTable columns={["Fecha", "Usuario", "Acción", "Módulo", "Detalle"]} rows={events.map((event) => ({
+          <DataTable columns={["Fecha", "Usuario", "Acción", "Módulo", "Detalle"]} empty="Ningún evento coincide con la búsqueda." rows={events.map((event) => ({
             key: event.id,
-            cells: <><td>{event.fecha}</td><td>{sanitizeText(event.realizado_por || "Sistema")}</td><td>{readable(event.accion)}</td><td>{moduleName(event.tabla_afectada)}</td><td>{sanitizeText(event.detalle || "—")}</td></>,
+            cells: <><td>{event.fecha}</td><td>{sanitizeText(event.realizado_por || "Sistema")}</td><td><span className="audit-action">{readable(event.accion)}</span></td><td>{moduleName(event.tabla_afectada)}</td><td>{sanitizeText(event.detalle || "—")}</td></>,
           }))} />
-          {!events.length && <p className="empty">Ningún evento coincide con la búsqueda.</p>}
           {result.paginas > 1 && (
             <nav className="audit-pages" aria-label="Páginas de la auditoría">
               <button className="primary-action secondary" type="button" disabled={result.pagina <= 1} onClick={() => goTo(result.pagina - 1)}>Anterior</button>

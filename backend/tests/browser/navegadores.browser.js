@@ -299,6 +299,8 @@ const FLUJOS = [
     await iniciarSesion(pagina, "almacenista");
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
+    // Rediseño: el formulario se abre con «+ Registrar movimiento»
+    await pagina.locator(".form-toggles button", { hasText: "+ Registrar movimiento" }).click();
     const form = formulario(pagina, "Registrar movimiento");
     // Ningún selector llega con una opción elegida: se muestra «Selecciona…»
     for (const nombre of ["materia_prima_id", "tipo"]) {
@@ -320,6 +322,8 @@ const FLUJOS = [
     await iniciarSesion(pagina, "almacenista");
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
+    // Rediseño: el formulario se abre con «+ Registrar movimiento»
+    await pagina.locator(".form-toggles button", { hasText: "+ Registrar movimiento" }).click();
     const form = formulario(pagina, "Registrar movimiento");
     await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("ajuste_salida");
@@ -338,6 +342,8 @@ const FLUJOS = [
     await iniciarSesion(pagina, "supervisor");
     await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
     await pagina.waitForLoadState("networkidle");
+    // Rediseño: el formulario se abre con «+ Registrar movimiento»
+    await pagina.locator(".form-toggles button", { hasText: "+ Registrar movimiento" }).click();
     const form = formulario(pagina, "Registrar movimiento");
     await form.locator("select[name=materia_prima_id]").selectOption({ index: 1 });
     await form.locator("select[name=tipo]").selectOption("consumo_produccion");
@@ -356,6 +362,8 @@ const FLUJOS = [
     await iniciarSesion(pagina, "almacenista");
     await pagina.goto(`${URL_BASE}/dashboard.html#inventario`);
     await pagina.waitForLoadState("networkidle");
+    // Rediseño: el formulario se abre con «+ Ingreso de inventario»
+    await pagina.locator(".form-toggles button", { hasText: "+ Ingreso de inventario" }).click();
     const form = formulario(pagina, "Ingreso de inventario");
     await form.locator("select[name=familia]").selectOption("Sencilla PP");
     // Una medida distinta por navegador, para crear una variante nueva en cada uno

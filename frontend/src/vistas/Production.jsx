@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Field, FormPanel, Intro, OrderRow, Panel, VariantFields, orderVariant } from "../comun/componentes.jsx";
+import { Field, FormPanel, FormToggles, Intro, OrderRow, Panel, VariantFields, orderVariant, useFormularioAbierto } from "../comun/componentes.jsx";
 import { CREATE_OPTION } from "../comun/constantes.js";
 import { NewLineDialog, NewMaterialDialog, useSelectAfterRender } from "../comun/CrearOpcion.jsx";
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
-import { Dialogo } from "../comun/Dialogo.jsx";
-import { AdminOrders } from "./AdminOrders.jsx";
+import { AdminOrders, CancelOrderDialog } from "./AdminOrders.jsx";
 
 export function Production({
   data,
@@ -41,7 +40,7 @@ export function Production({
   const [cancelTarget, setCancelTarget] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   // Rediseño: los formularios de nueva orden y de plantilla se abren solo cuando se necesitan
-  const [openForm, setOpenForm] = useState(null);
+  const [openForm, setOpenForm] = useFormularioAbierto("produccion");
   const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
   const isAdmin = role === "admin";
@@ -66,15 +65,17 @@ export function Production({
                 ? "Actualiza el estado de las órdenes asignadas."
                 : "Solo se muestran tus tareas asignadas."
         }
+        icon={isSupervisor ? "seguimiento" : "produccion"}
         action={isAdmin && view === "produccion" ? (
-          <div className="production-actions">
-            <button className="primary-action secondary" type="button" aria-expanded={openForm === "plantilla"} onClick={() => setOpenForm(openForm === "plantilla" ? null : "plantilla")}>
-              {openForm === "plantilla" ? "Cerrar plantilla" : "Guardar plantilla"}
-            </button>
-            <button className="primary-action" type="button" aria-expanded={openForm === "orden"} onClick={() => setOpenForm(openForm === "orden" ? null : "orden")}>
-              {openForm === "orden" ? "Cerrar formulario" : "+ Nueva orden"}
-            </button>
-          </div>
+          <FormToggles
+            className="production-actions"
+            open={openForm}
+            onToggle={setOpenForm}
+            options={[
+              { key: "plantilla", label: "Guardar plantilla", closeLabel: "Cerrar plantilla" },
+              { key: "orden", label: "+ Nueva orden", closeLabel: "Cerrar formulario", main: true },
+            ]}
+          />
         ) : undefined}
       />
       {isAdmin && view === "produccion" && (
@@ -268,7 +269,7 @@ export function Production({
             )}
             {(isSupervisor || isAdmin) && !order.responsable_id && order.estado === "pendiente" && (
               <form
-                className="data-form"
+                className="data-form inline-assign"
                 noValidate
                 onInput={clearInvalid}
                 onSubmit={(event) => {
@@ -297,31 +298,14 @@ export function Production({
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
       </Panel>}
       {cancelTarget && (
-        <Dialogo onClose={() => setCancelTarget(null)} labelledBy="cancel-order-title">
-            <div className="confirm-header">
-              <div className="confirm-icon">!</div>
-              <div>
-                <h3 id="cancel-order-title">Cancelar orden #{cancelTarget.id}</h3>
-                <p>
-                  ¿Deseas cancelar la orden de <strong>{safeProductName(cancelTarget.producto) || "Producto no válido"}{orderVariant(cancelTarget)}</strong>?
-                  <br />La orden se cierra y ya no admite avances. Lo producido hasta ahora queda en el inventario.
-                </p>
-              </div>
-            </div>
-            <div className="confirm-actions">
-              <button className="confirm-cancel" type="button" autoFocus onClick={() => setCancelTarget(null)}>No, volver</button>
-              <button
-                className="confirm-delete"
-                type="button"
-                onClick={() => {
-                  onChangeStatus(cancelTarget.id, "cancelado");
-                  setCancelTarget(null);
-                }}
-              >
-                Sí, cancelar la orden
-              </button>
-            </div>
-          </Dialogo>
+        <CancelOrderDialog
+          order={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={() => {
+            onChangeStatus(cancelTarget.id, "cancelado");
+            setCancelTarget(null);
+          }}
+        />
       )}
       {creating?.kind === "line" && <NewLineDialog onCreate={onCreateLine} onClose={() => setCreating(null)} onCreated={finishCreate} />}
       {creating?.kind === "material" && <NewMaterialDialog onCreate={onCreateMaterial} onClose={() => setCreating(null)} onCreated={(material) => finishCreate(material.id)} />}

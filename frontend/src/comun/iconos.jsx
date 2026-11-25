@@ -11,6 +11,39 @@ const trazos = {
   reloj: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   ok: <path d="M5 12l5 5 9-10" />,
   tareas: <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" /></>,
+  inicio: <><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></>,
+  usuarios: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8" /><path d="M18 14c2.2.7 3.5 3 3.5 6" /></>,
+  usuario: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" /></>,
+  materia: <><ellipse cx="8" cy="12" rx="4.5" ry="8" /><ellipse cx="8" cy="12" rx="1.5" ry="2.7" /><path d="M8 4h8c2.5 0 4.5 3.6 4.5 8s-2 8-4.5 8H8" /></>,
+  carrito: <><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2h11.6L21.5 7H6.3" /></>,
+  reportes: <path d="M4 20V11M10 20V5M16 20v-6M21 20H3" />,
+  auditoria: <><path d="M12 3l8 3v6c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></>,
+  asignar: <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V3h6v1" /><path d="M12 10v6M9 13h6" /></>,
+  operarios: <><path d="M2.5 18.5h19" /><path d="M4.5 18.5V16a7.5 7.5 0 0 1 15 0v2.5" /><path d="M9.5 9.2V6.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3" /><path d="M12 5.2v4" /></>,
+  seguimiento: <path d="M3 12h4l3-8 4 16 3-8h4" />,
+  registrar: <><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></>,
+  historial: <><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" /><path d="M3 4v5h5" /><path d="M12 7.5v4.5l3 2" /></>,
+  salir: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></>,
+  mas: <path d="M12 5v14M5 12h14" />,
+  pregunta: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.5" /><path d="M12 17h.01" /></>,
+  correo: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
+};
+
+// Ícono de cada vista del menú lateral (reemplaza las abreviaturas IN, US, MP…)
+export const VIEW_ICONS = {
+  inicio: "inicio",
+  usuarios: "usuarios",
+  materia: "materia",
+  inventario: "inventario",
+  produccion: "produccion",
+  ventas: "carrito",
+  reportes: "reportes",
+  auditoria: "auditoria",
+  asignar: "asignar",
+  operarios: "operarios",
+  tareas: "tareas",
+  registrar: "registrar",
+  historial: "historial",
 };
 
 export function Icono({ nombre, size = 20 }) {

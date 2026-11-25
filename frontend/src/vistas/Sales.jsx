@@ -86,7 +86,7 @@ export function Sales({ data, lines, onSubmitSale, saving, onReceipt }) {
 
   return (
     <>
-      <Intro title="Ventas" description="Elige la línea y la referencia; la venta se arma a la derecha y las existencias se descuentan al registrarla." />
+      <Intro icon="carrito" title="Ventas" description="Elige la línea y la referencia; la venta se arma a la derecha y las existencias se descuentan al registrarla." />
       {/* Rediseño: catálogo a la izquierda y la venta en curso siempre visible a la derecha */}
       <div className="sales-layout">
         <div className="sales-catalog">

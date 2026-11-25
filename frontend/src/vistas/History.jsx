@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../comun/api.js";
-import { DataTable, Intro, OrderRow, Panel } from "../comun/componentes.jsx";
+import { DataTable, Intro, OrderRow, Panel, StatCard } from "../comun/componentes.jsx";
 import { historyPeriods } from "../comun/constantes.js";
 import { number, safeProductName, sanitizeText, shortDate } from "../comun/formato.js";
 
@@ -24,8 +24,8 @@ export function History({ orders, token }) {
   const periodLabel = periodName.toLowerCase();
   return (
     <>
-      <Intro title="Mi historial" description="Lo que has producido, por periodo, y tus órdenes cerradas." />
-      <div className="report-periods history-periods" role="group" aria-label="Periodo">
+      <Intro icon="historial" title="Mi historial" description="Lo que has producido, por periodo, y tus órdenes cerradas." />
+      <div className="report-period-picker history-periods" role="group" aria-label="Periodo">
         {historyPeriods.map(([value, label]) => (
           <button key={value} type="button" className={`report-period-button ${period === value ? "active" : ""}`} aria-pressed={period === value} onClick={() => setPeriod(value)}>
             {label}
@@ -36,10 +36,10 @@ export function History({ orders, token }) {
       {!records && !error && <p className="empty" role="status">Cargando información...</p>}
       {records && (
         <>
-          <section className="stats-grid">
-            <article className="stat-card"><div className="stat-head"><span>Unidades producidas</span></div><strong>{number(records.resumen.unidades)}</strong><small>{periodName} · {records.desde === records.hastaInclusivo ? shortDate(records.desde, true) : `${shortDate(records.desde)} al ${shortDate(records.hastaInclusivo)}`}</small></article>
-            <article className="stat-card"><div className="stat-head"><span>Registros de avance</span></div><strong>{number(records.resumen.registros)}</strong><small>En {records.resumen.ordenes} {records.resumen.ordenes === 1 ? "orden" : "órdenes"}</small></article>
-            <article className="stat-card"><div className="stat-head"><span>Órdenes finalizadas</span></div><strong>{finished}</strong><small>Desde que tienes tareas asignadas</small></article>
+          <section className="stats-grid stats-grid-3">
+            <StatCard label="Unidades producidas" value={number(records.resumen.unidades)} icon="produccion" tone="verde" detail={`${periodName} · ${records.desde === records.hastaInclusivo ? shortDate(records.desde, true) : `${shortDate(records.desde)} al ${shortDate(records.hastaInclusivo)}`}`} />
+            <StatCard label="Registros de avance" value={number(records.resumen.registros)} icon="registrar" tone="azul" detail={`En ${records.resumen.ordenes} ${records.resumen.ordenes === 1 ? "orden" : "órdenes"}`} />
+            <StatCard label="Órdenes finalizadas" value={finished} icon="ok" tone="morado" detail="Desde que tienes tareas asignadas" />
           </section>
           <Panel title="Mis registros de producción">
             <DataTable
@@ -54,7 +54,7 @@ export function History({ orders, token }) {
         </>
       )}
       <Panel title={`Órdenes cerradas (${closed.length})`}>
-        {closed.map((order) => <OrderRow key={order.id} order={order} canManage={false} />)}
+        {closed.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
         {!closed.length && <p className="empty">Todavía no tienes órdenes finalizadas o canceladas.</p>}
       </Panel>
     </>

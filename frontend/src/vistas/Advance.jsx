@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Field, FormPanel, Intro, orderVariant } from "../comun/componentes.jsx";
+import { Field, FormPanel, Intro, OrderRow, Panel, orderVariant } from "../comun/componentes.jsx";
 import { ADVANCE_ORDER_KEY } from "../comun/constantes.js";
 import { number, safeProductName } from "../comun/formato.js";
 
@@ -20,7 +20,7 @@ export function Advance({ data, onSubmit, saving }) {
   const fixedOrder = activeOrders.find((order) => String(order.id) === chosenOrder);
   return (
     <>
-      <Intro title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
+      <Intro icon="registrar" title="Registrar producción" description="El avance se suma a la orden e ingresa al inventario terminado." />
       <FormPanel title="Nuevo registro" onSubmit={onSubmit} saving={saving} obligatorios={["id", "cantidad"]}>
         {fixedOrder ? (
           // Llegó desde «Registrar avance» en Mis tareas: la orden queda fija para no registrar en otra por error
@@ -36,6 +36,12 @@ export function Advance({ data, onSubmit, saving }) {
         {fixedOrder && <p className="form-hint form-hint-wide">Para registrar en otra orden, vuelve a Mis tareas y pulsa «Registrar avance» en esa orden.</p>}
         {!activeOrders.length && <p className="empty">No hay órdenes pendientes para registrar producción.</p>}
       </FormPanel>
+      {/* Rediseño: el avance de tus órdenes abiertas, para ver cuánto falta en cada una */}
+      {activeOrders.length > 0 && (
+        <Panel title={`Tus órdenes abiertas (${activeOrders.length})`}>
+          {activeOrders.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
+        </Panel>
+      )}
     </>
   );
 }

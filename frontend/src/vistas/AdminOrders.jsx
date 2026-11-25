@@ -3,6 +3,7 @@ import { Field, PriorityBadge, StatusBadge, VariantFields, orderVariant } from "
 import { Dialogo } from "../comun/Dialogo.jsx";
 import { dateTimeFormat, number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
+import { Icono } from "../comun/iconos.jsx";
 
 const OPEN_STATES = ["pendiente", "en_proceso"];
 const FILTERS = [
@@ -105,15 +106,16 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
   );
 }
 
-function OrderDetail({ order, data, lines, onClose, onEditOrder, onAssignOrder, onCancel }) {
+// Detalle de una orden en una ventana. Desde Inicio, el supervisor y el operario lo ven solo para consulta (readOnly)
+export function OrderDetail({ order, data, lines, onClose, onEditOrder, onAssignOrder, onCancel, readOnly = false }) {
   const [editing, setEditing] = useState(false);
   const [warning, check] = useObligatorios();
   const { goal, produced, percent } = progressOf(order);
-  const canEdit = order.estado === "pendiente" && produced === 0;
+  const canEdit = !readOnly && order.estado === "pendiente" && produced === 0;
   // CR-014: el administrador asigna el operario solo si ningún supervisor tomó la orden
-  const canAssign = order.estado === "pendiente" && !order.responsable_id;
+  const canAssign = !readOnly && order.estado === "pendiente" && !order.responsable_id;
   // CR-013: el administrador solo cancela órdenes abiertas
-  const canCancel = OPEN_STATES.includes(order.estado);
+  const canCancel = !readOnly && OPEN_STATES.includes(order.estado);
   return (
     <Dialogo onClose={onClose} labelledBy="order-detail-title" className="order-modal">
       <div className="order-modal-header">
@@ -157,7 +159,7 @@ function OrderDetail({ order, data, lines, onClose, onEditOrder, onAssignOrder, 
               <button className="primary-action" type="submit" disabled={!(data.operators || []).length}>Asignar operario</button>
             </form>
           )}
-          {order.estado === "pendiente" && !canEdit && <p className="orders-hint">Ya tiene avance registrado: no se puede editar.</p>}
+          {!readOnly && order.estado === "pendiente" && !canEdit && <p className="orders-hint">Ya tiene avance registrado: no se puede editar.</p>}
           <div className="confirm-actions">
             {canCancel && <button className="confirm-delete" type="button" onClick={() => onCancel(order)}>Cancelar orden</button>}
             {canEdit && <button className="confirm-edit" type="button" onClick={() => setEditing(true)}>Editar</button>}
@@ -188,6 +190,28 @@ function OrderDetail({ order, data, lines, onClose, onEditOrder, onAssignOrder, 
           </div>
         </form>
       )}
+    </Dialogo>
+  );
+}
+
+// Confirmación para cancelar una orden (Producción e Inicio)
+export function CancelOrderDialog({ order, onClose, onConfirm }) {
+  return (
+    <Dialogo onClose={onClose} labelledBy="cancel-order-title">
+      <div className="confirm-header">
+        <div className="confirm-icon"><Icono nombre="alerta" size={22} /></div>
+        <div>
+          <h3 id="cancel-order-title">Cancelar orden #{order.id}</h3>
+          <p>
+            ¿Deseas cancelar la orden de <strong>{safeProductName(order.producto) || "Producto no válido"}{orderVariant(order)}</strong>?
+            <br />La orden se cierra y ya no admite avances. Lo producido hasta ahora queda en el inventario.
+          </p>
+        </div>
+      </div>
+      <div className="confirm-actions">
+        <button className="confirm-cancel" type="button" autoFocus onClick={onClose}>No, volver</button>
+        <button className="confirm-delete" type="button" onClick={onConfirm}>Sí, cancelar la orden</button>
+      </div>
     </Dialogo>
   );
 }
