@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BotonVerClave } from "../comun/VerClave.jsx";
+import { Icono } from "../comun/iconos.jsx";
 import "../../css/login.css";
 
 // Recuperación de cuenta (antes recuperar.html con js/recovery.js). Sin token pide el correo; con el
@@ -160,7 +161,7 @@ export default function Recuperar() {
   return (
     <main className="recovery-shell">
       <a className="recovery-back" href="/login.html">
-        ← Volver al inicio de sesión
+        <Icono nombre="anterior" size={16} />Volver al inicio de sesión
       </a>
       <section className="login-card recovery-card">
         <div className="login-heading">
