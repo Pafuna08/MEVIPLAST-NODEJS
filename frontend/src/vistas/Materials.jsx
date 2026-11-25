@@ -49,7 +49,7 @@ export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
         )}
       />
       <section className="stats-grid stats-grid-3">
-        <StatCard label="Bobinas registradas" value={number(data.materials.length)} icon="materia" tone="azul" detail="Materiales por medida, calibre y color" />
+        <StatCard label="Bobinas registradas" value={number(data.materials.length)} icon="materia" tone="azul" detail="Materiales por tamaño del rollo, calibre y color" />
         <StatCard label="Kilos en existencia" value={number(totalKg)} icon="inventario" tone="verde" detail="Suma de todas las bobinas" />
         <StatCard label="En stock bajo" value={number(lowCount)} icon="alerta" tone="rojo" detail={lowCount ? "En el mínimo o por debajo" : "Todas sobre su mínimo"} warning={lowCount > 0} />
       </section>
