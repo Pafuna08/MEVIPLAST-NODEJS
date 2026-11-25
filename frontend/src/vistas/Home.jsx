@@ -49,7 +49,6 @@ export function Home({ data, role, navigate }) {
     : role === "supervisor"
       ? [["asignar", "Asignar tarea", true], ["reportes", "Ver reportes", false]]
       : [["produccion", "+ Nueva orden", false], ["ventas", "+ Registrar venta", false], ["reportes", "Ver reportes", true]];
-  const today = new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" });
   const summary = role === "operario"
     ? `Tienes ${active.length} ${active.length === 1 ? "tarea activa" : "tareas activas"}.`
     : `Hay ${pending} ${pending === 1 ? "orden pendiente" : "órdenes pendientes"}${lowStock.length ? ` y ${lowStock.length} ${lowStock.length === 1 ? "materia prima" : "materias primas"} en stock bajo` : ""}.`;
@@ -57,7 +56,6 @@ export function Home({ data, role, navigate }) {
     <>
       <section className="home-hero" aria-label="Resumen del día">
         <div>
-          <span className="home-hero-date">{today}</span>
           <h2>{role === "operario" ? "Mi jornada" : "Resumen operativo"}</h2>
           <p>{summary}</p>
         </div>

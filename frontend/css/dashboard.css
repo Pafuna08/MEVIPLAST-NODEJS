@@ -1521,11 +1521,6 @@ tbody tr.clickable-row:hover {
   margin: 0;
   color: #d4def0;
 }
-.home-hero-date {
-  color: #b9c7de;
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
 .home-hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1637,6 +1632,18 @@ tbody tr.clickable-row:hover {
   margin-top: 18px;
 }
 
+/* Separación entre paneles apilados (en las rejillas de dos columnas no aplica) */
+.panel + .panel,
+.stats-grid + .panel,
+.report-filters + .stats-grid {
+  margin-top: 18px;
+}
+.dashboard-grid > .panel,
+.production-layout > .panel,
+.sales-layout > .panel {
+  margin-top: 0;
+}
+
 /* Barras horizontales (Inicio y reportes) */
 .bar-list {
   display: grid;
@@ -1645,7 +1652,7 @@ tbody tr.clickable-row:hover {
 }
 .bar-row {
   display: grid;
-  grid-template-columns: minmax(120px, 300px) minmax(0, 1fr) 90px;
+  grid-template-columns: minmax(140px, 380px) minmax(0, 1fr) 90px;
   align-items: center;
   gap: 14px;
   font-size: 0.9rem;
