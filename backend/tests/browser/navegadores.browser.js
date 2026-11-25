@@ -542,10 +542,12 @@ const FLUJOS = [
     await pagina.goto(`${URL_BASE}/dashboard.html#reportes`);
     await pagina.waitForLoadState("networkidle");
     if (await pagina.locator(".report-category", { hasText: "ventas" }).count()) problemas.push("el supervisor ve el reporte de ventas");
+    // Rediseño: el periodo se elige una vez y la tarjeta abre el reporte con ese periodo
+    await pagina.locator(".report-period-picker button", { hasText: "Mensual" }).click();
     const tarjeta = pagina.locator(".report-category", { hasText: "rendimiento de operarios" });
     await Promise.all([
       pagina.waitForURL(/reporte=rendimiento&periodo=mensual/),
-      tarjeta.locator("button", { hasText: "Mensual" }).click(),
+      tarjeta.locator("button", { hasText: "Abrir reporte" }).click(),
     ]);
     const filaOperario = pagina.locator("tr", { hasText: "Navegador operario" });
     await filaOperario.waitFor({ timeout: 10000 });
