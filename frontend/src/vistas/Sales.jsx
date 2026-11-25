@@ -37,6 +37,8 @@ export function Sales({ data, lines, onSubmitSale, saving, onReceipt }) {
   const lineReferences = availableProducts.filter((item) => item.familia === selectedFamily);
   const selectedProduct = products.find((item) => String(item.id) === line.inventoryId);
   const cartTotal = cart.reduce((sum, item) => sum + item.packages * item.price, 0);
+  // Rediseño: barra de stock de cada línea, relativa a la línea con más unidades
+  const maxStock = Math.max(0, ...lines.map((family) => products.filter((item) => item.familia === family).reduce((total, item) => total + Number(item.cantidad), 0)));
 
   function fail(message, field) {
     setWarning(message);
@@ -84,152 +86,159 @@ export function Sales({ data, lines, onSubmitSale, saving, onReceipt }) {
 
   return (
     <>
-      <Intro title="Ventas" description="Agrega uno o varios productos a la venta; las existencias se descuentan al registrarla." />
-      <div className="product-family-grid">
-        {lines.map((family) => {
-          const variants = products.filter((item) => item.familia === family);
-          const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
-          // Solo cuentan las referencias con unidades: son las que se pueden vender
-          const withStock = variants.filter((item) => Number(item.cantidad) > 0).length;
-          return (
-            <button
-              className={`product-family-card${selectedFamily === family ? " selected" : ""}`}
-              key={family}
-              type="button"
-              onClick={() => {
-                setSelectedFamily(family);
-                setLine((current) => ({ ...current, inventoryId: "" }));
-              }}
-            >
-              <span className="product-family-initial">{family.slice(0, 1)}</span>
-              <strong>{family}</strong>
-              <span>{withStock} {withStock === 1 ? "referencia disponible" : "referencias disponibles"}</span>
-              <b>{number(stock)} unidades en stock</b>
-              <span className="product-family-link">Ver existencias</span>
-            </button>
-          );
-        })}
-      </div>
-      {selectedFamily && <Panel title={`Existencias de ${selectedFamily}`} className="reference-panel">
-        {lineReferences.length ? (
-          <div className="reference-list" role="group" aria-label={`Referencias de ${selectedFamily}`}>
-            {lineReferences.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`reference-option${String(selectedProduct?.id) === String(item.id) ? " selected" : ""}`}
-                aria-pressed={String(selectedProduct?.id) === String(item.id)}
-                onClick={() => setLine((current) => ({ ...current, inventoryId: String(item.id) }))}
-              >
-                <strong>{variantLabel(item)}</strong>
-                <span>{number(item.cantidad)} unidades</span>
-              </button>
-            ))}
+      <Intro title="Ventas" description="Elige la línea y la referencia; la venta se arma a la derecha y las existencias se descuentan al registrarla." />
+      {/* Rediseño: catálogo a la izquierda y la venta en curso siempre visible a la derecha */}
+      <div className="sales-layout">
+        <div className="sales-catalog">
+          <div className="product-family-grid">
+            {lines.map((family) => {
+              const variants = products.filter((item) => item.familia === family);
+              const stock = variants.reduce((total, item) => total + Number(item.cantidad), 0);
+              // Solo cuentan las referencias con unidades: son las que se pueden vender
+              const withStock = variants.filter((item) => Number(item.cantidad) > 0).length;
+              return (
+                <button
+                  className={`product-family-card${selectedFamily === family ? " selected" : ""}${stock > 0 ? "" : " no-stock"}`}
+                  key={family}
+                  type="button"
+                  aria-pressed={selectedFamily === family}
+                  onClick={() => {
+                    setSelectedFamily(family);
+                    setLine((current) => ({ ...current, inventoryId: "" }));
+                  }}
+                >
+                  <strong>{family}</strong>
+                  <span>{withStock} {withStock === 1 ? "referencia disponible" : "referencias disponibles"}</span>
+                  <b>{number(stock)} unidades en stock</b>
+                  <span className="family-stock-bar" aria-hidden="true"><span style={{ width: `${maxStock ? Math.max((stock * 100) / maxStock, stock > 0 ? 3 : 0) : 0}%` }} /></span>
+                  {stock > 0 ? <span className="product-family-link">Ver existencias</span> : <span className="family-empty">Sin existencias</span>}
+                </button>
+              );
+            })}
           </div>
-        ) : <p className="empty">No hay referencias de esta línea con existencias.</p>}
-      </Panel>}
-      <section className="panel form-panel">
-        <header className="panel-header"><h3>Nueva venta</h3></header>
-        <form
-          className="data-form"
-          noValidate
-          onInput={(event) => {
-            clearInvalid(event);
-            setWarning("");
-          }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const client = fields.current.client;
-            if (!client.value.trim()) return fail("Completa el campo «Cliente».", "client");
-            if (client.value.trim().length > 120) return fail("El cliente admite máximo 120 caracteres.", "client");
-            // Si quedó un producto escrito sin agregar, se agrega al registrar
-            let items = cart;
-            if (lineStarted || !cart.length) {
-              const item = readLine();
-              if (!item) return null;
-              items = [...cart, item];
-              setCart(items);
-              setLine(EMPTY_LINE);
-            }
-            setWarning("");
-            onSubmitSale(form, {
-              cliente: client.value.trim(),
-              items: items.map((item) => ({
-                inventario_id: item.inventoryId,
-                cantidad_paquetes: item.packages,
-                unidades_paquete: item.packageSize,
-                precio_paquete: item.price,
-              })),
-            });
-            return null;
-          }}
-        >
-          <Field label="Cliente"><input name="cliente" ref={(element) => { fields.current.client = element; }} /></Field>
-          <fieldset className="sale-line-editor">
-            <legend>Agregar producto</legend>
-            <Field label="Línea de producto">
-              <select ref={(element) => { fields.current.family = element; }} value={selectedFamily} onChange={(event) => {
-                setSelectedFamily(event.target.value);
-                setLine((current) => ({ ...current, inventoryId: "" }));
-              }}>
-                <option value="" disabled>Selecciona una línea</option>
-                {lines.map((family) => <option key={family} value={family}>{family}</option>)}
-              </select>
-            </Field>
-            <Field label="Variante (medida / calibre / color)">
-              <select name="inventario_id" ref={(element) => { fields.current.variant = element; }} value={selectedProduct ? String(selectedProduct.id) : ""} onChange={(event) => {
-                const item = products.find((product) => String(product.id) === event.target.value);
-                if (item) setSelectedFamily(item.familia);
-                setLine((current) => ({ ...current, inventoryId: event.target.value }));
-              }}>
-                <option value="" disabled>{selectedFamily ? "Selecciona la variante" : "Primero elige la línea"}</option>
-                {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
-                  <option key={item.id} value={item.id}>{variantLabel(item)} · {number(item.cantidad)} unidades</option>
+          {selectedFamily && <Panel title={`Existencias de ${selectedFamily}`} className="reference-panel">
+            {lineReferences.length ? (
+              <div className="reference-list" role="group" aria-label={`Referencias de ${selectedFamily}`}>
+                {lineReferences.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`reference-option${String(selectedProduct?.id) === String(item.id) ? " selected" : ""}`}
+                    aria-pressed={String(selectedProduct?.id) === String(item.id)}
+                    onClick={() => setLine((current) => ({ ...current, inventoryId: String(item.id) }))}
+                  >
+                    <strong>{variantLabel(item)}</strong>
+                    <span>{number(item.cantidad)} unidades</span>
+                  </button>
                 ))}
-              </select>
-            </Field>
-            <Field label="Unidades por paquete">
-              <select name="unidades_paquete" ref={(element) => { fields.current.packageSize = element; }} value={line.packageSize} onChange={(event) => setLine((current) => ({ ...current, packageSize: event.target.value }))}>
-                <option value="" disabled>Selecciona las unidades</option>
-                {packageSizes.map((size) => <option key={size} value={size}>{size} unidades</option>)}
-              </select>
-            </Field>
-            <Field label="Cantidad de paquetes">
-              <input name="cantidad_paquetes" type="number" ref={(element) => { fields.current.packages = element; }} value={line.packages} onChange={(event) => setLine((current) => ({ ...current, packages: event.target.value }))} />
-            </Field>
-            <Field label="Precio por paquete">
-              <input name="precio_paquete" type="number" ref={(element) => { fields.current.price = element; }} value={line.price} onChange={(event) => setLine((current) => ({ ...current, price: event.target.value }))} />
-            </Field>
-            <div className="sale-line-actions">
-              {selectedProduct && <span className="sale-line-stock">{number(selectedProduct.cantidad)} unidades disponibles</span>}
-              <button className="primary-action secondary" type="button" onClick={addLine}>Agregar a la venta</button>
-            </div>
-          </fieldset>
-          <div className="sale-cart">
-            {cart.length ? (
-              <table aria-label="Productos de la venta">
-                <thead><tr><th>Producto</th><th>Presentación</th><th>Unidades</th><th>Precio por paquete</th><th>Subtotal</th><th><span className="sr-only">Quitar</span></th></tr></thead>
-                <tbody>
-                  {cart.map((item) => (
-                    <tr key={item.inventoryId}>
-                      <td>{safeProductName(item.product.producto) || "Producto no válido"}</td>
-                      <td>{packagesLabel({ cantidad_paquetes: item.packages, unidades_paquete: item.packageSize })}</td>
-                      <td>{number(item.packages * item.packageSize)}</td>
-                      <td>{money(item.price)}</td>
-                      <td>{money(item.packages * item.price)}</td>
-                      <td><button className="text-action danger" type="button" aria-label={`Quitar ${safeProductName(item.product.producto)}`} onClick={() => setCart((current) => current.filter((other) => other.inventoryId !== item.inventoryId))}>Quitar</button></td>
-                    </tr>
+              </div>
+            ) : <p className="empty">No hay referencias de esta línea con existencias.</p>}
+          </Panel>}
+        </div>
+        <section className="panel form-panel sale-checkout">
+          <header className="panel-header"><h3>Nueva venta</h3><span className="sale-checkout-count">{cart.length} {cart.length === 1 ? "producto" : "productos"}</span></header>
+          <form
+            className="data-form"
+            noValidate
+            onInput={(event) => {
+              clearInvalid(event);
+              setWarning("");
+            }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = event.currentTarget;
+              const client = fields.current.client;
+              if (!client.value.trim()) return fail("Completa el campo «Cliente».", "client");
+              if (client.value.trim().length > 120) return fail("El cliente admite máximo 120 caracteres.", "client");
+              // Si quedó un producto escrito sin agregar, se agrega al registrar
+              let items = cart;
+              if (lineStarted || !cart.length) {
+                const item = readLine();
+                if (!item) return null;
+                items = [...cart, item];
+                setCart(items);
+                setLine(EMPTY_LINE);
+              }
+              setWarning("");
+              onSubmitSale(form, {
+                cliente: client.value.trim(),
+                items: items.map((item) => ({
+                  inventario_id: item.inventoryId,
+                  cantidad_paquetes: item.packages,
+                  unidades_paquete: item.packageSize,
+                  precio_paquete: item.price,
+                })),
+              });
+              return null;
+            }}
+          >
+            <Field label="Cliente"><input name="cliente" ref={(element) => { fields.current.client = element; }} /></Field>
+            <fieldset className="sale-line-editor">
+              <legend>Agregar producto</legend>
+              <Field label="Línea de producto">
+                <select ref={(element) => { fields.current.family = element; }} value={selectedFamily} onChange={(event) => {
+                  setSelectedFamily(event.target.value);
+                  setLine((current) => ({ ...current, inventoryId: "" }));
+                }}>
+                  <option value="" disabled>Selecciona una línea</option>
+                  {lines.map((family) => <option key={family} value={family}>{family}</option>)}
+                </select>
+              </Field>
+              <Field label="Variante (medida / calibre / color)">
+                <select name="inventario_id" ref={(element) => { fields.current.variant = element; }} value={selectedProduct ? String(selectedProduct.id) : ""} onChange={(event) => {
+                  const item = products.find((product) => String(product.id) === event.target.value);
+                  if (item) setSelectedFamily(item.familia);
+                  setLine((current) => ({ ...current, inventoryId: event.target.value }));
+                }}>
+                  <option value="" disabled>{selectedFamily ? "Selecciona la variante" : "Primero elige la línea"}</option>
+                  {availableProducts.filter((item) => item.familia === selectedFamily).map((item) => (
+                    <option key={item.id} value={item.id}>{variantLabel(item)} · {number(item.cantidad)} unidades</option>
                   ))}
-                </tbody>
-                <tfoot><tr><th colSpan={4}>Total de la venta</th><th colSpan={2}>{money(cartTotal)}</th></tr></tfoot>
-              </table>
-            ) : <p className="sale-cart-empty">Aún no hay productos en la venta. Llena el producto y pulsa «Agregar a la venta»; si es uno solo, puedes registrar directamente.</p>}
-          </div>
-          {warning && <p className="form-error" role="alert">{warning}</p>}
-          <button className="primary-action" type="submit" disabled={saving}>{saving ? "Guardando..." : "Registrar venta"}</button>
-        </form>
-      </section>
+                </select>
+              </Field>
+              <Field label="Unidades por paquete">
+                <select name="unidades_paquete" ref={(element) => { fields.current.packageSize = element; }} value={line.packageSize} onChange={(event) => setLine((current) => ({ ...current, packageSize: event.target.value }))}>
+                  <option value="" disabled>Selecciona las unidades</option>
+                  {packageSizes.map((size) => <option key={size} value={size}>{size} unidades</option>)}
+                </select>
+              </Field>
+              <Field label="Cantidad de paquetes">
+                <input name="cantidad_paquetes" type="number" ref={(element) => { fields.current.packages = element; }} value={line.packages} onChange={(event) => setLine((current) => ({ ...current, packages: event.target.value }))} />
+              </Field>
+              <Field label="Precio por paquete">
+                <input name="precio_paquete" type="number" ref={(element) => { fields.current.price = element; }} value={line.price} onChange={(event) => setLine((current) => ({ ...current, price: event.target.value }))} />
+              </Field>
+              <div className="sale-line-actions">
+                {selectedProduct && <span className="sale-line-stock">{number(selectedProduct.cantidad)} unidades disponibles</span>}
+                <button className="primary-action secondary" type="button" onClick={addLine}>Agregar a la venta</button>
+              </div>
+            </fieldset>
+            <div className="sale-cart">
+              {cart.length ? (
+                <table aria-label="Productos de la venta">
+                  <thead><tr><th>Producto</th><th>Subtotal</th><th><span className="sr-only">Quitar</span></th></tr></thead>
+                  <tbody>
+                    {cart.map((item) => (
+                      <tr key={item.inventoryId}>
+                        <td>
+                          <strong className="cart-product">{safeProductName(item.product.producto) || "Producto no válido"}</strong>
+                          <span className="cart-detail">{packagesLabel({ cantidad_paquetes: item.packages, unidades_paquete: item.packageSize })} · {number(item.packages * item.packageSize)} unidades · {money(item.price)} c/u</span>
+                        </td>
+                        <td className="cart-subtotal">{money(item.packages * item.price)}</td>
+                        <td><button className="text-action danger" type="button" aria-label={`Quitar ${safeProductName(item.product.producto)}`} onClick={() => setCart((current) => current.filter((other) => other.inventoryId !== item.inventoryId))}>Quitar</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot><tr><th>Total de la venta</th><th colSpan={2} className="cart-total">{money(cartTotal)}</th></tr></tfoot>
+                </table>
+              ) : <p className="sale-cart-empty">Aún no hay productos en la venta. Llena el producto y pulsa «Agregar a la venta»; si es uno solo, puedes registrar directamente.</p>}
+            </div>
+            {warning && <p className="form-error" role="alert">{warning}</p>}
+            <button className="primary-action sale-submit" type="submit" disabled={saving}>{saving ? "Guardando..." : "Registrar venta"}</button>
+            <p className="sale-submit-note">Al registrarla se descuenta el stock y se abre el comprobante.</p>
+          </form>
+        </section>
+      </div>
       <Panel title="Ventas registradas"><DataTable columns={["N.º", "Cliente", "Productos", "Unidades", "Total", "Comprobante"]} rows={data.sales.map((sale) => ({ key: sale.id, cells: <><td className="nowrap">{sanitizeText(sale.numero || `#${sale.id}`)}</td><td>{sanitizeText(sale.cliente)}</td><td>{itemsSummary(sale)}</td><td>{number(sale.unidades ?? sale.cantidad)}</td><td>{money(sale.total)}</td><td><button className="text-action" type="button" onClick={() => onReceipt(sale.id)}>Ver</button></td></> }))} /></Panel>
     </>
   );
