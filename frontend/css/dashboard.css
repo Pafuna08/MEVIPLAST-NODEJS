@@ -1450,3 +1450,314 @@ tbody tr.clickable-row:hover {
   content: " ✓";
   color: var(--red);
 }
+
+/* ===== Rediseño 2026-11 (MEVI-110): base común ===== */
+.panel,
+.stat-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 20, 46, 0.05), 0 8px 24px rgba(0, 20, 46, 0.06);
+}
+.panel-header {
+  border-bottom-color: #edf1f6;
+}
+.primary-action,
+.report-period-button {
+  border-radius: 10px;
+}
+.icono {
+  display: block;
+  flex: none;
+}
+
+/* Tarjetas de indicadores con ícono y color */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stat-card strong {
+  margin: 4px 0 0;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+.stat-card .stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.stat-card.tono-azul .stat-icon { color: #1d4ed8; background: #e8eefb; }
+.stat-card.tono-verde .stat-icon { color: #1b6e46; background: #e3f3ea; }
+.stat-card.tono-morado .stat-icon { color: #5b34a8; background: #efe9fa; }
+.stat-card.tono-rojo .stat-icon { color: #b3202d; background: #fdecee; }
+.stat-split {
+  display: flex;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #eef1f5;
+}
+.split-pending { background: #e09a2b; }
+.split-progress { background: #1d4ed8; }
+
+/* Inicio: franja de bienvenida */
+.home-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 24px 28px;
+  border-radius: 18px;
+  color: var(--white);
+  background: linear-gradient(120deg, var(--deep) 0%, #13305f 100%);
+}
+.home-hero h2 {
+  margin: 4px 0 6px;
+  font-size: 1.75rem;
+}
+.home-hero p {
+  margin: 0;
+  color: #d4def0;
+}
+.home-hero-date {
+  color: #b9c7de;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.hero-action {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #5b77a6;
+  border-radius: 10px;
+  color: var(--white);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hero-action:hover,
+.hero-action:focus-visible {
+  border-color: var(--white);
+  background: rgba(255, 255, 255, 0.08);
+}
+.hero-action.main {
+  border-color: var(--red);
+  background: var(--red);
+}
+.hero-action.main:hover,
+.hero-action.main:focus-visible {
+  background: #b3202d;
+}
+
+/* Inicio: avance de órdenes */
+.order-progress-list {
+  margin: 0;
+  padding: 6px 20px 14px;
+  list-style: none;
+}
+.order-progress-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 160px) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f6;
+}
+.order-progress-list li:last-child {
+  border-bottom: 0;
+}
+.order-progress-info strong {
+  display: block;
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+.order-progress-info span {
+  color: var(--steel);
+  font-size: 0.82rem;
+}
+.order-progress-bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #eef1f5;
+}
+.order-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: #1d4ed8;
+}
+.order-progress-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Inicio: «Requiere atención» */
+.attention-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 20px 20px;
+  list-style: none;
+}
+.attention {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+}
+.attention strong {
+  display: block;
+  font-size: 0.92rem;
+}
+.attention span {
+  color: var(--steel);
+  font-size: 0.84rem;
+}
+.attention.alert { background: #fdecee; }
+.attention.alert .icono,
+.attention.alert strong { color: #9b1c27; }
+.attention.warning { background: #fdf3e2; }
+.attention.warning .icono,
+.attention.warning strong { color: #7a4a00; }
+.attention.ok { background: #e6f4ec; }
+.attention.ok .icono,
+.attention.ok strong { color: #17603c; }
+.home-lines {
+  margin-top: 18px;
+}
+
+/* Barras horizontales (Inicio y reportes) */
+.bar-list {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px 20px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 300px) minmax(0, 1fr) 90px;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.9rem;
+}
+.bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-track {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: #eef1f5;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: #13305f;
+}
+.bar-value {
+  color: var(--navy);
+  text-align: right;
+}
+
+/* Reportes: un periodo para todos y tarjetas con ícono */
+.report-period-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+.report-period-picker .report-period-button {
+  border-color: transparent;
+}
+.report-period-picker .report-period-button.active {
+  border-color: var(--deep);
+  background: var(--deep);
+}
+.report-cards {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-top: 4px solid var(--navy);
+}
+.report-card h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+}
+.report-card > p {
+  flex: 1;
+  padding: 0;
+}
+.report-card-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+}
+.report-card.tono-azul { border-top-color: #1d4ed8; }
+.report-card.tono-azul .report-card-icon { color: #1d4ed8; background: #e8eefb; }
+.report-card.tono-rojo { border-top-color: var(--red); }
+.report-card.tono-rojo .report-card-icon { color: #b3202d; background: #fdecee; }
+.report-card.tono-verde { border-top-color: #1b6e46; }
+.report-card.tono-verde .report-card-icon { color: #1b6e46; background: #e3f3ea; }
+.report-card.tono-morado { border-top-color: #5b34a8; }
+.report-card.tono-morado .report-card-icon { color: #5b34a8; background: #efe9fa; }
+.report-open {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--navy);
+  border-radius: 10px;
+  color: var(--navy);
+  background: var(--white);
+  font-weight: 700;
+  cursor: pointer;
+}
+.report-open:hover,
+.report-open:focus-visible {
+  border-color: var(--red);
+  color: var(--white);
+  background: var(--red);
+}
+
+@media (max-width: 760px) {
+  .order-progress-list li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .order-progress-badges {
+    justify-content: flex-start;
+  }
+  .bar-row {
+    grid-template-columns: minmax(0, 1fr) 80px;
+  }
+  .bar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .home-hero {
+    padding: 20px;
+  }
+}

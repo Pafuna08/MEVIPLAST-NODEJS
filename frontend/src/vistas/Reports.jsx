@@ -1,55 +1,68 @@
 import React from "react";
 import { DataTable, Field, Intro, Panel } from "../comun/componentes.jsx";
 import { money, number, percentFormat, safeProductName, sanitizeText } from "../comun/formato.js";
+import { BarList, Icono } from "../comun/iconos.jsx";
+
+const PERIODOS = [
+  ["diario", "Diario"],
+  ["semanal", "Semanal"],
+  ["mensual", "Mensual"],
+  ["anual", "Anual"],
+];
+
+// Rediseño: el periodo se elige una sola vez y cada tarjeta abre su reporte con ese periodo
+const TIPOS_REPORTE = [
+  { tipo: "produccion", titulo: "Reporte de producción", icono: "produccion", tono: "azul", descripcion: "Unidades producidas y cada registro; filtra por operario y producto." },
+  { tipo: "ventas", titulo: "Reporte de ventas", icono: "ventas", tono: "rojo", descripcion: "Total vendido, unidades, clientes y comprobantes." },
+  { tipo: "rendimiento", titulo: "Reporte de rendimiento de operarios", icono: "rendimiento", tono: "verde", descripcion: "% de cumplimiento de la meta de cada operario." },
+];
 
 export function Reports({ role }) {
   const isAdmin = role === "admin";
-  const periodos = [
-    ["diario", "Diario"],
-    ["semanal", "Semanal"],
-    ["mensual", "Mensual"],
-    ["anual", "Anual"],
-  ];
-  function abrirReporte(tipo, periodo) {
+  const [periodo, setPeriodo] = React.useState("mensual");
+  function abrirReporte(tipo, conPeriodo) {
     const url = new URL(window.location.href);
     url.search = "";
     url.hash = "";
     url.searchParams.set("reporte", tipo);
-    if (periodo) url.searchParams.set("periodo", periodo);
+    if (conPeriodo) url.searchParams.set("periodo", conPeriodo);
     window.location.assign(url.toString());
   }
   return (
     <>
-      <Intro title="Reportes" description={isAdmin ? "Consulta el seguimiento de producción, las ventas y el rendimiento de los operarios por periodo." : "Consulta el seguimiento de producción y el rendimiento de los operarios por periodo."} />
-      <section className="report-categories">
-        {[
-          ["produccion", "Producción", "Consulta las cantidades producidas y cada registro de producción."],
-          ["ventas", "Ventas", "Consulta ventas, unidades, clientes y valores registrados."],
-          ["rendimiento", "Rendimiento de operarios", "Consulta el % de cumplimiento de la meta de cada operario."],
-        ].filter(([tipo]) => isAdmin || tipo !== "ventas").map(([tipo, titulo, descripcion]) => (
-          <Panel key={tipo} title={`Reporte de ${titulo.toLowerCase()}`} className="report-category">
+      <Intro title="Reportes" description="Elige el periodo una vez y abre el reporte que necesites." />
+      <div className="report-period-picker" role="radiogroup" aria-label="Periodo de los reportes">
+        {PERIODOS.map(([valor, etiqueta]) => (
+          <button
+            key={valor}
+            type="button"
+            role="radio"
+            aria-checked={periodo === valor}
+            className={`report-period-button${periodo === valor ? " active" : ""}`}
+            onClick={() => setPeriodo(valor)}
+          >
+            {etiqueta}
+          </button>
+        ))}
+      </div>
+      <section className="report-categories report-cards">
+        {TIPOS_REPORTE.filter(({ tipo }) => isAdmin || tipo !== "ventas").map(({ tipo, titulo, icono, tono, descripcion }) => (
+          <article key={tipo} className={`panel report-category report-card tono-${tono}`}>
+            <span className="report-card-icon"><Icono nombre={icono} size={24} /></span>
+            <h3>{titulo}</h3>
             <p>{descripcion}</p>
-            <div className="report-periods">
-              {periodos.map(([periodo, etiqueta]) => (
-                <button
-                  key={periodo}
-                  className="report-period-button"
-                  type="button"
-                  onClick={() => abrirReporte(tipo, periodo)}
-                >
-                  {etiqueta}
-                </button>
-              ))}
-            </div>
-          </Panel>
+            <button className="report-open" type="button" onClick={() => abrirReporte(tipo, periodo)}>
+              Abrir reporte {PERIODOS.find(([valor]) => valor === periodo)[1].toLowerCase()}
+            </button>
+          </article>
         ))}
         {/* HU-023 / RF-026: las existencias son de hoy, por eso este reporte no lleva periodo */}
-        <Panel title="Reporte de inventario" className="report-category">
-          <p>Consulta las existencias actuales de producto terminado y de materias primas, con las que están por debajo del mínimo.</p>
-          <div className="report-periods">
-            <button className="report-period-button" type="button" onClick={() => abrirReporte("inventario")}>Ver existencias</button>
-          </div>
-        </Panel>
+        <article className="panel report-category report-card tono-morado">
+          <span className="report-card-icon"><Icono nombre="inventario" size={24} /></span>
+          <h3>Reporte de inventario</h3>
+          <p>Existencias de hoy de producto terminado y materias primas, con las que están en stock bajo.</p>
+          <button className="report-open" type="button" onClick={() => abrirReporte("inventario")}>Ver existencias</button>
+        </article>
       </section>
     </>
   );
@@ -120,6 +133,19 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
           </>
         )}
       </section>
+      {data.porProducto.length > 0 && (
+        <Panel title={reporteTipo === "produccion" ? "Unidades por producto" : "Total vendido por producto"}>
+          <BarList
+            label={reporteTipo === "produccion" ? "Unidades producidas por producto" : "Total vendido por producto"}
+            format={reporteTipo === "produccion" ? number : money}
+            items={data.porProducto.slice(0, 8).map((item) => ({
+              clave: item.producto,
+              etiqueta: safeProductName(item.producto) || "Producto no válido",
+              valor: Number(reporteTipo === "produccion" ? item.unidades : item.total) || 0,
+            }))}
+          />
+        </Panel>
+      )}
       <Panel title="Resumen por producto">
         <DataTable
           columns={reporteTipo === "produccion" ? ["Producto", "Unidades producidas"] : ["Producto", "Unidades", "Total vendido"]}
