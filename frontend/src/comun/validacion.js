@@ -42,6 +42,8 @@ const FIELD_RULES = {
   // enteras; el formulario de bobinas la cambia a kg con decimales
   cantidad: { positive: true, integer: true, maxValue: 1000000 },
   peso_rollo: { positive: true, decimals: 2, maxValue: 100000 },
+  // MEVI-115: tamaño del rollo; el servidor limita a 200 en pulgadas y 500 en centímetros
+  tamano_rollo: { positive: true, decimals: 2, maxValue: 500 },
   precio_paquete: { positive: true, decimals: 2, maxValue: 100000000, money: true },
   cantidad_paquetes: { positive: true, integer: true, maxValue: 1000 },
   unidades_paquete: { oneOf: packageSizes, message: "Elige 50, 100 o 500 unidades por paquete." },

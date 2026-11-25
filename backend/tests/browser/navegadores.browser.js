@@ -507,19 +507,22 @@ const FLUJOS = [
     if ((await producto.inputValue()) !== linea) problemas.push(`la línea nueva no quedó elegida (${await producto.inputValue()})`);
     await form.locator("input[name=medida]").waitFor({ timeout: 10000 });
     // Material nuevo: mismas reglas de «Registrar material»; queda elegido
-    const medida = { Edge: "61 x 91", Chrome: "62 x 92", Firefox: "63 x 93" }[nombre] || "64 x 94";
+    // MEVI-115: tamaño del rollo con decimales y su unidad de medida
+    const tamano = { Edge: "61.5", Chrome: "62.5", Firefox: "63.5" }[nombre] || "64.5";
+    const medida = `${tamano} pulg`;
     const materia = form.locator("select[name=materia_prima_id]");
     await materia.selectOption("__crear__");
     await ventana.waitFor({ timeout: 10000 });
     await ventana.locator("select[name=tipo]").selectOption("PEBD");
-    await ventana.locator("input[name=medida]").fill("abc");
+    await ventana.locator("input[name=tamano_rollo]").fill("0");
+    await ventana.locator("select[name=unidad_medida]").selectOption("pulgadas");
     await ventana.locator("input[name=calibre]").fill("2");
     await ventana.locator("select[name=color]").selectOption("Rojo");
     await ventana.locator("input[name=peso_rollo]").fill("40");
     await ventana.locator("button[type=submit]").click();
-    // Una medida inventada no pasa: la ventana sigue abierta con el aviso
+    // Un tamaño de cero no pasa: la ventana sigue abierta con el aviso
     await ventana.locator(".form-error").waitFor({ timeout: 10000 });
-    await ventana.locator("input[name=medida]").fill(medida);
+    await ventana.locator("input[name=tamano_rollo]").fill(tamano);
     await ventana.locator("button[type=submit]").click();
     await ventana.waitFor({ state: "hidden", timeout: 10000 });
     const elegida = await materia.locator("option:checked").textContent();

@@ -357,8 +357,9 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       assert.equal(r.status, 400, JSON.stringify(cambio));
       assert.match(r.body.mensaje, mensaje);
     }
-    const repetida = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Transparente", peso_rollo: 10 });
-    assert.equal(repetida.status, 409, "la bobina base ya existe con esa variante");
+    // MEVI-115: el tamaño del rollo tiene tope por unidad de medida
+    const enorme = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", tamano_rollo: 201, unidad_medida: "pulgadas", calibre: "2", color: "Transparente", peso_rollo: 10 });
+    assert.equal(enorme.status, 400, JSON.stringify(enorme.body));
     assert.equal((await llamar("PUT", `/materia-prima/${bobina}`, tokens.admin, { stock_minimo: -3 })).status, 400);
     const conEspacio = await llamar("POST", "/usuarios", tokens.admin, { nombre: "Con espacio", usuario: "con espacio", correo: "espacio@e2e.local", password: CLAVE, rol: "operario" });
     assert.equal(conEspacio.status, 400);
@@ -369,9 +370,13 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
 
   await t.test("DEF-013 / RF-015 / RF-016: compras, ajustes y consumo por orden de materia prima", async () => {
     const creada = await llamar("POST", "/materia-prima", tokens.admin, {
-      tipo: "PEBD", medida: "10 x 15", calibre: "2", color: "Azul", peso_rollo: 100,
+      tipo: "PEBD", tamano_rollo: "27,5", unidad_medida: "pulgadas", calibre: "2", color: "Azul", peso_rollo: 100,
     });
     assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.medida, "27.5 pulg");
+    // Una sola bobina por variante: «27.50» pulgadas es la misma (409)
+    const repetida = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", tamano_rollo: "27.50", unidad_medida: "pulgadas", calibre: "2", color: "Azul", peso_rollo: 10 });
+    assert.equal(repetida.status, 409, "la bobina ya existe con esa variante");
     const materiaId = creada.body.id;
     const saldo = async () => Number((await db.query("SELECT cantidad FROM materia_prima WHERE id = ?", [materiaId]))[0][0].cantidad);
     const mover = (token, cuerpo) => llamar("POST", "/materia-prima/movimientos", token, { materia_prima_id: materiaId, ...cuerpo });

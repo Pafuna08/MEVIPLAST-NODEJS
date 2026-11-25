@@ -24,11 +24,11 @@ async function obtener(req, res) {
 
 async function crear(req, res) {
   try {
-    const { tipo, medida, calibre, color, peso_rollo } = req.body;
-    if (!tipo || !medida || !calibre || !color || peso_rollo === undefined) {
+    const { tipo, tamano_rollo, unidad_medida, calibre, color, peso_rollo } = req.body;
+    if (!tipo || tamano_rollo === undefined || tamano_rollo === "" || !unidad_medida || !calibre || !color || peso_rollo === undefined) {
       return res
         .status(400)
-        .json({ mensaje: "Material, medida, calibre, color y peso del rollo son obligatorios" });
+        .json({ mensaje: "Material, tamaño del rollo, unidad de medida, calibre, color y peso del rollo son obligatorios" });
     }
     const nuevo = await materiaPrimaService.crear(req.body, req.usuario.id);
     res.status(201).json(nuevo);
