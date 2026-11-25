@@ -19,3 +19,7 @@
 | Revisión visual con capturas antes y después | Inicio, menú, Usuarios, Materias primas, Inventario, Producción y su detalle, Ventas y comprobante, Reportes y sus detalles, Auditoría, Mi perfil, Asignar tareas, Seguimiento, Mis tareas y Mi historial |
 | Lint y build del frontend | Sin errores |
 | Navegadores (`npm run test:browser`, escritorio) | 63 de 63 flujos; capturas de escritorio de Inicio, Usuarios y Producción sin cambios |
+
+## Ajustes posteriores (MEVI-119)
+
+Al revisar la demo en su celular, el usuario pidió que las líneas divisorias de las tablas se notaran más y vio que «Volver al sitio» quedaba detrás del logo en el inicio de sesión. Cada registro de una tabla en tarjetas tiene ahora borde, una franja azul a la izquierda, sombra suave y 12 px de separación con el siguiente, y una línea suave entre sus datos. En el inicio de sesión, hasta 850 px, «Volver al sitio» va arriba en su propia línea. Comprobado con capturas en 390 px (inicio de sesión, recuperación y Usuarios) y con los navegadores: 63 de 63 flujos.
