@@ -2550,6 +2550,13 @@ tbody tr:hover td {
 .assign-hint .text-action {
   border-radius: 10px;
 }
+/* En el celular el encabezado va en columna: la base de 380 px del texto se volvía su alto y dejaba
+   un espacio vacío arriba y abajo del título */
+@media (max-width: 780px) {
+  .page-intro-text {
+    flex: none;
+  }
+}
 @media (max-width: 900px) {
   .order-row.aligned.with-consume {
     grid-template-columns: minmax(0, 1fr) 150px;
