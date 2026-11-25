@@ -128,6 +128,15 @@ export default function DashboardApp() {
   const [reloadKey, setReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // MEVI-118: en el celular, Esc también cierra el menú lateral
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [sidebarOpen]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [receipt, setReceipt] = useState(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -636,6 +645,8 @@ export default function DashboardApp() {
   return (
     <>
       <div className="dashboard">
+        {/* MEVI-118: en el celular, el fondo oscuro detrás del menú lo cierra al tocarlo */}
+        {sidebarOpen && <div className="sidebar-backdrop" aria-hidden="true" onClick={() => setSidebarOpen(false)} />}
         <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
           <a className="sidebar-brand" href="/dashboard.html">
             <img src="/assets/logo-meviplast.png" alt="" />
@@ -668,10 +679,11 @@ export default function DashboardApp() {
               <button
                 className="sidebar-toggle"
                 type="button"
-                aria-label="Abrir menú"
+                aria-label={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={sidebarOpen}
                 onClick={() => setSidebarOpen((open) => !open)}
               >
-                ☰
+                <Icono nombre="menu" size={22} />
               </button>
               <div><h1>{config.title}</h1><p>{today}</p></div>
             </div>

@@ -61,7 +61,7 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
         ))}
       </div>
       <p className="orders-hint">Haz clic en una orden para ver su detalle, editarla, asignarle operario o cancelarla.</p>
-      <div className="table-wrap">
+      <div className="table-wrap card-table">
         <table className="orders-table">
           <thead>
             <tr><th>Orden</th><th>Producto</th><th>Operario</th><th>Avance</th><th>Prioridad</th><th>Estado</th></tr>
@@ -71,17 +71,17 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
               const { produced, goal } = progressOf(order);
               return (
                 <tr key={order.id} className="clickable-row" onClick={() => setSelectedId(order.id)}>
-                  <td>
+                  <td data-label="Orden">
                     <button className="link-button" type="button" aria-label={`Ver la orden #${order.id}`} onClick={(event) => {
                       event.stopPropagation();
                       setSelectedId(order.id);
                     }}>#{order.id}</button>
                   </td>
-                  <td>{productLabel(order)}</td>
-                  <td>{order.responsable_nombre ? sanitizeText(order.responsable_nombre) : <span className="muted-text">Sin asignar</span>}</td>
-                  <td title={`${number(produced)} de ${number(goal)}`}><ProgressBar order={order} /></td>
-                  <td><PriorityBadge order={order} /></td>
-                  <td><StatusBadge status={order.estado} /></td>
+                  <td data-label="Producto">{productLabel(order)}</td>
+                  <td data-label="Operario">{order.responsable_nombre ? sanitizeText(order.responsable_nombre) : <span className="muted-text">Sin asignar</span>}</td>
+                  <td data-label="Avance" title={`${number(produced)} de ${number(goal)}`}><ProgressBar order={order} /></td>
+                  <td data-label="Prioridad"><PriorityBadge order={order} /></td>
+                  <td data-label="Estado"><StatusBadge status={order.estado} /></td>
                 </tr>
               );
             })}
