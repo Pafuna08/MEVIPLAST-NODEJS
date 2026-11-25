@@ -2964,3 +2964,126 @@ button.user-menu:focus-visible {
     font-size: 0.78rem;
   }
 }
+
+/* MEVI-120: barras por partes (cada color es una referencia) y su ventana de detalle */
+.stacked-list {
+  gap: 4px;
+}
+.stacked-list > [role="listitem"] {
+  display: block;
+}
+button.stacked-row {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+button.stacked-row:hover,
+button.stacked-row:focus-visible {
+  border-color: var(--line);
+  background: #f3f6fb;
+}
+button.stacked-row:focus-visible {
+  outline: 3px solid rgba(0, 31, 84, 0.35);
+  outline-offset: 1px;
+}
+.stacked-track {
+  height: 16px;
+  background: #eef1f5;
+}
+.stacked-width {
+  display: block;
+  height: 100%;
+}
+/* Los segmentos van separados por 2 px y con las puntas redondeadas */
+.stacked-fill {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--white);
+}
+.stacked-segment {
+  display: block;
+  min-width: 3px;
+  height: 100%;
+}
+.stacked-fill.big {
+  height: 22px;
+  border-radius: 8px;
+}
+.bar-detail-bar {
+  margin: 0 22px 16px;
+}
+.bar-detail-modal {
+  width: min(760px, 100%);
+}
+.bar-detail-table {
+  margin: 0 22px 16px;
+  width: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.bar-detail-table table {
+  min-width: 0;
+}
+.bar-detail-table tfoot td {
+  border-top: 2px solid var(--line);
+  background: #f7f9fb;
+}
+.legend-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-swatch {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0 20px 18px;
+  list-style: none;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .bar-detail-table,
+  .bar-detail-bar {
+    margin: 0 14px 14px;
+  }
+  .bar-detail-table {
+    border: 0;
+  }
+  .bar-detail-table tbody {
+    padding: 0;
+  }
+  /* El total de la ventana de detalle también como tarjeta, a lo ancho */
+  .card-table tfoot {
+    display: block;
+    margin-top: 12px;
+  }
+  .card-table tfoot tr {
+    border-left-color: var(--red);
+  }
+}

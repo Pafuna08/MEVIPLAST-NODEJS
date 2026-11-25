@@ -3216,7 +3216,7 @@
           "admin",
           "supervisor"
         ],
-        "description": "Por cada operario activo: órdenes asignadas y creadas en el periodo (sin las canceladas), finalizadas, meta, producido (limitado a la meta de cada orden), cumplimiento = producido / meta × 100 (null si no tiene órdenes) y unidades que registró en el periodo."
+        "description": "Por cada operario activo: órdenes asignadas y creadas en el periodo (sin las canceladas), finalizadas, meta, producido (limitado a la meta de cada orden), cumplimiento = producido / meta × 100 (null si no tiene órdenes) y unidades que registró en el periodo. MEVI-120: cada operario trae `referencias`: lo de sus órdenes del periodo por línea, medida, calibre y color (órdenes, meta, producido y cumplimiento), para la gráfica por operario y su detalle."
       }
     },
     "/reportes/rendimiento/pdf": {

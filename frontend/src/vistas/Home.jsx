@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Panel, PriorityBadge, ProgressBar, StatusBadge, orderVariant } from "../comun/componentes.jsx";
 import { money, number, safeProductName, sanitizeText } from "../comun/formato.js";
-import { BarList, Icono } from "../comun/iconos.jsx";
+import { Icono } from "../comun/iconos.jsx";
+import { StackedBarList, groupByLine } from "../comun/BarrasApiladas.jsx";
 import { CancelOrderDialog, OrderDetail } from "./AdminOrders.jsx";
 
 // Rediseño del Inicio: franja de bienvenida con lo urgente, tarjetas con ícono y color,
@@ -14,15 +15,13 @@ export function Home({ data, role, navigate, lines = [], onEditOrder, onAssignOr
   const selected = data.orders.find((order) => order.id === selectedId);
   const active = data.orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
   const produced = data.orders.reduce((sum, order) => sum + Number(order.cantidad_producida || 0), 0);
-  // Unidades producidas por línea, de mayor a menor
-  const producedByLine = Object.entries(
-    data.orders.reduce((lines, order) => {
-      const line = safeProductName(order.producto);
-      const units = Number(order.cantidad_producida || 0);
-      if (line && units > 0) lines[line] = (lines[line] || 0) + units;
-      return lines;
-    }, {}),
-  ).sort(([, a], [, b]) => b - a);
+  // Unidades producidas por línea, de mayor a menor; cada barra se divide por variante (MEVI-120)
+  const lineItems = groupByLine(
+    data.orders.filter((order) => safeProductName(order.producto) && Number(order.cantidad_producida || 0) > 0),
+    (order) => safeProductName(order.producto) + orderVariant(order),
+    (order) => order.cantidad_producida,
+  );
+  const producedByLine = lineItems.map((item) => [item.etiqueta, item.valor]);
   const salesCount = Number(data.sales?.resumen?.numero_ventas || 0);
   const salesTotal = Number(data.sales?.resumen?.total_vendido || 0);
   const pending = active.filter((order) => order.estado === "pendiente").length;
@@ -143,7 +142,7 @@ export function Home({ data, role, navigate, lines = [], onEditOrder, onAssignOr
       </div>
       {producedByLine.length > 0 && (
         <Panel title="Producción por línea" className="home-lines">
-          <BarList label="Unidades producidas por línea" format={number} items={producedByLine.map(([line, units]) => ({ clave: line, etiqueta: line, valor: units }))} />
+          <StackedBarList label="Unidades producidas por línea" format={number} unit="Unidades" items={lineItems} />
         </Panel>
       )}
       {selected && (

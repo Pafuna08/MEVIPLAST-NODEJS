@@ -1,7 +1,8 @@
 import React from "react";
 import { DataTable, Field, Intro, Panel } from "../comun/componentes.jsx";
 import { money, number, percentFormat, safeProductName, sanitizeText } from "../comun/formato.js";
-import { BarList, Icono } from "../comun/iconos.jsx";
+import { Icono } from "../comun/iconos.jsx";
+import { StackedBarList, groupByLine } from "../comun/BarrasApiladas.jsx";
 
 const PERIODOS = [
   ["diario", "Diario"],
@@ -135,15 +136,18 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
         )}
       </section>
       {data.porProducto.length > 0 && (
-        <Panel title={reporteTipo === "produccion" ? "Unidades por producto" : "Total vendido por producto"}>
-          <BarList
-            label={reporteTipo === "produccion" ? "Unidades producidas por producto" : "Total vendido por producto"}
+        <Panel title={reporteTipo === "produccion" ? "Unidades por línea" : "Total vendido por línea"}>
+          {/* MEVI-120: cada barra es una línea dividida por sus variantes; un clic abre el detalle */}
+          <StackedBarList
+            label={reporteTipo === "produccion" ? "Unidades producidas por línea" : "Total vendido por línea"}
             format={reporteTipo === "produccion" ? number : money}
-            items={data.porProducto.slice(0, 8).map((item) => ({
-              clave: item.producto,
-              etiqueta: safeProductName(item.producto) || "Producto no válido",
-              valor: Number(reporteTipo === "produccion" ? item.unidades : item.total) || 0,
-            }))}
+            unit={reporteTipo === "produccion" ? "Unidades" : "Total vendido"}
+            items={groupByLine(
+              data.porProducto,
+              (item) => safeProductName(item.producto),
+              (item) => (reporteTipo === "produccion" ? item.unidades : item.total),
+              reporteTipo === "produccion" ? undefined : (item) => ({ Unidades: number(item.unidades) }),
+            ).slice(0, 8)}
           />
         </Panel>
       )}
@@ -242,6 +246,34 @@ function PerformanceReport({ data }) {
         <article className="stat-card"><div className="stat-head"><span>Operarios con órdenes</span></div><strong>{number(resumen.con_ordenes)}</strong><small>De {number(resumen.operarios)} operarios activos · {number(resumen.ordenes)} {resumen.ordenes === 1 ? "orden" : "órdenes"}</small></article>
         <article className="stat-card"><div className="stat-head"><span>Unidades registradas</span></div><strong>{number(resumen.unidades_periodo)}</strong><small>Avances de los operarios en el periodo</small></article>
       </section>
+      {data.operarios.some((item) => item.producido > 0) && (
+        <Panel title="Producción por operario">
+          {/* MEVI-120: lo producido por cada operario, dividido por referencia; el mismo color es la misma
+              referencia en todos los operarios. Un clic abre el detalle con la meta y el cumplimiento */}
+          <StackedBarList
+            label="Unidades producidas por operario"
+            format={number}
+            unit="Producido"
+            colorBy="entity"
+            items={data.operarios.filter((item) => item.producido > 0).map((item) => ({
+              clave: String(item.id),
+              etiqueta: sanitizeText(item.nombre),
+              valor: item.producido,
+              subtitulo: `meta ${number(item.meta)} · cumplimiento ${item.cumplimiento === null ? "—" : `${percentFormat.format(item.cumplimiento)} %`}`,
+              totalesExtra: { "Órdenes": number(item.ordenes), Meta: number(item.meta), Cumplimiento: item.cumplimiento === null ? "—" : `${percentFormat.format(item.cumplimiento)} %` },
+              partes: (item.referencias || []).map((ref) => {
+                const nombre = [safeProductName(ref.producto) || "Producto no válido", ref.medida, ref.calibre && `calibre ${ref.calibre}`, ref.color].filter(Boolean).map((parte) => sanitizeText(parte)).join(" · ");
+                return {
+                  clave: nombre,
+                  etiqueta: nombre,
+                  valor: ref.producido,
+                  extra: { "Órdenes": number(ref.ordenes), Meta: number(ref.meta), Cumplimiento: ref.cumplimiento === null ? "—" : `${percentFormat.format(ref.cumplimiento)} %` },
+                };
+              }),
+            }))}
+          />
+        </Panel>
+      )}
       <Panel title="Cumplimiento por operario">
         <p className="panel-note">Cumplimiento = unidades producidas ÷ meta de las órdenes asignadas al operario que se crearon en el periodo, sin las canceladas. «Unidades registradas» suma todos sus avances del periodo, incluidos los de órdenes anteriores.</p>
         <DataTable
