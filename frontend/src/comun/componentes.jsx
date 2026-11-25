@@ -16,22 +16,100 @@ export function Panel({ title, action, children, className = "" }) {
   );
 }
 
-export function DataTable({ columns, rows, empty = "No hay datos para mostrar." }) {
+// Pedido del usuario (25/11/2026): ninguna lista muestra más de 10 registros a la vez, en ningún rol
+export const POR_PAGINA = 10;
+
+// Página visible de una lista. Vuelve a la primera cuando cambia «reinicio» (un filtro) y nunca queda
+// fuera de rango si la lista se acorta. Al guardar, el panel vuelve a montar la vista y se ve la página 1,
+// donde están los registros más recientes
+export function usePaginacion(items, { porPagina = POR_PAGINA, reinicio = "" } = {}) {
+  const [estado, setEstado] = useState({ reinicio, pagina: 1 });
+  const total = items.length;
+  const paginas = Math.max(1, Math.ceil(total / porPagina));
+  const pagina = Math.min(estado.reinicio === reinicio ? estado.pagina : 1, paginas);
+  const desde = (pagina - 1) * porPagina;
+  return {
+    pagina,
+    paginas,
+    total,
+    porPagina,
+    visibles: items.slice(desde, desde + porPagina),
+    cambiar: (nueva) => setEstado({ reinicio, pagina: nueva }),
+  };
+}
+
+// 1 … 4 5 6 … 12: siempre la primera, la última y las vecinas de la actual (null es un salto)
+function numerosDePagina(pagina, paginas) {
+  if (paginas <= 7) return Array.from({ length: paginas }, (_, indice) => indice + 1);
+  const numeros = [...new Set([1, pagina - 1, pagina, pagina + 1, paginas])]
+    .filter((numero) => numero >= 1 && numero <= paginas)
+    .sort((a, b) => a - b);
+  return numeros.flatMap((numero, indice) => (indice > 0 && numero - numeros[indice - 1] > 1 ? [null, numero] : [numero]));
+}
+
+// Controles de página debajo de la lista: «Mostrando 11–20 de 37», anterior, números y siguiente.
+// «control» es lo que devuelve usePaginacion (o la página que mandó el servidor, en Auditoría)
+export function Paginacion({ control, etiqueta = "Páginas" }) {
+  const { pagina, paginas, total, porPagina, cambiar } = control;
+  if (paginas <= 1) return null;
+  const ir = (event, nueva) => {
+    cambiar(nueva);
+    // Si el comienzo de la lista quedó arriba de la pantalla, se vuelve a él
+    const panel = event.currentTarget.closest(".panel, .paginado");
+    if (panel && panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: "start", behavior: "smooth" });
+  };
   return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.map((row, index) => <tr key={row.key ?? index} className={row.className} onClick={row.onClick}>{row.cells}</tr>)
-          ) : (
-            <tr><td colSpan={columns.length}>{empty}</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <nav className="paginacion" aria-label={etiqueta}>
+      <span className="paginacion-resumen" aria-live="polite">
+        Mostrando {number((pagina - 1) * porPagina + 1)}–{number(Math.min(pagina * porPagina, total))} de {number(total)}
+      </span>
+      <div className="paginacion-botones">
+        <button className="paginacion-paso" type="button" aria-label="Página anterior" disabled={pagina <= 1} onClick={(event) => ir(event, pagina - 1)}>
+          <Icono nombre="anterior" size={16} /><span>Anterior</span>
+        </button>
+        {numerosDePagina(pagina, paginas).map((numero, indice) => (numero === null ? (
+          <span key={`salto-${indice}`} className="paginacion-salto" aria-hidden="true">…</span>
+        ) : (
+          <button
+            key={numero}
+            className={`paginacion-numero${numero === pagina ? " activa" : ""}`}
+            type="button"
+            aria-label={`Página ${numero}`}
+            aria-current={numero === pagina ? "page" : undefined}
+            onClick={(event) => ir(event, numero)}
+          >
+            {numero}
+          </button>
+        )))}
+        <button className="paginacion-paso" type="button" aria-label="Página siguiente" disabled={pagina >= paginas} onClick={(event) => ir(event, pagina + 1)}>
+          <span>Siguiente</span><Icono nombre="siguiente" size={16} />
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// Tabla en páginas de 10; porPagina={0} la muestra completa (Auditoría ya pagina en el servidor)
+export function DataTable({ columns, rows, empty = "No hay datos para mostrar.", porPagina = POR_PAGINA, etiqueta = "Páginas de la tabla" }) {
+  const paginas = usePaginacion(rows, { porPagina: porPagina || Math.max(rows.length, 1) });
+  return (
+    <>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr>
+          </thead>
+          <tbody>
+            {rows.length ? (
+              paginas.visibles.map((row, index) => <tr key={row.key ?? index} className={row.className} onClick={row.onClick}>{row.cells}</tr>)
+            ) : (
+              <tr><td colSpan={columns.length}>{empty}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <Paginacion control={paginas} etiqueta={etiqueta} />
+    </>
   );
 }
 

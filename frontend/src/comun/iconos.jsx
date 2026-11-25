@@ -27,6 +27,8 @@ const trazos = {
   mas: <path d="M12 5v14M5 12h14" />,
   pregunta: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.5" /><path d="M12 17h.01" /></>,
   correo: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
+  anterior: <path d="M15 5l-7 7 7 7" />,
+  siguiente: <path d="M9 5l7 7-7 7" />,
 };
 
 // Ícono de cada vista del menú lateral (reemplaza las abreviaturas IN, US, MP…)

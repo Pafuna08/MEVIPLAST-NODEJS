@@ -1,16 +1,17 @@
 import React from "react";
-import { Intro, ProgressBar, orderVariant } from "../comun/componentes.jsx";
+import { Intro, Paginacion, ProgressBar, orderVariant, usePaginacion } from "../comun/componentes.jsx";
 import { number, safeProductName, sanitizeText } from "../comun/formato.js";
 import { Icono } from "../comun/iconos.jsx";
 
 // Rediseño: una tarjeta por operario con su carga de trabajo y el avance de cada orden activa
 export function Operators({ data }) {
   const isOpen = (order) => ["pendiente", "en_proceso"].includes(order.estado);
+  const paginas = usePaginacion(data.operators);
   return (
     <>
       <Intro icon="operarios" title="Operarios" description="Disponibilidad basada en órdenes activas." />
       <section className="operator-grid" aria-label="Equipo de producción">
-        {data.operators.map((operator) => {
+        {paginas.visibles.map((operator) => {
           const open = data.orders.filter((order) => Number(order.responsable_id) === Number(operator.id) && isOpen(order));
           return (
             <article className="panel operator-card" key={operator.id}>
@@ -44,6 +45,9 @@ export function Operators({ data }) {
         })}
         {!data.operators.length && <p className="empty">No hay operarios activos.</p>}
       </section>
+      <div className="paginado">
+        <Paginacion control={paginas} etiqueta="Páginas de operarios" />
+      </div>
     </>
   );
 }

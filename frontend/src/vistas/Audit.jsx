@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../comun/api.js";
-import { DataTable, Field, Intro, Panel } from "../comun/componentes.jsx";
+import { DataTable, Field, Intro, POR_PAGINA, Paginacion, Panel } from "../comun/componentes.jsx";
 import { number, sanitizeText } from "../comun/formato.js";
 
 const names = { LOGIN: "Inicio de sesión", RESTABLECER_PASSWORD: "Restablecer contraseña", CONSUMO_PRODUCCION: "Consumo en producción" };
@@ -36,7 +36,7 @@ export function Audit({ token }) {
   useEffect(() => {
     let current = true;
     setError("");
-    const params = new URLSearchParams(Object.entries(query).filter(([, value]) => String(value).trim() !== ""));
+    const params = new URLSearchParams(Object.entries({ ...query, porPagina: POR_PAGINA }).filter(([, value]) => String(value).trim() !== ""));
     api(`/api/reportes/auditoria?${params}`, token)
       .then((data) => current && setResult(data))
       .catch((cause) => current && setError(cause.message || "No se pudo consultar la auditoría."));
@@ -98,17 +98,14 @@ export function Audit({ token }) {
       {!result && !error && <p className="empty" role="status">Cargando auditoría...</p>}
       {result && (
         <Panel title={`Eventos encontrados (${number(result.total)})`}>
-          <DataTable columns={["Fecha", "Usuario", "Acción", "Módulo", "Detalle"]} empty="Ningún evento coincide con la búsqueda." rows={events.map((event) => ({
+          <DataTable columns={["Fecha", "Usuario", "Acción", "Módulo", "Detalle"]} empty="Ningún evento coincide con la búsqueda." porPagina={0} rows={events.map((event) => ({
             key: event.id,
             cells: <><td>{event.fecha}</td><td>{sanitizeText(event.realizado_por || "Sistema")}</td><td><span className="audit-action">{readable(event.accion)}</span></td><td>{moduleName(event.tabla_afectada)}</td><td>{sanitizeText(event.detalle || "—")}</td></>,
           }))} />
-          {result.paginas > 1 && (
-            <nav className="audit-pages" aria-label="Páginas de la auditoría">
-              <button className="primary-action secondary" type="button" disabled={result.pagina <= 1} onClick={() => goTo(result.pagina - 1)}>Anterior</button>
-              <span>Página {result.pagina} de {result.paginas}</span>
-              <button className="primary-action secondary" type="button" disabled={result.pagina >= result.paginas} onClick={() => goTo(result.pagina + 1)}>Siguiente</button>
-            </nav>
-          )}
+          <Paginacion
+            control={{ pagina: result.pagina, paginas: result.paginas, total: Number(result.total), porPagina: result.porPagina, cambiar: goTo }}
+            etiqueta="Páginas de la auditoría"
+          />
         </Panel>
       )}
     </>
