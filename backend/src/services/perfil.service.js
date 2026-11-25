@@ -52,6 +52,13 @@ async function actualizar(id, { nombre, usuario, correo }) {
   if (correoLimpio.length > 254 || !FORMATO_CORREO.test(correoLimpio)) throw errorDe("El correo electrónico no es válido");
 
   const anterior = await leer(id);
+  // MEVI-117: qué datos cambian de verdad; si ninguno, no se escribe nada ni se audita
+  const cambios = [
+    anterior.nombre !== nombreLimpio && "nombre",
+    anterior.usuario !== usuarioLimpio && "usuario",
+    (anterior.correo || "") !== correoLimpio && "correo",
+  ].filter(Boolean);
+  if (!cambios.length) return { usuario: publico(anterior), token: firmarToken(anterior), cambios };
   try {
     await pool.query("UPDATE usuarios SET nombre = ?, usuario = ?, correo = ? WHERE id = ?", [nombreLimpio, usuarioLimpio, correoLimpio, id]);
   } catch (error) {
@@ -60,16 +67,10 @@ async function actualizar(id, { nombre, usuario, correo }) {
     }
     throw error;
   }
-  const cambios = [
-    anterior.nombre !== nombreLimpio && "nombre",
-    anterior.usuario !== usuarioLimpio && `usuario (${anterior.usuario} → ${usuarioLimpio})`,
-    anterior.correo !== correoLimpio && "correo",
-  ].filter(Boolean);
-  if (cambios.length) {
-    await registrarAuditoria({ usuarioId: id, accion: "ACTUALIZAR_PERFIL", tabla: "usuarios", detalle: `Cambió su ${cambios.join(", ")}` });
-  }
+  const detalle = cambios.map((campo) => (campo === "usuario" ? `usuario (${anterior.usuario} → ${usuarioLimpio})` : campo));
+  await registrarAuditoria({ usuarioId: id, accion: "ACTUALIZAR_PERFIL", tabla: "usuarios", detalle: `Cambió su ${detalle.join(", ")}` });
   const actual = await leer(id);
-  return { usuario: publico(actual), token: firmarToken(actual) };
+  return { usuario: publico(actual), token: firmarToken(actual), cambios };
 }
 
 async function cambiarPassword(id, { actual, nueva }) {

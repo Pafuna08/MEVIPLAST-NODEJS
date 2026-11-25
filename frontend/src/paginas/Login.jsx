@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sanitizeText } from "../comun/formato.js";
+import { BotonVerClave } from "../comun/VerClave.jsx";
 import "../../css/login.css";
 
 // Inicio de sesión (antes login.html con js/login.js). Misma validación, mismos mensajes y las mismas
@@ -120,14 +121,8 @@ export default function Login() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
-              <button
-                type="button"
-                id="toggle-password"
-                aria-label={verClave ? "Ocultar contraseña" : "Mostrar contraseña"}
-                onClick={() => setVerClave((visible) => !visible)}
-              >
-                {verClave ? "Ocultar" : "Ver"}
-              </button>
+              {/* MEVI-117: el ojo, igual que en el panel, en lugar de la palabra «Ver» */}
+              <BotonVerClave id="toggle-password" visible={verClave} onToggle={() => setVerClave((visible) => !visible)} />
             </div>
             <small>{errores.password}</small>
           </div>

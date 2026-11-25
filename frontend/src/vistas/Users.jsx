@@ -3,6 +3,7 @@ import { DataTable, Field, FormPanel, FormToggles, Intro, Panel, StatCard, useFo
 import { roleName, sanitizeText } from "../comun/formato.js";
 import { Icono } from "../comun/iconos.jsx";
 import { clearInvalid, useObligatorios } from "../comun/validacion.js";
+import { CampoClave } from "../comun/VerClave.jsx";
 
 // Rediseño: indicadores de las cuentas, el formulario se abre con «+ Nuevo usuario» y la tabla
 // muestra el rol y el estado como etiquetas de color
@@ -42,7 +43,7 @@ export function Users({
           <Field label="Nombre"><input name="nombre" /></Field>
           <Field label="Usuario"><input name="usuario" autoComplete="off" /></Field>
           <Field label="Correo electrónico"><input name="correo" type="text" inputMode="email" autoComplete="email" /></Field>
-          <Field label="Contraseña"><input name="password" type="password" autoComplete="new-password" /></Field>
+          <Field label="Contraseña"><CampoClave name="password" autoComplete="new-password" /></Field>
           <Field label="Rol"><select name="rol" defaultValue=""><option value="" disabled>Selecciona el rol</option><option value="operario">Operario</option><option value="vendedor">Vendedor</option><option value="almacenista">Almacenista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></Field>
         </FormPanel>
       )}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { BotonVerClave } from "../comun/VerClave.jsx";
 import "../../css/login.css";
 
 // Recuperación de cuenta (antes recuperar.html con js/recovery.js). Sin token pide el correo; con el
@@ -83,6 +84,9 @@ function PedirCorreo() {
 function NuevaClave({ token }) {
   const [password, setPassword] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
+  // MEVI-117: el ojo de cada campo muestra lo que se escribe
+  const [verClave, setVerClave] = useState(false);
+  const [verConfirmacion, setVerConfirmacion] = useState(false);
   const [estado, setEstado] = useState({ texto: "", ok: false });
 
   async function cambiar(event) {
@@ -111,25 +115,31 @@ function NuevaClave({ token }) {
     <form id="reset-password-form" className="recovery-form" noValidate onSubmit={cambiar}>
       <div className="field">
         <label htmlFor="new-password">Nueva contraseña</label>
-        <input
-          id="new-password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <div className="password-field">
+          <input
+            id="new-password"
+            name="password"
+            type={verClave ? "text" : "password"}
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <BotonVerClave visible={verClave} onToggle={() => setVerClave((visible) => !visible)} />
+        </div>
       </div>
       <div className="field">
         <label htmlFor="confirm-password">Confirmar contraseña</label>
-        <input
-          id="confirm-password"
-          name="confirm-password"
-          type="password"
-          autoComplete="new-password"
-          value={confirmacion}
-          onChange={(event) => setConfirmacion(event.target.value)}
-        />
+        <div className="password-field">
+          <input
+            id="confirm-password"
+            name="confirm-password"
+            type={verConfirmacion ? "text" : "password"}
+            autoComplete="new-password"
+            value={confirmacion}
+            onChange={(event) => setConfirmacion(event.target.value)}
+          />
+          <BotonVerClave visible={verConfirmacion} onToggle={() => setVerConfirmacion((visible) => !visible)} />
+        </div>
       </div>
       <button className="login-button" type="submit">
         Cambiar contraseña

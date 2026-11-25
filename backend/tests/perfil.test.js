@@ -70,7 +70,14 @@ test("CP-115: consulta y actualiza el perfil propio, sin la clave ni datos de ot
   assert.equal(r.status, 200, JSON.stringify(r.body));
   assert.deepEqual(r.body.usuario, { id: 9, nombre: "Ana María Pérez", usuario: "ana.maria", correo: "ana.m@example.test", rol: "operario" });
   assert.equal(jwt.verify(r.body.token, process.env.JWT_SECRET).usuario, "ana.maria", "el token nuevo lleva el usuario nuevo");
+  assert.deepEqual(r.body.cambios, ["nombre", "usuario", "correo"]);
   assert.equal(cuenta.rol, "operario");
+  // CP-116 · MEVI-117: los mismos datos (con otros espacios o mayúsculas) no se escriben de nuevo
+  const escrituras = consultas.filter(({ sql }) => sql.startsWith("UPDATE usuarios SET nombre")).length;
+  const igual = await llamar("PUT", "/perfil", { nombre: "Ana María  Pérez", usuario: "ANA.MARIA", correo: "Ana.M@example.test" });
+  assert.equal(igual.status, 200);
+  assert.deepEqual(igual.body.cambios, []);
+  assert.equal(consultas.filter(({ sql }) => sql.startsWith("UPDATE usuarios SET nombre")).length, escrituras, "sin cambios no hay UPDATE");
   assert.ok(consultas.some(({ sql }) => sql.startsWith("UPDATE usuarios SET nombre = ?, usuario = ?, correo = ? WHERE id = ?")));
 });
 
