@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { lineSizes, productColors } from "./constantes.js";
 import { number, safeProductName, sanitizeText } from "./formato.js";
 import { clearInvalid, useObligatorios } from "./validacion.js";
+import { Icono } from "./iconos.jsx";
 
 export function Panel({ title, action, children, className = "" }) {
   return (
@@ -61,11 +62,75 @@ export function FormPanel({ title, onSubmit, children, saving, obligatorios = []
   );
 }
 
-export function Intro({ title, description, action }) {
+export function Intro({ title, description, action, icon }) {
   return (
     <div className="page-intro">
-      <div><h2>{title}</h2><p>{description}</p></div>
+      <div className="page-intro-text">
+        {icon && <span className="page-icon"><Icono nombre={icon} size={24} /></span>}
+        <div><h2>{title}</h2><p>{description}</p></div>
+      </div>
       {action}
+    </div>
+  );
+}
+
+// Barra de avance con su porcentaje (órdenes de producción)
+export function ProgressBar({ value, label }) {
+  const width = Math.min(Math.max(Number(value) || 0, 0), 100);
+  return (
+    <span className="progress-meter">
+      <span className="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={width} aria-label={label}>
+        <span style={{ width: `${width}%` }} />
+      </span>
+      <b>{width}%</b>
+    </span>
+  );
+}
+
+// Tarjeta de indicador con ícono y color (Inicio, historial, usuarios, materias primas, inventario)
+export function StatCard({ label, value, detail, icon = "ordenes", tone = "azul", warning = false, children }) {
+  return (
+    <article className={`stat-card tono-${tone}`}>
+      <div className="stat-head"><span>{label}</span><i className="stat-icon" aria-hidden="true"><Icono nombre={icon} /></i></div>
+      <strong>{value}</strong>
+      {children}
+      {detail && <small className={warning ? "warning" : undefined}>{detail}</small>}
+    </article>
+  );
+}
+
+// Qué formulario de la vista está abierto. Se guarda en la sesión del navegador porque, al guardar,
+// el panel recarga los datos y vuelve a montar la vista: así el formulario sigue abierto para el siguiente registro
+export function useFormularioAbierto(vista) {
+  const clave = `meviplastFormulario:${vista}`;
+  const [abierto, setAbierto] = useState(() => {
+    try {
+      return sessionStorage.getItem(clave) || null;
+    } catch {
+      return null;
+    }
+  });
+  function cambiar(valor) {
+    setAbierto(valor);
+    try {
+      if (valor) sessionStorage.setItem(clave, valor);
+      else sessionStorage.removeItem(clave);
+    } catch {
+      // sin almacenamiento de sesión: el formulario se cierra al recargar
+    }
+  }
+  return [abierto, cambiar];
+}
+
+// Botones del encabezado que abren o cierran un formulario (uno a la vez)
+export function FormToggles({ options, open, onToggle, className = "" }) {
+  return (
+    <div className={`form-toggles ${className}`.trim()}>
+      {options.map(({ key, label, closeLabel, main }) => (
+        <button key={key} className={main ? "primary-action" : "primary-action secondary"} type="button" aria-expanded={open === key} onClick={() => onToggle(open === key ? null : key)}>
+          {open === key ? closeLabel : label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -174,12 +239,13 @@ export function OrderRow({ order, canManage, onCancel, canEdit, onEdit, editing 
   // En la lista de gestión cada elemento ocupa su columna aunque falte, para que las filas queden alineadas
   if (aligned) {
     return (
-      <div className="order-row aligned">
+      <div className={canManage ? "order-row aligned" : "order-row aligned read-only"}>
         {info}
+        <div className="order-cell"><ProgressBar value={progress} label={`Avance de la orden ${order.id}`} /></div>
         <div className="order-cell"><PriorityBadge order={order} /></div>
         <div className="order-cell"><StatusBadge status={order.estado} /></div>
-        <div className="order-cell">{editButton}</div>
-        <div className="order-cell">{cancelButton}</div>
+        {canManage && <div className="order-cell">{editButton}</div>}
+        {canManage && <div className="order-cell">{cancelButton}</div>}
       </div>
     );
   }

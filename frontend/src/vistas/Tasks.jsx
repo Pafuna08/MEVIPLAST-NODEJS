@@ -8,7 +8,7 @@ export function Tasks({ orders, onChangeStatus, navigate }) {
   const open = orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
   return (
     <>
-      <Intro title="Mis tareas" description="Tus órdenes abiertas, primero las de mayor prioridad." />
+      <Intro icon="tareas" title="Mis tareas" description="Tus órdenes abiertas, primero las de mayor prioridad." />
       <Panel title={`Tareas abiertas (${open.length})`}>
         {open.map((order) => {
           const goal = Number(order.cantidad) || 0;

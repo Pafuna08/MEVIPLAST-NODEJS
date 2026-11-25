@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Dialogo } from "./Dialogo.jsx";
 import { Field } from "./componentes.jsx";
+import { Icono } from "./iconos.jsx";
 import { productColors } from "./constantes.js";
 import { sanitizePayload } from "./formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "./validacion.js";
@@ -58,7 +59,7 @@ function CreateDialog({ id, title, description, obligatorios, limites, onSave, o
   return (
     <Dialogo onClose={onClose} labelledBy={`${id}-titulo`} className="create-modal">
       <div className="confirm-header">
-        <div className="confirm-icon create-icon">+</div>
+        <div className="confirm-icon create-icon"><Icono nombre="mas" size={22} /></div>
         <div>
           <h3 id={`${id}-titulo`}>{title}</h3>
           <p>{description}</p>

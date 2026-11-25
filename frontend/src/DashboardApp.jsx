@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api, filtrosReporte, loadView, readSession } from "./comun/api.js";
 import { orderVariant } from "./comun/componentes.jsx";
+import { Icono, VIEW_ICONS } from "./comun/iconos.jsx";
 import { finishedProductFamilies, movementTypeNames, roleViews, viewTitles } from "./comun/constantes.js";
 import { money, number, packagesLabel, safeProductName, sanitizePayload, sanitizeText } from "./comun/formato.js";
 import { blockNonNumericKeys, blockNonNumericPaste } from "./comun/validacion.js";
@@ -580,19 +581,21 @@ export default function DashboardApp() {
           </a>
           <p className="role-label">{role}</p>
           <nav className="side-nav" aria-label="Navegación principal">
-            {config.views.map(([view, icon, label]) => (
+            {config.views.map(([view, , label]) => (
               <a
                 className={activeView === view ? "active" : ""}
                 href={`/dashboard.html#${view}`}
                 key={view}
                 onClick={() => setSidebarOpen(false)}
               >
-                <span className="nav-icon">{icon}</span>{label}
+                {/* Rediseño: ícono de cada panel en lugar de la abreviatura (IN, US, MP…) */}
+                <span className="nav-icon"><Icono nombre={VIEW_ICONS[view]} size={19} /></span>{label}
               </a>
             ))}
           </nav>
           <div className="sidebar-footer">
             <button type="button" onClick={() => setConfirmLogout(true)}>
+              <Icono nombre="salir" size={18} />
               Cerrar sesión
             </button>
           </div>
@@ -615,7 +618,7 @@ export default function DashboardApp() {
               <span>{role}: {config.welcome}</span>
             </div>
             <div className="user-menu">
-              <span className="user-avatar">{config.initials}</span>
+              <span className="user-avatar" aria-hidden="true"><Icono nombre="usuario" size={20} /></span>
               <div><strong>{session.username}</strong><span>{role}</span></div>
             </div>
           </header>
@@ -626,7 +629,7 @@ export default function DashboardApp() {
       {deleteTarget && (
         <Dialogo onClose={() => setDeleteTarget(null)} labelledBy="delete-title">
             <div className="confirm-header">
-              <div className="confirm-icon">!</div>
+              <div className="confirm-icon"><Icono nombre="alerta" size={22} /></div>
               <div>
                 <h3 id="delete-title">Confirmar eliminación</h3>
                 <p>¿Deseas eliminar al usuario <strong>{deleteTarget.usuario}</strong>?<br />Se eliminará del sistema y no podrá iniciar sesión.</p>
@@ -641,7 +644,7 @@ export default function DashboardApp() {
       {pendingSave && (
         <Dialogo onClose={() => setPendingSave(null)} labelledBy="save-title">
             <div className="confirm-header">
-              <div className="confirm-icon">?</div>
+              <div className="confirm-icon"><Icono nombre="pregunta" size={22} /></div>
               <div>
                 <h3 id="save-title">{pendingSave.title}</h3>
                 <p>Revisa los datos antes de guardar. Este registro mueve el inventario y no se puede deshacer desde el panel.</p>
@@ -671,7 +674,7 @@ export default function DashboardApp() {
       {confirmLogout && (
         <Dialogo onClose={() => setConfirmLogout(false)} labelledBy="logout-title">
             <div className="confirm-header">
-              <div className="confirm-icon">?</div>
+              <div className="confirm-icon"><Icono nombre="pregunta" size={22} /></div>
               <div>
                 <h3 id="logout-title">Cerrar sesión</h3>
                 <p>¿Deseas cerrar tu sesión?<br />Lo que no hayas guardado se perderá.</p>
@@ -715,7 +718,7 @@ function renderView({
   createMaterial,
 }) {
   if (view === "reporte-detalle") return <ReportDetail data={data} onExportExcel={downloadReportExcel} onOpenPdf={openReportPdf} onReceipt={openReceipt} />;
-  if (view === "inicio") return <Home data={data} role={role} navigate={navigate} />;
+  if (view === "inicio") return <Home data={data} role={role} navigate={navigate} lines={lines} onEditOrder={updateOrder} onAssignOrder={assignOrder} onChangeStatus={updateOrderStatus} />;
   if (view === "usuarios") return <Users data={data} username={username} onSubmit={submitForm} saving={saving} onToggle={toggleUser} onUnlock={unlockUser} onUpdateEmail={updateUserEmail} onDelete={requestDelete} role={role} />;
   if (view === "materia") return <Materials data={data} role={role} onSubmit={submitForm} saving={saving} onCreateMaterial={createMaterial} />;
   if (view === "inventario") return <Inventory data={data} lines={lines} onSubmit={submitForm} saving={saving} />;

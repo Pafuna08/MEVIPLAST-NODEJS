@@ -6,7 +6,7 @@ import { VARIANT_FIELDS } from "../comun/validacion.js";
 export function Assign({ data, lines, onSubmit, saving }) {
   return (
     <>
-      <Intro title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
+      <Intro icon="asignar" title="Asignar tarea" description="Crea una orden y entrégala a un operario activo." />
       <FormPanel title="Nueva orden de producción" onSubmit={onSubmit} saving={saving} obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "responsable_id", "materia_prima_id", "prioridad"]}>
         <Field label="Producto"><select name="producto" defaultValue=""><option value="" disabled>Selecciona una línea</option>{lines.map((family) => <option key={family} value={family}>{family}</option>)}</select></Field>
         <VariantFields idPrefix="tarea-nueva" />
