@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sanitizeText } from "../comun/formato.js";
 import { BotonVerClave } from "../comun/VerClave.jsx";
+import { Icono } from "../comun/iconos.jsx";
 import "../../css/login.css";
 
 // Inicio de sesión (antes login.html con js/login.js). Misma validación, mismos mensajes y las mismas
@@ -78,7 +79,7 @@ export default function Login() {
     <main className="login-shell">
       <section className="login-brand" aria-label="Presentación del sistema">
         <a className="back-link" href="/">
-          ← Volver al sitio
+          <Icono nombre="anterior" size={16} />Volver al sitio
         </a>
         <div className="brand-copy">
           <img src="/assets/logo-meviplast.png" alt="Logo de MEVIPLAST" />
