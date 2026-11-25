@@ -432,6 +432,7 @@ export default function DashboardApp() {
     }
   }
 
+  // Devuelve el mensaje de error (null si se asignó) para que una ventana lo muestre: el aviso flotante queda detrás
   async function assignOrder(id, responsableId) {
     try {
       await api(`/api/produccion/${id}/asignar`, token, {
@@ -440,8 +441,26 @@ export default function DashboardApp() {
       });
       setToast("Operario asignado a la orden.");
       setReloadKey((value) => value + 1);
+      return null;
     } catch (cause) {
       setToast(cause.message);
+      return cause.message || "No fue posible asignar la orden.";
+    }
+  }
+
+  // CR-026: consumo de materia prima desde Seguimiento (el supervisor ya no entra a Materias primas).
+  // La ventana ya pidió la confirmación; devuelve el mensaje de error para mostrarlo en ella, o null
+  async function registerConsumption(payload) {
+    try {
+      await api("/api/materia-prima/movimientos", token, {
+        method: "POST",
+        body: JSON.stringify(sanitizePayload(payload)),
+      });
+      setToast("Consumo registrado.");
+      setReloadKey((value) => value + 1);
+      return null;
+    } catch (cause) {
+      return cause.message || "No fue posible registrar el consumo.";
     }
   }
 
@@ -562,6 +581,7 @@ export default function DashboardApp() {
     updateOrderStatus,
     updateOrder,
     assignOrder,
+    registerConsumption,
     saveProductionTemplate,
     deleteProductionTemplate,
     openReceipt,
@@ -709,6 +729,7 @@ function renderView({
   updateOrderStatus,
   updateOrder,
   assignOrder,
+  registerConsumption,
   saveProductionTemplate,
   deleteProductionTemplate,
   openReceipt,
@@ -724,8 +745,8 @@ function renderView({
   if (view === "inventario") return <Inventory data={data} lines={lines} onSubmit={submitForm} saving={saving} />;
   if (view === "tareas") return <Tasks orders={data} onChangeStatus={updateOrderStatus} navigate={navigate} />;
   if (view === "historial") return <History orders={data} token={token} />;
-  if (view === "produccion") return <Production data={data} lines={lines} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} onCreateLine={createLine} onCreateMaterial={createMaterial} />;
-  if (view === "asignar") return <Assign data={data} lines={lines} onSubmit={submitForm} saving={saving} />;
+  if (view === "produccion") return <Production data={data} lines={lines} role={role} view={view} onSubmit={submitForm} saving={saving} onChangeStatus={updateOrderStatus} onEditOrder={updateOrder} onAssignOrder={assignOrder} onSaveTemplate={saveProductionTemplate} onDeleteTemplate={deleteProductionTemplate} onCreateLine={createLine} onCreateMaterial={createMaterial} onConsume={registerConsumption} />;
+  if (view === "asignar") return <Assign data={data} lines={lines} onSubmit={submitForm} saving={saving} onAssignOrder={assignOrder} />;
   if (view === "registrar") return <Advance data={data} onSubmit={submitForm} saving={saving} />;
   if (view === "operarios") return <Operators data={data} />;
   if (view === "ventas") return <Sales data={data} lines={lines} onSubmitSale={submitPayload} saving={saving} onReceipt={openReceipt} />;
