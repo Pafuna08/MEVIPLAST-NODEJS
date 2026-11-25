@@ -1364,21 +1364,6 @@ tbody tr.clickable-row:hover {
 .audit-filter-actions .primary-action {
   flex: 1;
 }
-.audit-pages {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 14px 18px 4px;
-}
-.audit-pages .primary-action {
-  width: auto;
-  min-width: 120px;
-}
-.audit-pages .primary-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 /* Correo y botón «Cambiar» en la tabla de usuarios: el botón queda alineado al borde derecho */
 .email-cell {
@@ -2555,6 +2540,83 @@ tbody tr:hover td {
 @media (max-width: 780px) {
   .page-intro-text {
     flex: none;
+  }
+}
+
+/* MEVI-114: todas las listas en páginas de 10, con el resumen a la izquierda y los botones a la derecha */
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 20px;
+  border-top: 1px solid #edf0f3;
+}
+.paginacion-resumen {
+  color: var(--steel);
+  font-size: 0.85rem;
+}
+.paginacion-botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.paginacion button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--navy);
+  background: var(--white);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.paginacion button:hover:not(:disabled) {
+  border-color: #9fb3cc;
+  background: #f3f6fb;
+}
+.paginacion button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.paginacion .paginacion-numero.activa {
+  border-color: var(--navy);
+  color: var(--white);
+  background: var(--navy);
+}
+.paginacion-salto {
+  padding: 0 4px;
+  color: var(--steel);
+}
+/* Operarios: la paginación va debajo de las tarjetas, en su propio recuadro */
+.paginado .paginacion {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+}
+.paginado:empty {
+  display: none;
+}
+/* Plantillas: la columna es angosta, el resumen va arriba de los botones */
+.template-panel .paginacion {
+  justify-content: center;
+}
+@media (max-width: 560px) {
+  .paginacion {
+    justify-content: center;
+  }
+  .paginacion-paso span {
+    display: none;
   }
 }
 @media (max-width: 900px) {

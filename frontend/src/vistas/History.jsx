@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../comun/api.js";
-import { DataTable, Intro, OrderRow, Panel, StatCard } from "../comun/componentes.jsx";
+import { DataTable, Intro, OrderRow, Paginacion, Panel, StatCard, usePaginacion } from "../comun/componentes.jsx";
 import { historyPeriods } from "../comun/constantes.js";
 import { number, safeProductName, sanitizeText, shortDate } from "../comun/formato.js";
 
@@ -20,6 +20,7 @@ export function History({ orders, token }) {
   }, [period, token]);
   const closed = orders.filter((order) => ["finalizado", "cancelado"].includes(order.estado));
   const finished = closed.filter((order) => order.estado === "finalizado").length;
+  const closedPages = usePaginacion(closed);
   const periodName = historyPeriods.find(([value]) => value === period)[1];
   const periodLabel = periodName.toLowerCase();
   return (
@@ -54,8 +55,9 @@ export function History({ orders, token }) {
         </>
       )}
       <Panel title={`Órdenes cerradas (${closed.length})`}>
-        {closed.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
+        {closedPages.visibles.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
         {!closed.length && <p className="empty">Todavía no tienes órdenes finalizadas o canceladas.</p>}
+        <Paginacion control={closedPages} etiqueta="Páginas de órdenes cerradas" />
       </Panel>
     </>
   );

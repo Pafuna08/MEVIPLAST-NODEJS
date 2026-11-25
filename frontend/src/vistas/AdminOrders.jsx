@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Field, PriorityBadge, StatusBadge, VariantFields, orderVariant } from "../comun/componentes.jsx";
+import { Field, Paginacion, PriorityBadge, StatusBadge, VariantFields, orderVariant, usePaginacion } from "../comun/componentes.jsx";
 import { Dialogo } from "../comun/Dialogo.jsx";
 import { dateTimeFormat, number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
 import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "../comun/validacion.js";
@@ -48,6 +48,7 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
   const [filter, setFilter] = useState("abiertas");
   const [selectedId, setSelectedId] = useState(null);
   const visible = orders.filter((order) => matches(order, filter));
+  const paginas = usePaginacion(visible, { reinicio: filter });
   const selected = orders.find((order) => order.id === selectedId);
   const filterLabel = FILTERS.find(([key]) => key === filter)[1].toLowerCase();
   return (
@@ -66,7 +67,7 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
             <tr><th>Orden</th><th>Producto</th><th>Operario</th><th>Avance</th><th>Prioridad</th><th>Estado</th></tr>
           </thead>
           <tbody>
-            {visible.map((order) => {
+            {paginas.visibles.map((order) => {
               const { produced, goal } = progressOf(order);
               return (
                 <tr key={order.id} className="clickable-row" onClick={() => setSelectedId(order.id)}>
@@ -88,6 +89,7 @@ export function AdminOrders({ orders, data, lines, onEditOrder, onAssignOrder, o
           </tbody>
         </table>
       </div>
+      <Paginacion control={paginas} etiqueta="Páginas de órdenes" />
       {selected && (
         <OrderDetail
           order={selected}

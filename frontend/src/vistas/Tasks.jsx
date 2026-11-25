@@ -1,16 +1,17 @@
 import React from "react";
-import { Intro, Panel, PriorityBadge, StatusBadge, orderVariant } from "../comun/componentes.jsx";
+import { Intro, Paginacion, Panel, PriorityBadge, StatusBadge, orderVariant, usePaginacion } from "../comun/componentes.jsx";
 import { ADVANCE_ORDER_KEY } from "../comun/constantes.js";
 import { number, safeProductName } from "../comun/formato.js";
 
 // Mis tareas (operario): solo lo pendiente, con su avance y las acciones del día
 export function Tasks({ orders, onChangeStatus, navigate }) {
   const open = orders.filter((order) => ["pendiente", "en_proceso"].includes(order.estado));
+  const paginas = usePaginacion(open);
   return (
     <>
       <Intro icon="tareas" title="Mis tareas" description="Tus órdenes abiertas, primero las de mayor prioridad." />
       <Panel title={`Tareas abiertas (${open.length})`}>
-        {open.map((order) => {
+        {paginas.visibles.map((order) => {
           const goal = Number(order.cantidad) || 0;
           const produced = Number(order.cantidad_producida) || 0;
           const progress = goal ? Math.min(100, Math.round((produced * 100) / goal)) : 0;
@@ -49,6 +50,7 @@ export function Tasks({ orders, onChangeStatus, navigate }) {
           );
         })}
         {!open.length && <p className="empty">No tienes tareas abiertas. Lo que ya terminaste está en «Mi historial».</p>}
+        <Paginacion control={paginas} etiqueta="Páginas de tareas" />
       </Panel>
     </>
   );

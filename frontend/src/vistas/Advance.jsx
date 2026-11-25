@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Field, FormPanel, Intro, OrderRow, Panel, orderVariant } from "../comun/componentes.jsx";
+import { Field, FormPanel, Intro, OrderRow, Paginacion, Panel, orderVariant, usePaginacion } from "../comun/componentes.jsx";
 import { ADVANCE_ORDER_KEY } from "../comun/constantes.js";
 import { number, safeProductName } from "../comun/formato.js";
 
 export function Advance({ data, onSubmit, saving }) {
   const activeOrders = data.filter((order) => !["finalizado", "cancelado"].includes(order.estado));
+  const paginas = usePaginacion(activeOrders);
   // Si se llegó desde «Registrar avance» en Mis tareas, esa orden queda elegida (una sola vez)
   const [chosenOrder] = useState(() => {
     try {
@@ -39,7 +40,8 @@ export function Advance({ data, onSubmit, saving }) {
       {/* Rediseño: el avance de tus órdenes abiertas, para ver cuánto falta en cada una */}
       {activeOrders.length > 0 && (
         <Panel title={`Tus órdenes abiertas (${activeOrders.length})`}>
-          {activeOrders.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
+          {paginas.visibles.map((order) => <OrderRow key={order.id} order={order} canManage={false} aligned />)}
+          <Paginacion control={paginas} etiqueta="Páginas de órdenes abiertas" />
         </Panel>
       )}
     </>

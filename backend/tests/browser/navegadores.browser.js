@@ -59,6 +59,14 @@ async function prepararBase() {
     ids[rol] = r.insertId;
   }
   const [bobina] = await raiz.query("INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD 10 x 15', 'PEBD', '10 x 15', '2', 'Transparente', 500, 50)");
+  // Quince ajustes de entrada de 1 kg: el historial de la bobina pasa de 10 movimientos y se ve en páginas
+  for (let i = 1; i <= 15; i += 1) {
+    await raiz.query(
+      "INSERT INTO movimientos_materia_prima (materia_prima_id, usuario_id, tipo, cantidad, observaciones) VALUES (?, NULL, 'ajuste_entrada', 1, ?)",
+      [bobina.insertId, `Ajuste de prueba ${i}`],
+    );
+  }
+  await raiz.query("UPDATE materia_prima SET cantidad = cantidad + 15 WHERE id = ?", [bobina.insertId]);
   for (const familia of productosTerminados) {
     await raiz.query(
       "INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES (?, ?, '10 x 15', '2', 'Transparente', 100000)",
@@ -344,6 +352,33 @@ const FLUJOS = [
     const otros = problemas.filter((p) => p !== "API 400 /api/materia-prima/movimientos");
     if (otros.length) throw new Error(otros.join("; "));
     return "rechazado con «Stock insuficiente»";
+  }],
+  ["Almacenista: movimientos en páginas de 10", async (navegador) => {
+    const { contexto, pagina, problemas } = await nuevaPagina(navegador);
+    await iniciarSesion(pagina, "almacenista");
+    await pagina.goto(`${URL_BASE}/dashboard.html#materia`);
+    await pagina.waitForLoadState("networkidle");
+    // Ninguna lista muestra más de 10 registros a la vez: abajo, «Mostrando 1–10 de N» y los botones de página
+    const panel = pagina.locator("section.panel", { has: pagina.locator("h3", { hasText: "Movimientos recientes" }) });
+    const filas = panel.locator("tbody tr");
+    const resumen = panel.locator(".paginacion-resumen");
+    await resumen.waitFor({ timeout: 10000 });
+    const total = Number((await resumen.innerText()).match(/de ([\d.]+)/)[1].replace(/\./g, ""));
+    if (!(await resumen.innerText()).startsWith("Mostrando 1–10 de")) problemas.push(`resumen «${await resumen.innerText()}»`);
+    if ((await filas.count()) !== 10) problemas.push(`la primera página tiene ${await filas.count()} movimientos`);
+    if (!(await panel.locator(".paginacion-paso").first().isDisabled())) problemas.push("«Anterior» está activo en la primera página");
+    const primera = await filas.first().innerText();
+    await panel.locator(".paginacion-paso", { hasText: "Siguiente" }).click();
+    await panel.locator(".paginacion-resumen", { hasText: "Mostrando 11–" }).waitFor({ timeout: 10000 });
+    if ((await filas.count()) !== Math.min(10, total - 10)) problemas.push(`la segunda página tiene ${await filas.count()} de ${total} movimientos`);
+    if ((await filas.first().innerText()) === primera) problemas.push("la segunda página repite la primera");
+    if ((await panel.locator(".paginacion-numero.activa").innerText()) !== "2") problemas.push("la página 2 no queda marcada");
+    // El número 1 vuelve a la primera página
+    await panel.locator(".paginacion-numero", { hasText: /^1$/ }).click();
+    await panel.locator(".paginacion-resumen", { hasText: "Mostrando 1–10" }).waitFor({ timeout: 10000 });
+    await contexto.close();
+    if (problemas.length) throw new Error(problemas.join("; "));
+    return `${total} movimientos en páginas de 10`;
   }],
   ["Supervisor: consumo de materia prima desde Seguimiento (CR-026)", async (navegador) => {
     const { contexto, pagina, problemas } = await nuevaPagina(navegador);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Field, FormPanel, FormToggles, Intro, OrderRow, Panel, VariantFields, orderVariant, useFormularioAbierto } from "../comun/componentes.jsx";
+import { Field, FormPanel, FormToggles, Intro, OrderRow, Paginacion, Panel, VariantFields, orderVariant, useFormularioAbierto, usePaginacion } from "../comun/componentes.jsx";
 import { CREATE_OPTION } from "../comun/constantes.js";
 import { NewLineDialog, NewMaterialDialog, useSelectAfterRender } from "../comun/CrearOpcion.jsx";
 import { number, safeProductName, sanitizePayload, sanitizeText } from "../comun/formato.js";
@@ -56,6 +56,8 @@ export function Production({
   const templates = (data.templates || []).filter((template) =>
     safeProductName(template.producto),
   );
+  const orderPages = usePaginacion(orders);
+  const templatePages = usePaginacion(templates);
   const selectedTemplate = templates.find(
     (template) => String(template.id) === selectedTemplateId,
   );
@@ -202,7 +204,7 @@ export function Production({
           <Panel title="Órdenes frecuentes" className="template-panel">
             {templates.length ? (
               <div className="template-list">
-                {templates.map((template) => (
+                {templatePages.visibles.map((template) => (
                   <div className="template-item" key={template.id}>
                     <div>
                       <strong>{safeProductName(template.producto) || "Producto no válido"}{orderVariant(template)}</strong>
@@ -237,10 +239,11 @@ export function Production({
             ) : (
               <p className="empty">Aún no hay plantillas. Créalas con «Guardar plantilla».</p>
             )}
+            <Paginacion control={templatePages} etiqueta="Páginas de plantillas" />
           </Panel>
         </div>
       ) : <Panel title="Órdenes">
-        {orders.map((order) => (
+        {orderPages.visibles.map((order) => (
           <React.Fragment key={order.id}>
             <OrderRow
               order={order}
@@ -286,6 +289,7 @@ export function Production({
           </React.Fragment>
         ))}
         {!orders.length && <p className="empty">No hay órdenes asignadas.</p>}
+        <Paginacion control={orderPages} etiqueta="Páginas de órdenes" />
       </Panel>}
       {cancelTarget && (
         <CancelOrderDialog

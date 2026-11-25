@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Field, FormPanel, FormToggles, Intro, Panel, PriorityBadge, StatusBadge, VariantFields, orderVariant, useFormularioAbierto } from "../comun/componentes.jsx";
+import { Field, FormPanel, FormToggles, Intro, Paginacion, Panel, PriorityBadge, StatusBadge, VariantFields, orderVariant, useFormularioAbierto, usePaginacion } from "../comun/componentes.jsx";
 import { Dialogo } from "../comun/Dialogo.jsx";
 import { dateTimeFormat, number, safeProductName, sanitizeText } from "../comun/formato.js";
 import { Icono } from "../comun/iconos.jsx";
@@ -32,6 +32,7 @@ export function Assign({ data, lines, onSubmit, saving, onAssignOrder }) {
   const [selectedId, setSelectedId] = useState(null);
   const orders = data.orders || [];
   const toAssign = orders.filter((order) => order.estado === "pendiente" && !order.responsable_id);
+  const paginas = usePaginacion(toAssign);
   const selected = toAssign.find((order) => order.id === selectedId);
   return (
     <>
@@ -61,7 +62,7 @@ export function Assign({ data, lines, onSubmit, saving, onAssignOrder }) {
         <p className="orders-hint">Las crea el administrador y quedan pendientes para los supervisores. Haz clic en una orden para ver su detalle y elegir el operario; al asignarla, la orden queda a tu cargo.</p>
         {toAssign.length > 0 && (
           <ul className="order-progress-list assign-list">
-            {toAssign.map((order) => (
+            {paginas.visibles.map((order) => (
               <li key={order.id}>
                 {/* Columnas fijas: orden | prioridad | acción */}
                 <button className="order-progress-row assign-row" type="button" onClick={() => setSelectedId(order.id)}>
@@ -81,6 +82,7 @@ export function Assign({ data, lines, onSubmit, saving, onAssignOrder }) {
           </ul>
         )}
         {!toAssign.length && <p className="empty">No hay órdenes por asignar. Cuando el administrador cree una, aparecerá aquí.</p>}
+        <Paginacion control={paginas} etiqueta="Páginas de órdenes por asignar" />
       </Panel>
       {selected && (
         <AssignDialog
