@@ -765,9 +765,19 @@
                       "PP"
                     ]
                   },
-                  "medida": {
+                  "tamano_rollo": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "multipleOf": 0.01,
+                    "description": "MEVI-115 (CR-027): tamaño del rollo, mayor que cero y con hasta 2 decimales; hasta 200 en pulgadas o 500 en centímetros. Se guarda en «medida» como «28 pulg» o «27.5 cm»"
+                  },
+                  "unidad_medida": {
                     "type": "string",
-                    "description": "Ancho x largo con unidad opcional (RN-025), p. ej. 10 x 15 o 40 x 60 cm; se guarda normalizada"
+                    "enum": [
+                      "pulgadas",
+                      "centimetros"
+                    ],
+                    "description": "Unidad de medida del tamaño del rollo"
                   },
                   "calibre": {
                     "type": "string",
@@ -802,7 +812,8 @@
                 },
                 "required": [
                   "tipo",
-                  "medida",
+                  "tamano_rollo",
+                  "unidad_medida",
                   "calibre",
                   "color",
                   "peso_rollo"
@@ -838,7 +849,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Una sola bobina por variante (tipo, medida, calibre y color): si ya existe responde 409 y su existencia sube con una compra (DEF-022)."
+        "description": "Una sola bobina por variante (tipo, tamaño del rollo, calibre y color): si ya existe responde 409 y su existencia sube con una compra (DEF-022)."
       }
     },
     "/materia-prima/bajo-stock": {
