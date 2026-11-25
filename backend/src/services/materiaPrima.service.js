@@ -1,6 +1,6 @@
 const { pool } = require("../config/database");
 const { registrarAuditoria } = require("../utils/auditoria");
-const { normalizarMedida, normalizarCalibre, normalizarColor } = require("../utils/variantes");
+const { normalizarCalibre, normalizarColor, normalizarTamanoRollo } = require("../utils/variantes");
 const { LIMITES, decimal, errorDeDato } = require("../utils/numeros");
 
 const tiposEntrada = new Set(["compra", "ajuste_entrada"]);
@@ -55,7 +55,8 @@ async function crear(datos, actorId) {
     throw error;
   }
   // Obligatorios y dentro del largo de la columna; luego el formato de RN-025
-  const medida = normalizarMedida(validarCampoMaterial(datos.medida, "La medida", 80));
+  // MEVI-115: tamaño del rollo con su unidad de medida (pulgadas o centímetros), en lugar de ancho x largo
+  const medida = normalizarTamanoRollo(datos.tamano_rollo, datos.unidad_medida);
   const calibre = normalizarCalibre(validarCampoMaterial(datos.calibre, "El calibre", 40));
   const color = normalizarColor(validarCampoMaterial(datos.color, "El color", 80));
   const nombreCompleto = nombreMaterial(tipo, medida, calibre, color);

@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { normalizarMedida, normalizarCalibre, normalizarColor } = require("../src/utils/variantes");
+const { normalizarMedida, normalizarCalibre, normalizarColor, normalizarTamanoRollo } = require("../src/utils/variantes");
 const inventarioService = require("../src/services/inventario.service");
 const materiaPrimaService = require("../src/services/materiaPrima.service");
 const productionService = require("../src/services/produccion.service");
@@ -66,9 +66,26 @@ test("RN-025: la orden de producción y la bobina usan la misma regla", async ()
     rechazo(/calibre/),
   );
   await assert.rejects(
-    materiaPrimaService.crear({ tipo: "PEBD", medida: "grande", calibre: "1", color: "Natural", peso_rollo: 20 }, 1),
-    rechazo(/ancho x largo/),
+    materiaPrimaService.crear({ tipo: "PEBD", tamano_rollo: "grande", unidad_medida: "pulgadas", calibre: "1", color: "Natural", peso_rollo: 20 }, 1),
+    rechazo(/tamaño del rollo/),
   );
+});
+
+test("CP-114 · MEVI-115: el tamaño del rollo admite decimales y se guarda con su unidad de medida", () => {
+  assert.equal(normalizarTamanoRollo("28", "pulgadas"), "28 pulg");
+  assert.equal(normalizarTamanoRollo("27,5", "pulgadas"), "27.5 pulg");
+  assert.equal(normalizarTamanoRollo(70.25, "centimetros"), "70.25 cm");
+  assert.equal(normalizarTamanoRollo(" 070 ", "Centímetros"), "70 cm");
+  assert.equal(normalizarTamanoRollo("200", "pulgadas"), "200 pulg");
+  assert.equal(normalizarTamanoRollo("500", "centimetros"), "500 cm");
+  for (const [tamano, unidad, patron] of [
+    ["0", "pulgadas", /mayor que cero/], ["-3", "pulgadas", /mayor que cero/], ["28.555", "pulgadas", /2 decimales/],
+    ["10 x 15", "pulgadas", /tamaño del rollo/], ["", "pulgadas", /tamaño del rollo/], [undefined, "pulgadas", /tamaño del rollo/],
+    ["200.5", "pulgadas", /máximo 200 pulgadas/], ["501", "centimetros", /máximo 500 centímetros/],
+    ["28", "metros", /unidad de medida/], ["28", "", /unidad de medida/], ["28", undefined, /unidad de medida/],
+  ]) {
+    assert.throws(() => normalizarTamanoRollo(tamano, unidad), rechazo(patron), `${tamano} ${unidad}`);
+  }
 });
 
 test("Cargadera usa tallas T15, T20, T25 y T30; las demás líneas, ancho x largo (CR-019)", () => {

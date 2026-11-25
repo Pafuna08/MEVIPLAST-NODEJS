@@ -42,7 +42,7 @@ test("inventario rechaza ingresos y salidas fuera del tope o con decimales", asy
 });
 
 test("materia prima: tope de kg, stock mínimo válido y una sola bobina por variante", async (t) => {
-  const bobina = { tipo: "PEBD", medida: "7 x 9", calibre: "1", color: "Azul" };
+  const bobina = { tipo: "PEBD", tamano_rollo: "7", unidad_medida: "pulgadas", calibre: "1", color: "Azul" };
   await assert.rejects(materiaPrimaService.crear({ ...bobina, peso_rollo: 1e12 }, 1), /máximo 100.000/);
   await assert.rejects(materiaPrimaService.actualizar(3, { stock_minimo: -3 }, 1), /mayor que o igual a cero/);
   await assert.rejects(materiaPrimaService.registrarMovimiento(3, { tipo: "compra", cantidad: 1e12 }, { id: 1, rol: "admin" }), /máximo 100.000/);

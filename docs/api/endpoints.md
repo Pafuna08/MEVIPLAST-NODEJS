@@ -27,7 +27,7 @@ Los archivos de Swagger UI vienen con la dependencia `swagger-ui-express` (no se
 | PUT, DELETE | `/usuarios/{id}`                                                     | Admin                                  | Actualizar o eliminar usuario          |
 | PUT         | `/usuarios/{id}/desbloquear`                                         | Admin                                  | Desbloquear una cuenta bloqueada por intentos fallidos |
 | GET         | `/materia-prima`, `/materia-prima/bajo-stock`, `/materia-prima/{id}` | Admin, supervisor, almacenista         | Consultar materias primas              |
-| POST        | `/materia-prima`                                                     | Admin                                  | Crear material y registrar saldo inicial |
+| POST        | `/materia-prima`                                                     | Admin                                  | Crear material (material, tamaño del rollo con su unidad de medida, calibre, color y peso; CR-027) y registrar saldo inicial |
 | PUT         | `/materia-prima/{id}`                                                | Admin, almacenista                     | Actualizar datos (no cantidad)          |
 | DELETE      | `/materia-prima/{id}`                                                | Admin                                  | Eliminar material                      |
 | GET         | `/materia-prima/movimientos`, `/materia-prima/{id}/movimientos`     | Admin, almacenista (el supervisor no, CR-026) | Consultar ledger de materias primas    |

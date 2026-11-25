@@ -37,7 +37,8 @@ test("crear registra una bobina con sus especificaciones y el peso como existenc
   await materiaPrimaService.crear(
     {
       tipo: "PEBD",
-      medida: "6 x 12",
+      tamano_rollo: "27,50",
+      unidad_medida: "pulgadas",
       calibre: "0.95",
       color: "Transparente",
       peso_rollo: "25.5",
@@ -53,9 +54,9 @@ test("crear registra una bobina con sus especificaciones y el peso como existenc
   );
   assert.equal(committed, true);
   assert.deepEqual(materialInsert.params, [
-    "Bobina o rollo de polietileno de baja densidad (PEBD) - 6 x 12 - calibre 0.95 - Transparente",
+    "Bobina o rollo de polietileno de baja densidad (PEBD) - 27.5 pulg - calibre 0.95 - Transparente",
     "PEBD",
-    "6 x 12",
+    "27.5 pulg",
     "0.95",
     "Transparente",
     25.5,
@@ -72,14 +73,14 @@ test("crear registra una bobina con sus especificaciones y el peso como existenc
 test("crear rechaza un material no permitido o un peso de rollo inválido", async () => {
   await assert.rejects(
     materiaPrimaService.crear(
-      { tipo: "Resina", medida: "6 x 12", calibre: "1", color: "Negro", peso_rollo: 10 },
+      { tipo: "Resina", tamano_rollo: 28, unidad_medida: "pulgadas", calibre: "1", color: "Negro", peso_rollo: 10 },
       2,
     ),
     { statusCode: 400, message: "Selecciona un material válido" },
   );
   await assert.rejects(
     materiaPrimaService.crear(
-      { tipo: "PP", medida: "6 x 12", calibre: "1", color: "Negro", peso_rollo: 0 },
+      { tipo: "PP", tamano_rollo: 70, unidad_medida: "centimetros", calibre: "1", color: "Negro", peso_rollo: 0 },
       2,
     ),
     { statusCode: 400, message: "El peso del rollo debe ser un número mayor que cero" },

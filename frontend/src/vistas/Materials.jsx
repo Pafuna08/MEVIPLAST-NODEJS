@@ -36,7 +36,7 @@ export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
       <Intro
         icon="materia"
         title="Materias primas"
-        description="Registra bobinas, compras, ajustes y consumos, y consulta existencias por material, medida, calibre y color."
+        description="Registra bobinas, compras, ajustes y consumos, y consulta existencias por material, tamaño del rollo, calibre y color."
         action={(canMove || canCreate) && (
           <FormToggles
             open={openForm}
@@ -95,7 +95,7 @@ export function Materials({ data, role, onSubmit, saving, onCreateMaterial }) {
           setMaterialId(String(material.id));
         }}
       />}
-      <Panel title="Materiales registrados"><DataTable columns={["Material", "Medida", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
+      <Panel title="Materiales registrados"><DataTable columns={["Material", "Tamaño del rollo", "Calibre", "Color", "Peso del rollo", "Existencia"]} rows={data.materials.map((item) => ({
         key: item.id,
         cells: <><td>{sanitizeText(item.nombre)}</td><td>{sanitizeText(item.medida || "—")}</td><td>{sanitizeText(item.calibre || "—")}</td><td>{sanitizeText(item.color || "—")}</td><td>{item.peso_rollo === null || item.peso_rollo === undefined ? "—" : `${number(item.peso_rollo)} kg`}</td><td><span className="stock-cell">{number(item.cantidad)} {sanitizeText(item.unidad)}{lowStock(item) && <span className="status alert">Stock bajo</span>}</span></td></>,
       }))} /></Panel>

@@ -58,6 +58,29 @@ function normalizarTalla(valor, linea) {
   return texto;
 }
 
+// Bobinas (MEVI-115): el tamaño del rollo es un número mayor que cero con hasta 2 decimales en pulgadas
+// (hasta 200) o centímetros (hasta 500); se guarda en la columna medida como «28 pulg» o «27.5 cm»
+const UNIDADES_ROLLO = {
+  pulgadas: { abreviatura: "pulg", maximo: 200 },
+  centimetros: { abreviatura: "cm", maximo: 500 },
+};
+const TAMANO_ROLLO = /^\d{1,3}(?:[.,]\d+)?$/;
+
+function normalizarTamanoRollo(tamano, unidadMedida) {
+  const unidad = UNIDADES_ROLLO[clave(typeof unidadMedida === "string" ? unidadMedida.trim() : "")];
+  if (!unidad) throw errorDeDato("Selecciona la unidad de medida: pulgadas o centímetros");
+  const texto = typeof tamano === "number" ? String(tamano) : typeof tamano === "string" ? tamano.trim() : "";
+  const numero = Number(texto.replace(",", "."));
+  if (!TAMANO_ROLLO.test(texto) || !(numero > 0)) {
+    throw errorDeDato("El tamaño del rollo debe ser un número mayor que cero, por ejemplo 28 o 27.5");
+  }
+  if ((texto.split(/[.,]/)[1] || "").length > 2) throw errorDeDato("El tamaño del rollo admite como máximo 2 decimales");
+  if (numero > unidad.maximo) {
+    throw errorDeDato(`El tamaño del rollo admite como máximo ${unidad.maximo} ${unidad.abreviatura === "pulg" ? "pulgadas" : "centímetros"}`);
+  }
+  return `${numeroTexto(texto)} ${unidad.abreviatura}`;
+}
+
 function normalizarVariante({ medida, calibre, color }, linea) {
   return {
     medida: tallasPorLinea[linea] ? normalizarTalla(medida, linea) : normalizarMedida(medida),
@@ -66,4 +89,4 @@ function normalizarVariante({ medida, calibre, color }, linea) {
   };
 }
 
-module.exports = { normalizarMedida, normalizarCalibre, normalizarColor, normalizarVariante, normalizarTalla };
+module.exports = { normalizarMedida, normalizarCalibre, normalizarColor, normalizarVariante, normalizarTalla, normalizarTamanoRollo };

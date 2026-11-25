@@ -4,7 +4,7 @@ import { Field } from "./componentes.jsx";
 import { Icono } from "./iconos.jsx";
 import { productColors } from "./constantes.js";
 import { sanitizePayload } from "./formato.js";
-import { VARIANT_FIELDS, clearInvalid, useObligatorios } from "./validacion.js";
+import { clearInvalid, useObligatorios } from "./validacion.js";
 
 const POLYMER_MATERIALS = [
   ["PEBD", "Bobina o rollo de polietileno de baja densidad (PEBD)"],
@@ -12,7 +12,8 @@ const POLYMER_MATERIALS = [
   ["PP", "Bobina o rollo de polipropileno (PP)"],
 ];
 
-// Campos de una bobina nueva: el material y el color salen de listas fijas; la medida, en «ancho x largo» (RN-025)
+// Campos de una bobina nueva: el material, la unidad de medida y el color salen de listas fijas; el tamaño del
+// rollo es un número con hasta 2 decimales (MEVI-115); el calibre sigue la regla de RN-025
 export function MaterialFields({ idPrefix }) {
   return (
     <>
@@ -22,11 +23,15 @@ export function MaterialFields({ idPrefix }) {
           {POLYMER_MATERIALS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </Field>
-      <Field label="Medida (ancho x largo)">
-        <input name="medida" list={`${idPrefix}-medidas`} />
-        <datalist id={`${idPrefix}-medidas`}>
-          {["6 x 8", "6 x 12", "8 x 12", "10 x 15", "15 x 20", "20 x 30", "30 x 40", "40 x 60", "50 x 70"].map((value) => <option key={value} value={value} />)}
-        </datalist>
+      <Field label="Tamaño del rollo">
+        <input name="tamano_rollo" type="number" step="0.01" />
+      </Field>
+      <Field label="Unidad de medida">
+        <select name="unidad_medida" defaultValue="">
+          <option value="" disabled>Selecciona la unidad</option>
+          <option value="pulgadas">Pulgadas</option>
+          <option value="centimetros">Centímetros</option>
+        </select>
       </Field>
       <Field label="Calibre">
         <input name="calibre" list={`${idPrefix}-calibres`} />
@@ -47,8 +52,8 @@ export function MaterialFields({ idPrefix }) {
   );
 }
 
-export const MATERIAL_REQUIRED = ["tipo", ...VARIANT_FIELDS, "peso_rollo"];
-export const MATERIAL_LIMITS = { medida: 80 };
+export const MATERIAL_REQUIRED = ["tipo", "tamano_rollo", "unidad_medida", "calibre", "color", "peso_rollo"];
+export const MATERIAL_LIMITS = {};
 
 // Ventana con un formulario para crear un dato desde la opción «+ Crear…» de un selector.
 // Valida igual que los formularios del panel y muestra el error del servidor sin cerrarse.
