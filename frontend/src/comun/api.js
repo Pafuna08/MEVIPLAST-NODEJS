@@ -72,6 +72,8 @@ export async function loadView(view, role, token) {
     return { orders, inventory, sales, lowStock, materials, operators };
   }
   if (view === "usuarios") return api("/api/usuarios", token);
+  // CR-028: «Mi perfil» de cualquier rol
+  if (view === "perfil") return api("/api/auth/perfil", token);
   if (view === "materia") {
     // Las órdenes solo hacen falta para el consumo: aquí lo registra el administrador
     // (CR-026: el supervisor ya no entra a esta vista; registra el consumo desde Seguimiento)

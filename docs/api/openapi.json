@@ -341,6 +341,222 @@
         ]
       }
     },
+    "/auth/perfil": {
+      "get": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Mi perfil",
+        "description": "CR-028: datos de la cuenta del token (nombre, usuario, correo y rol).",
+        "responses": {
+          "200": {
+            "description": "Perfil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "usuario": {
+                      "type": "string"
+                    },
+                    "correo": {
+                      "type": "string"
+                    },
+                    "rol": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario",
+          "vendedor",
+          "almacenista"
+        ]
+      },
+      "put": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Actualizar mi perfil",
+        "description": "CR-028: cambia el nombre (máx. 120), el usuario (3 a 50, sin espacios; se guarda en minúsculas) y el correo de la cuenta del token; el rol no cambia. Devuelve un token nuevo con el usuario vigente.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "usuario": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._-]{3,50}$"
+                  },
+                  "correo": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  }
+                },
+                "required": [
+                  "nombre",
+                  "usuario",
+                  "correo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "usuario": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "nombre": {
+                          "type": "string"
+                        },
+                        "usuario": {
+                          "type": "string"
+                        },
+                        "correo": {
+                          "type": "string"
+                        },
+                        "rol": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "409": {
+            "description": "Usuario o correo ya registrado"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario",
+          "vendedor",
+          "almacenista"
+        ]
+      }
+    },
+    "/auth/perfil/password": {
+      "put": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Cambiar mi contraseña",
+        "description": "CR-028: exige la contraseña actual (si es incorrecta cuenta como intento fallido, RN-024; bloqueada responde 423) y una nueva de 8 a 128 caracteres distinta de la actual. Revoca las demás sesiones (HU-020) y devuelve un token nuevo para esta.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "actual": {
+                    "type": "string"
+                  },
+                  "nueva": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "actual",
+                  "nueva"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Validacion"
+          },
+          "401": {
+            "$ref": "#/components/responses/SesionInvalida"
+          },
+          "403": {
+            "$ref": "#/components/responses/SinPermiso"
+          },
+          "423": {
+            "description": "Cuenta bloqueada temporalmente"
+          }
+        },
+        "x-roles": [
+          "admin",
+          "supervisor",
+          "operario",
+          "vendedor",
+          "almacenista"
+        ]
+      }
+    },
     "/usuarios": {
       "get": {
         "tags": [
