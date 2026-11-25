@@ -387,6 +387,8 @@ const FLUJOS = [
     await iniciarSesion(pagina, "admin");
     await pagina.goto(`${URL_BASE}/dashboard.html#produccion`);
     await pagina.waitForLoadState("networkidle");
+    // Rediseño: el formulario de nueva orden se abre con «+ Nueva orden»
+    await pagina.locator(".production-actions button", { hasText: "+ Nueva orden" }).click();
     const form = formulario(pagina, "Nueva orden de producción");
     const producto = form.locator("select[name=producto]");
     const ventana = pagina.locator(".create-modal");
@@ -443,6 +445,8 @@ const FLUJOS = [
     await pagina.waitForLoadState("networkidle");
     // Orden propia de este navegador (la base es compartida): la meta la distingue
     const meta = { Edge: "111", Chrome: "222", Firefox: "333" }[nombre] || "444";
+    // Rediseño: el formulario de nueva orden se abre con «+ Nueva orden»
+    await pagina.locator(".production-actions button", { hasText: "+ Nueva orden" }).click();
     const form = formulario(pagina, "Nueva orden de producción");
     await form.locator("select[name=producto]").selectOption("Sencilla PP");
     await form.locator("input[name=medida]").fill("6 x 9");

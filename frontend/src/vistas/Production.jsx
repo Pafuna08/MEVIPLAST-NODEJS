@@ -40,6 +40,8 @@ export function Production({
   const [inlineWarning, checkInline] = useObligatorios();
   const [cancelTarget, setCancelTarget] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  // Rediseño: los formularios de nueva orden y de plantilla se abren solo cuando se necesitan
+  const [openForm, setOpenForm] = useState(null);
   const orders = Array.isArray(data) ? data : data.orders;
   const canManage = role !== "operario";
   const isAdmin = role === "admin";
@@ -64,44 +66,20 @@ export function Production({
                 ? "Actualiza el estado de las órdenes asignadas."
                 : "Solo se muestran tus tareas asignadas."
         }
+        action={isAdmin && view === "produccion" ? (
+          <div className="production-actions">
+            <button className="primary-action secondary" type="button" aria-expanded={openForm === "plantilla"} onClick={() => setOpenForm(openForm === "plantilla" ? null : "plantilla")}>
+              {openForm === "plantilla" ? "Cerrar plantilla" : "Guardar plantilla"}
+            </button>
+            <button className="primary-action" type="button" aria-expanded={openForm === "orden"} onClick={() => setOpenForm(openForm === "orden" ? null : "orden")}>
+              {openForm === "orden" ? "Cerrar formulario" : "+ Nueva orden"}
+            </button>
+          </div>
+        ) : undefined}
       />
       {isAdmin && view === "produccion" && (
         <>
-          <Panel title="Órdenes frecuentes">
-            {templates.length ? (
-              <div className="order-list">
-                {templates.map((template) => (
-                  <div className="order-row" key={template.id}>
-                    <div>
-                      <strong>{safeProductName(template.producto) || "Producto no válido"}{orderVariant(template)}</strong>
-                      <span>
-                        Meta habitual: {number(template.cantidad)}
-                        {template.materia_prima_nombre
-                          ? ` · ${sanitizeText(template.materia_prima_nombre)}`
-                          : ""}
-                      </span>
-                    </div>
-                    <button
-                      className="text-action"
-                      type="button"
-                      onClick={() => setSelectedTemplateId(String(template.id))}
-                    >
-                      Usar plantilla
-                    </button>
-                    <button
-                      className="text-action danger"
-                      type="button"
-                      onClick={() => onDeleteTemplate(template.id)}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="empty">Aún no hay plantillas. Puedes crear una abajo.</p>
-            )}
-          </Panel>
+          {openForm === "orden" && (
           <FormPanel
             title="Nueva orden de producción"
             obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id", "prioridad"]}
@@ -165,6 +143,8 @@ export function Production({
               </select>
             </Field>
           </FormPanel>
+          )}
+          {openForm === "plantilla" && (
           <FormPanel
             title="Guardar plantilla frecuente"
             obligatorios={["producto", ...VARIANT_FIELDS, "cantidad", "materia_prima_id", "prioridad"]}
@@ -202,12 +182,54 @@ export function Production({
               </select>
             </Field>
           </FormPanel>
+          )}
         </>
       )}
       {isAdmin && view === "produccion" ? (
-        <Panel title="Órdenes">
-          <AdminOrders orders={orders} data={data} lines={lines} onEditOrder={onEditOrder} onAssignOrder={onAssignOrder} onCancel={setCancelTarget} />
-        </Panel>
+        <div className="production-layout">
+          <Panel title="Órdenes">
+            <AdminOrders orders={orders} data={data} lines={lines} onEditOrder={onEditOrder} onAssignOrder={onAssignOrder} onCancel={setCancelTarget} />
+          </Panel>
+          <Panel title="Órdenes frecuentes" className="template-panel">
+            {templates.length ? (
+              <div className="template-list">
+                {templates.map((template) => (
+                  <div className="template-item" key={template.id}>
+                    <div>
+                      <strong>{safeProductName(template.producto) || "Producto no válido"}{orderVariant(template)}</strong>
+                      <span>
+                        Meta habitual: {number(template.cantidad)}
+                        {template.materia_prima_nombre
+                          ? ` · ${sanitizeText(template.materia_prima_nombre)}`
+                          : ""}
+                      </span>
+                    </div>
+                    <button
+                      className="text-action"
+                      type="button"
+                      onClick={() => {
+                        setSelectedTemplateId(String(template.id));
+                        setOpenForm("orden");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      Usar plantilla
+                    </button>
+                    <button
+                      className="text-action danger"
+                      type="button"
+                      onClick={() => onDeleteTemplate(template.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="empty">Aún no hay plantillas. Créalas con «Guardar plantilla».</p>
+            )}
+          </Panel>
+        </div>
       ) : <Panel title="Órdenes">
         {orders.map((order) => (
           <React.Fragment key={order.id}>
