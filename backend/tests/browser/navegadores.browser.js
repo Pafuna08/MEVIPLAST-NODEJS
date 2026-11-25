@@ -174,6 +174,11 @@ const FLUJOS = [
     await pagina.goto(`${URL_BASE}/login.html`);
     await pagina.fill("#username", "nav_vendedor");
     await pagina.fill("#password", "clave-erronea");
+    // MEVI-117: el ojo muestra la contraseña escrita y la vuelve a ocultar
+    await pagina.click("#toggle-password");
+    if ((await pagina.getAttribute("#password", "type")) !== "text") throw new Error("el ojo del inicio de sesión no muestra la contraseña");
+    await pagina.click("#toggle-password");
+    if ((await pagina.getAttribute("#password", "type")) !== "password") throw new Error("el ojo del inicio de sesión no la oculta");
     await pagina.click("button[type=submit]");
     await pagina.locator("#login-status", { hasText: /incorrect/i }).waitFor({ timeout: 10000 });
     await contexto.close();
@@ -209,20 +214,45 @@ const FLUJOS = [
     await pagina.locator(".page-intro h2", { hasText: "Mi perfil" }).waitFor({ timeout: 10000 });
     const datos = pagina.locator("section.profile-card", { hasText: "Datos personales" });
     if ((await datos.locator("input[name=usuario]").inputValue()) !== "nav_vendedor") problemas.push("el perfil no trae el usuario");
+    // MEVI-117: sin cambios no se envía nada ni se pide confirmación
+    await datos.locator("button[type=submit]").click();
+    await datos.locator(".form-notice", { hasText: "No hay cambios" }).waitFor({ timeout: 10000 });
+    if (await pagina.locator(".confirm-modal").count()) problemas.push("sin cambios se abrió la confirmación");
     await datos.locator("input[name=nombre]").fill(`Vendedor ${nombre}`);
     await datos.locator("input[name=correo]").fill(`vendedor.${nombre.toLowerCase()}@example.test`);
     await datos.locator("button[type=submit]").click();
+    // La ventana muestra solo lo que cambia (antes → después); «Revisar» vuelve sin guardar
+    const ventana = pagina.locator(".confirm-modal");
+    const resumen = ventana.locator(".profile-changes");
+    await resumen.waitFor({ timeout: 10000 });
+    const cambios = await resumen.innerText();
+    if (!cambios.includes("Nombre completo") || !cambios.includes("Correo electrónico")) problemas.push(`la confirmación no muestra los cambios: ${cambios}`);
+    if (cambios.includes("Usuario")) problemas.push("la confirmación muestra el usuario, que no cambió");
+    await ventana.locator("button", { hasText: "Revisar" }).click();
+    await ventana.waitFor({ state: "detached", timeout: 10000 });
+    await datos.locator("button[type=submit]").click();
+    await ventana.locator(".confirm-delete").click();
     await esperarAviso(pagina, "Datos actualizados");
     await pagina.locator(".topbar-welcome", { hasText: `Vendedor ${nombre}` }).waitFor({ timeout: 10000 });
     // Contraseña: la actual equivocada y la confirmación distinta avisan en la tarjeta
     const seguridad = pagina.locator("section.profile-card", { hasText: "Seguridad" });
-    const cambiar = async (actual, nueva, confirmacion = nueva) => {
+    // El ojo muestra lo que se escribe y lo vuelve a ocultar
+    const campoActual = seguridad.locator("input[name=actual]");
+    const ojo = seguridad.locator(".password-input", { has: pagina.locator("input[name=actual]") }).locator(".password-toggle");
+    await campoActual.fill(CLAVE);
+    await ojo.click();
+    if ((await campoActual.getAttribute("type")) !== "text") problemas.push("el ojo no muestra la contraseña");
+    await ojo.click();
+    if ((await campoActual.getAttribute("type")) !== "password") problemas.push("el ojo no vuelve a ocultar la contraseña");
+    // Con los datos completos, el cambio de contraseña se confirma en una ventana
+    const cambiar = async (actual, nueva, confirmacion = nueva, confirmar = true) => {
       await seguridad.locator("input[name=actual]").fill(actual);
       await seguridad.locator("input[name=nueva]").fill(nueva);
       await seguridad.locator("input[name=confirmacion]").fill(confirmacion);
       await seguridad.locator("button[type=submit]").click();
+      if (confirmar) await pagina.locator(".confirm-modal .confirm-delete", { hasText: "Sí, cambiar contraseña" }).click();
     };
-    await cambiar(CLAVE, "Otra-clave-123", "Otra-clave-124");
+    await cambiar(CLAVE, "Otra-clave-123", "Otra-clave-124", false);
     await seguridad.locator(".form-error", { hasText: "confirmación" }).waitFor({ timeout: 10000 });
     await cambiar("clave-equivocada", "Otra-clave-123");
     await seguridad.locator(".form-error", { hasText: "no es correcta" }).waitFor({ timeout: 10000 });

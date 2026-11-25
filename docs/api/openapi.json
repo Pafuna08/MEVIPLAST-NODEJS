@@ -396,7 +396,7 @@
           "Autenticación"
         ],
         "summary": "Actualizar mi perfil",
-        "description": "CR-028: cambia el nombre (máx. 120), el usuario (3 a 50, sin espacios; se guarda en minúsculas) y el correo de la cuenta del token; el rol no cambia. Devuelve un token nuevo con el usuario vigente.",
+        "description": "CR-028: cambia el nombre (máx. 120), el usuario (3 a 50, sin espacios; se guarda en minúsculas) y el correo de la cuenta del token; el rol no cambia. Devuelve un token nuevo con el usuario vigente. Si los datos son los mismos (tras quitar espacios y pasar usuario y correo a minúsculas) no escribe nada y devuelve cambios vacío.",
         "requestBody": {
           "required": true,
           "content": {
@@ -457,6 +457,18 @@
                     },
                     "token": {
                       "type": "string"
+                    },
+                    "cambios": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "nombre",
+                          "usuario",
+                          "correo"
+                        ]
+                      },
+                      "description": "MEVI-117: datos que cambiaron; vacío si eran los mismos (no se escribe nada)"
                     }
                   }
                 }

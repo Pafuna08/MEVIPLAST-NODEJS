@@ -2683,3 +2683,73 @@ button.user-menu:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* MEVI-117: el ojo al final de los campos de contraseña (Mi perfil y Usuarios) */
+.password-input {
+  position: relative;
+  display: block;
+}
+.data-form .password-input input {
+  padding-right: 48px;
+}
+/* Edge pone su propio ojo en los campos de contraseña: se oculta para que no salgan dos */
+.password-input input::-ms-reveal,
+.password-input input::-ms-clear {
+  display: none;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  width: 36px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: var(--steel);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.password-toggle:hover,
+.password-toggle[aria-pressed="true"] {
+  color: var(--navy);
+  background: #e8eef5;
+}
+.password-toggle:focus-visible {
+  outline: 3px solid rgba(0, 31, 84, 0.35);
+  outline-offset: 1px;
+}
+/* Mi perfil: aviso cuando no hay nada que guardar y ventana con los cambios (antes → después) */
+.form-notice {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #b9d3ef;
+  border-radius: 10px;
+  color: #1d4f86;
+  background: #eef5fd;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.profile-changes dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.profile-changes .change-before {
+  color: var(--steel);
+  text-decoration: line-through;
+}
+.profile-changes .icono {
+  color: var(--steel);
+}
+.confirm-note {
+  margin: -6px 22px 16px;
+  color: #7a4d05;
+  font-size: 0.85rem;
+  font-weight: 700;
+}

@@ -468,7 +468,8 @@ export default function DashboardApp() {
     try {
       const result = await api("/api/auth/perfil", token, { method: "PUT", body: JSON.stringify(payload) });
       renewSession(result.token, result.usuario);
-      setToast("Datos actualizados.");
+      // MEVI-117: el aviso solo dice «actualizados» si el servidor cambió algo
+      setToast(result.cambios && !result.cambios.length ? "No había cambios para guardar." : "Datos actualizados.");
       setReloadKey((value) => value + 1);
       return null;
     } catch (cause) {
