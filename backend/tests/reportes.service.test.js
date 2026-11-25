@@ -124,6 +124,13 @@ test("HU-022: rendimientoOperarios consulta las órdenes del periodo sin las can
     if (sql.includes("FROM usuarios u")) {
       return [[{ id: 3, nombre: "Operario", ordenes: 1, finalizadas: 0, meta: "500.00", producido: "125.00" }]];
     }
+    // CP-117 · MEVI-120: lo de cada operario por referencia
+    if (sql.includes("GROUP BY p.responsable_id, p.producto")) {
+      return [[
+        { operario_id: 3, producto: "Sencilla PP", medida: "6 x 9", calibre: "1", color: "Natural", ordenes: 1, meta: "400.00", producido: "100.00" },
+        { operario_id: 3, producto: "Cargadera", medida: "T20", calibre: "2", color: "Blanco", ordenes: 1, meta: "100.00", producido: "25.00" },
+      ]];
+    }
     return [[{ usuario_id: 3, unidades: "125.00" }]];
   };
   t.after(() => {
@@ -131,6 +138,13 @@ test("HU-022: rendimientoOperarios consulta las órdenes del periodo sin las can
   });
 
   const reporte = await reportesService.rendimientoOperarios("semanal", new Date(2026, 10, 8));
+  assert.deepEqual(reporte.operarios[0].referencias.map((r) => [r.producto, r.medida, r.producido, r.meta, r.cumplimiento]), [
+    ["Sencilla PP", "6 x 9", 100, 400, 25],
+    ["Cargadera", "T20", 25, 100, 25],
+  ]);
+  const consultaReferencias = queries.find(({ sql }) => sql.includes("GROUP BY p.responsable_id, p.producto"));
+  assert.match(consultaReferencias.sql, /estado <> 'cancelado'/);
+  assert.ok(consultaReferencias.sql.includes("LEAST(p.cantidad_producida, p.cantidad)"), "lo producido por referencia no supera su meta");
   assert.equal(reporte.desde, "2026-11-02");
   assert.equal(reporte.hasta, "2026-11-09");
   assert.equal(reporte.operarios[0].cumplimiento, 25);

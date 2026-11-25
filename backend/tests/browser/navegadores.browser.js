@@ -727,6 +727,17 @@ const FLUJOS = [
     await filaOperario.waitFor({ timeout: 10000 });
     const cumplimiento = (await filaOperario.locator(".performance-cell strong").textContent()).trim();
     if (!/^\d+(,\d)? %$/.test(cumplimiento)) throw new Error(`cumplimiento «${cumplimiento}»`);
+    // MEVI-120: la barra del operario abre el detalle por referencia, con su meta y cumplimiento; Esc la cierra
+    const barra = pagina.locator(".stacked-row", { hasText: "Navegador operario" });
+    if (await barra.count()) {
+      await barra.click();
+      const detalle = pagina.locator(".bar-detail-modal");
+      await detalle.waitFor({ timeout: 10000 });
+      if (!(await detalle.locator("tbody tr").count())) problemas.push("el detalle de la barra no trae referencias");
+      if (!(await detalle.textContent()).includes("Cumplimiento")) problemas.push("el detalle no muestra el cumplimiento por referencia");
+      await pagina.keyboard.press("Escape");
+      await detalle.waitFor({ state: "detached", timeout: 10000 });
+    }
     const [descarga] = await Promise.all([pagina.waitForEvent("download"), pagina.click("text=Descargar Excel")]);
     const nombre = descarga.suggestedFilename();
     if (!(await abrePdf(contexto, pagina.locator(".report-actions button", { hasText: "Abrir PDF" })))) problemas.push("«Abrir PDF» no abrió el reporte de rendimiento");

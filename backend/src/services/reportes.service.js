@@ -220,7 +220,40 @@ async function rendimientoOperarios(periodo, ahora = new Date()) {
   const unidadesPorUsuario = new Map(
     unidades.map((fila) => [fila.usuario_id, Number(fila.unidades)]),
   );
-  return { periodo, ...rango, ...calcularCumplimiento(filas, unidadesPorUsuario) };
+  // MEVI-120: lo de cada operario por referencia (línea, medida, calibre y color), con las mismas órdenes del
+  // cumplimiento, para la gráfica por operario y su ventana de detalle
+  const [referencias] = await pool.query(
+    `SELECT p.responsable_id AS operario_id, p.producto, p.medida, p.calibre, p.color,
+            COUNT(*) AS ordenes, SUM(p.cantidad) AS meta,
+            SUM(LEAST(p.cantidad_producida, p.cantidad)) AS producido
+     FROM produccion p
+     JOIN usuarios u ON u.id = p.responsable_id AND u.rol = 'operario' AND u.activo = 1
+     WHERE p.estado <> 'cancelado' AND p.fecha_inicio >= ? AND p.fecha_inicio < ?
+     GROUP BY p.responsable_id, p.producto, p.medida, p.calibre, p.color
+     ORDER BY producido DESC`,
+    [rango.desde, rango.hasta],
+  );
+  const porOperario = new Map();
+  for (const fila of referencias) {
+    if (fila.operario_id === undefined || fila.operario_id === null) continue;
+    const meta = Number(fila.meta || 0);
+    const producido = Number(fila.producido || 0);
+    const lista = porOperario.get(fila.operario_id) || [];
+    lista.push({
+      producto: fila.producto,
+      medida: fila.medida,
+      calibre: fila.calibre,
+      color: fila.color,
+      ordenes: Number(fila.ordenes || 0),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+    });
+    porOperario.set(fila.operario_id, lista);
+  }
+  const resultado = calcularCumplimiento(filas, unidadesPorUsuario);
+  resultado.operarios = resultado.operarios.map((operario) => ({ ...operario, referencias: porOperario.get(operario.id) || [] }));
+  return { periodo, ...rango, ...resultado };
 }
 
 async function resumenProduccion() {
