@@ -2753,3 +2753,195 @@ button.user-menu:focus-visible {
   font-size: 0.85rem;
   font-weight: 700;
 }
+
+/* MEVI-118: revisión del panel en el celular */
+/* Inicio: «Avance de órdenes» y «Requiere atención» uno debajo del otro. La regla de 1050 px ya lo decía,
+   pero la columna mínima de 280 px del rediseño la anulaba y dejaba el avance en una franja angosta */
+@media (max-width: 1050px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* «Volver a reportes» con la flecha como ícono */
+.primary-action.back-action {
+  gap: 6px;
+}
+/* Menú lateral: botón con ícono y fondo oscuro detrás del menú abierto, que lo cierra al tocarlo */
+.sidebar-toggle {
+  border-radius: 10px;
+  color: var(--navy);
+}
+.sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 780px) {
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    display: block;
+    background: rgba(1, 16, 28, 0.5);
+  }
+  /* Botones del encabezado (formularios y reportes) a lo ancho y del mismo tamaño */
+  .page-intro > .form-toggles,
+  .page-intro > .report-actions {
+    width: 100%;
+  }
+  .page-intro > .form-toggles .primary-action,
+  .page-intro > .report-actions .primary-action {
+    flex: 1 1 auto;
+  }
+}
+@media (max-width: 780px) {
+  /* Filas de órdenes (Inicio, Asignar tareas, Seguimiento, Registrar producción, Mi historial): el producto y
+     el avance a lo ancho y, debajo, prioridad, estado y botones de a dos por línea. Antes una regla de 780 px
+     las volvía «flex» y la barra de avance se encogía hasta desaparecer */
+  .order-row.aligned,
+  .order-row.aligned.read-only,
+  .order-row.aligned.with-consume {
+    display: grid;
+  }
+  .order-progress-row,
+  .order-row.aligned,
+  .order-row.aligned.read-only,
+  .order-row.aligned.with-consume,
+  .order-progress-row.assign-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+  }
+  .order-progress-row > :first-child,
+  .order-progress-row:not(.assign-row) > .order-cell:nth-child(2),
+  .order-row.aligned > :first-child,
+  .order-row.aligned > .order-cell:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+  .order-row.aligned > .order-cell:empty {
+    display: none;
+  }
+  .order-row.aligned > .order-cell .progress-meter,
+  .order-progress-row > .order-cell .progress-meter {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+  /* Los botones de cada orden (Consumo, Editar, Cancelar) del mismo ancho */
+  .order-row.aligned > .order-cell > .compact-action {
+    width: 100%;
+  }
+}
+@media (max-width: 640px) {
+  /* Mi historial: los cuatro periodos en dos filas iguales */
+  .report-period-picker.history-periods {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .history-periods .report-period-button {
+    text-align: center;
+  }
+}
+@media (max-width: 640px) {
+  /* Tablas en tarjetas: cada fila es una tarjeta y cada dato lleva a la izquierda el nombre de su columna,
+     en lugar de esconder las columnas de la derecha detrás de un desplazamiento horizontal */
+  .table-wrap.card-table {
+    overflow: visible;
+  }
+  .card-table table,
+  table.card-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+  }
+  .card-table thead,
+  table.card-table thead {
+    display: none;
+  }
+  .card-table tbody,
+  table.card-table tbody,
+  .card-table tr,
+  table.card-table tr {
+    display: block;
+  }
+  .card-table tr,
+  table.card-table tr {
+    padding: 10px 16px;
+    border-bottom: 1px solid #edf0f3;
+  }
+  table.receipt-table.card-table tr {
+    padding: 10px 0;
+  }
+  /* La etiqueta ocupa la primera columna (todas las filas que haga falta) y el contenido de la celda va en
+     la segunda, uno debajo del otro: si la etiqueta ocupa dos líneas, la fila crece y nada se monta */
+  .card-table td,
+  table.card-table td {
+    display: grid;
+    grid-template-columns: 36% minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    min-height: 30px;
+    padding: 6px 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .card-table td > *,
+  table.card-table td > * {
+    grid-column: 2;
+  }
+  /* Botones, enlaces y etiquetas de color conservan su tamaño (no se estiran a lo ancho) */
+  .card-table td > :is(button, a, .status, .role-chip, .movement-chip, .audit-action),
+  table.card-table td > :is(button, a, .status) {
+    justify-self: start;
+  }
+  .card-table td::before,
+  table.card-table td::before {
+    content: attr(data-label);
+    grid-column: 1;
+    grid-row: 1 / span 9;
+    padding-top: 2px;
+    color: var(--steel);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+  /* La fila de «No hay datos» no tiene columna */
+  .card-table td:not([data-label]),
+  table.card-table td:not([data-label]) {
+    display: block;
+  }
+  .card-table td:not([data-label])::before,
+  table.card-table td:not([data-label])::before {
+    content: none;
+  }
+  /* Inicio: los accesos rápidos a lo ancho y del mismo tamaño */
+  .home-hero-actions {
+    width: 100%;
+  }
+  .hero-action {
+    flex: 1 1 auto;
+  }
+  /* Ventas: las líneas en dos columnas más bajas, para llegar pronto al formulario de la venta */
+  .sales-catalog .product-family-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .sales-catalog .product-family-card {
+    gap: 6px;
+    padding: 12px;
+  }
+  .sales-catalog .product-family-card strong {
+    font-size: 0.9rem;
+  }
+  .sales-catalog .product-family-card b {
+    font-size: 0.98rem;
+  }
+  .sales-catalog .product-family-card > span:not(.family-stock-bar):not(.product-family-link):not(.family-empty) {
+    font-size: 0.74rem;
+  }
+  .sales-catalog .product-family-card .product-family-link,
+  .sales-catalog .family-empty {
+    font-size: 0.78rem;
+  }
+}

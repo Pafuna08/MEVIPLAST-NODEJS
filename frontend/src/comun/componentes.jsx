@@ -89,19 +89,27 @@ export function Paginacion({ control, etiqueta = "Páginas" }) {
   );
 }
 
+// MEVI-118: en el celular cada fila se ve como una tarjeta y cada celda lleva el nombre de su columna
+// (data-label), en lugar de esconder las columnas de la derecha detrás de un desplazamiento horizontal
+function withColumnLabels(cells, columns) {
+  if (!React.isValidElement(cells)) return cells;
+  const children = cells.type === React.Fragment ? React.Children.toArray(cells.props.children) : [cells];
+  return children.map((cell, index) => (React.isValidElement(cell) && cell.type === "td" ? React.cloneElement(cell, { "data-label": columns[index] }) : cell));
+}
+
 // Tabla en páginas de 10; porPagina={0} la muestra completa (Auditoría ya pagina en el servidor)
 export function DataTable({ columns, rows, empty = "No hay datos para mostrar.", porPagina = POR_PAGINA, etiqueta = "Páginas de la tabla" }) {
   const paginas = usePaginacion(rows, { porPagina: porPagina || Math.max(rows.length, 1) });
   return (
     <>
-      <div className="table-wrap">
+      <div className="table-wrap card-table">
         <table>
           <thead>
             <tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr>
           </thead>
           <tbody>
             {rows.length ? (
-              paginas.visibles.map((row, index) => <tr key={row.key ?? index} className={row.className} onClick={row.onClick}>{row.cells}</tr>)
+              paginas.visibles.map((row, index) => <tr key={row.key ?? index} className={row.className} onClick={row.onClick}>{withColumnLabels(row.cells, columns)}</tr>)
             ) : (
               <tr><td colSpan={columns.length}>{empty}</td></tr>
             )}

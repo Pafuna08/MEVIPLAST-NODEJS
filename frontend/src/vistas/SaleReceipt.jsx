@@ -25,18 +25,18 @@ export function SaleReceipt({ sale, onClose, onOpenPdf }) {
           <div><dt>Cliente</dt><dd>{sanitizeText(sale.cliente)}</dd></div>
           <div><dt>Atendido por</dt><dd>{sanitizeText(sale.vendedor || "—")}</dd></div>
         </dl>
-        <table className="receipt-table">
+        <table className="receipt-table card-table">
           <thead><tr><th>Producto</th><th>Presentación</th><th>Unidades</th><th>Precio por paquete</th><th>Total</th></tr></thead>
           <tbody>
             {items.map((item, index) => {
               const variante = variantOf(item);
               return (
                 <tr key={item.id ?? index}>
-                  <td><strong>{sanitizeText(item.familia || item.producto)}</strong>{variante && <small>{variante}</small>}</td>
-                  <td>{packagesLabel(item)}</td>
-                  <td>{number(item.cantidad)}</td>
-                  <td>{money(item.precio_paquete)}</td>
-                  <td>{money(item.total)}</td>
+                  <td data-label="Producto"><strong>{sanitizeText(item.familia || item.producto)}</strong>{variante && <small>{variante}</small>}</td>
+                  <td data-label="Presentación">{packagesLabel(item)}</td>
+                  <td data-label="Unidades">{number(item.cantidad)}</td>
+                  <td data-label="Precio por paquete">{money(item.precio_paquete)}</td>
+                  <td data-label="Total">{money(item.total)}</td>
                 </tr>
               );
             })}

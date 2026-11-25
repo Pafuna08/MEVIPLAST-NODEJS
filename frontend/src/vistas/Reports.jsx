@@ -76,7 +76,7 @@ function InventoryReport({ data }) {
   const bajos = materias.filter((item) => item.bajo_stock).length;
   return (
     <>
-      <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
+      <a className="primary-action secondary back-action" href="/dashboard.html#reportes"><Icono nombre="anterior" size={16} />Volver a reportes</a>
       <Intro icon="inventario" title="Reporte de inventario" description="Existencias actuales de producto terminado y de materias primas, de menor a mayor cantidad." />
       <section className="stats-grid">
         <article className="stat-card"><div className="stat-head"><span>Producto terminado</span></div><strong>{number(unidades)}</strong><small>Unidades en {number(productos.length)} referencias</small></article>
@@ -107,7 +107,7 @@ export function ReportDetail({ data, onExportExcel, onOpenPdf, onReceipt }) {
   const fechas = `${data.desde} - ${data.hastaInclusivo}`;
   return (
     <>
-      <a className="primary-action secondary back-action" href="/dashboard.html#reportes">← Volver a reportes</a>
+      <a className="primary-action secondary back-action" href="/dashboard.html#reportes"><Icono nombre="anterior" size={16} />Volver a reportes</a>
       <Intro
         icon={{ produccion: "produccion", ventas: "ventas", rendimiento: "rendimiento" }[reporteTipo]}
         title={`Reporte de ${titulo} ${data.periodo}`}
