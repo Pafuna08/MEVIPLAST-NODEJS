@@ -9,7 +9,8 @@
   --ink: #17243a;
   --steel: #5f6e81;
   --success: #23855e;
-  --warning: #a96908;
+  /* DEF-041: #a96908 daba 4,46:1 sobre blanco; #9a5f05 da 5,2:1 (WCAG AA) */
+  --warning: #9a5f05;
   --sidebar: 250px;
 }
 * {
