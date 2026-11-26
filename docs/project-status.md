@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Corte: 25/11/2026, rama `develop` con los PR #1 a #125 fusionados. Sin etiqueta de liberación. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (desde el PR #53) está en curso.
+Corte: 26/11/2026. Versión estable `v1.0.0` en `main` (PR #127); `develop` con los PR #1 a #126. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (PR #53 a #127) cerró con la versión 1.0.0.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
 - Pruebas: [`testing/strategy.md`](testing/strategy.md). 164 unitarias, 24 E2E con MySQL, prueba de carga y 21 flujos en cada uno de Edge, Chrome y Firefox (63); cobertura de 79,0 % con unitarias y 91,6 % con E2E (medida el 25/11/2026); contraste WCAG AA medido en 56 vistas sin fallas (EV-2026-11-25-10).
@@ -15,10 +15,10 @@ Corte: 25/11/2026, rama `develop` con los PR #1 a #125 fusionados. Sin etiqueta 
 
 Las 25 historias están implementadas (25 de 25) y los 29 requisitos funcionales también (29 de 29): el 24/11/2026 se completaron HU-004, HU-010, HU-020 y HU-023 (PR #107 a #109) y HU-017 quedó cerrada por la decisión CR-025 (permisos fijos por rol). MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes; las preguntas del Acta de Aceptación por Rol (MEV-ACT-01) se resolvieron por esa delegación el 08/11/2026 (DEF-007 y HU-022 incluidos). La sesión de aceptación con usuarios de la empresa no se realizó y el acta no tiene firma del cliente.
 
-## Pendiente antes de `v1.0.0`
+## Pendiente después de `v1.0.0`
 
+- Aprobación del instructor de la entrega y del paquete documental.
 - Que Carlos Herrera revise los PR desde el #124. Ya revisó los 112 PR del #12 al #123: aprobó 104 en GitHub y dio visto bueno a 8 en su commit de fusión (#55 a #58 y #60 a #63). La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
-- Decisión del equipo de crear la etiqueta `v1.0.0` y el PR de `develop` a `main`.
 
 ## Limitaciones conocidas de la entrega
 

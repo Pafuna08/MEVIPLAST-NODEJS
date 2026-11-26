@@ -1,8 +1,14 @@
 # Changelog
 
-Los cambios relevantes se registran aquí. El proyecto todavía no tiene una versión estable etiquetada.
+Los cambios relevantes se registran aquí. La versión estable `v1.0.0` se etiquetó el 26/11/2026 en `main`.
 
-## Unreleased - 2026-10-27
+## Unreleased
+
+Sin cambios desde la versión 1.0.0.
+
+## 1.0.0 - 2026-11-26
+
+Primera versión estable: reúne todo lo desarrollado hasta el 26/11/2026 (PR #1 a #127), con las 25 historias y los 29 requisitos funcionales implementados. MEVIPLAST delegó en el equipo las decisiones pendientes y la aprobación del instructor sigue pendiente.
 
 ### Security
 
@@ -64,6 +70,7 @@ Los cambios relevantes se registran aquí. El proyecto todavía no tiene una ver
 
 ### Changed
 
+- Versión estable 1.0.0 (MEVI-123): `main` recibe `develop` (PR #127) y se etiqueta `v1.0.0`; la guía de contribución explica cómo seguir cambiando después de una versión; el estado del proyecto, el README y el paquete ADSO dejan de decir «etiqueta pendiente».
 - Documentación al día con los PR #112 a #124 (MEVI-122): cifras medidas el 25/11/2026 (164 unitarias en 38 archivos, 24 E2E, 63 flujos, 60 operaciones, cobertura de 79,0 % con unitarias y 91,6 % con E2E); README sin la impresión del navegador (el servidor genera los PDF desde los PR #89 y #90), con Mi perfil, el panel en el celular y las bobinas por tamaño del rollo; la estrategia de pruebas lista `perfil.test.js`, `auth.correo-exacto.test.js` y `seguridad-auditoria.test.js`, que faltaban; trazabilidad con CP-114, CP-115 y CP-117; el estado del proyecto registra que Carlos revisó los 112 PR del #12 al #123 y el respaldo de la nube del 25/11/2026. En el paquete ADSO: capturas del diseño nuevo en el Manual de usuario y en el documento UX (más Mi perfil, el consumo del supervisor y el celular), procedimientos y mensajes nuevos, CR-026 a CR-028, CP-113 a CP-117, DEF-040, DEF-041, EV-054 a EV-063 y CIC-18; además, la matriz de permisos del Alcance (el supervisor no registra ni consulta ventas desde DEF-007 y CR-021) y el catálogo de endpoints de Arquitectura (faltaban 10 operaciones y 7 permisos estaban desactualizados) quedaron iguales al código.
 - Mi perfil confirma los cambios (MEVI-117, pedido del usuario): «Guardar cambios» sin cambios avisa «No hay cambios para guardar» y no envía nada (el servidor tampoco escribe ni audita si los datos son los mismos y responde `cambios: []`); con cambios, una ventana muestra cada dato antes → después para confirmar, y el cambio de contraseña también se confirma. Los campos de contraseña de Mi perfil, Usuarios, el inicio de sesión (antes decía «Ver») y la recuperación tienen un ojo para mostrar u ocultar lo que se escribe (EV-2026-11-25-07).
 - «Registrar material» pide el **tamaño del rollo** y su **unidad de medida** (pulgadas o centímetros) en lugar de la medida «ancho x largo» (CR-027, MEVI-115): número mayor que cero con hasta 2 decimales, hasta 200 pulgadas o 500 centímetros; se guarda como «28 pulg» o «27.5 cm». Se mantienen el peso del rollo como existencia inicial, el material y el color de sus listas, el calibre con su formato y una sola bobina por variante. También en «+ Crear nuevo material…». La API recibe `tamano_rollo` y `unidad_medida` en `POST /api/materia-prima`. Las bobinas anteriores conservan su medida (EV-2026-11-25-05).

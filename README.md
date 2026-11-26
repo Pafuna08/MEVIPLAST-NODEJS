@@ -2,7 +2,7 @@
 
 Sistema web interno para apoyar la gestión de producción, materias primas, inventario terminado, ventas y reportes de MEVIPLAST.
 
-**Estado:** proyecto académico. La rama `develop` integra los PR #1 a #125; todavía no hay etiqueta de liberación. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`docs/requirements/decisiones-por-delegacion.md`](docs/requirements/decisiones-por-delegacion.md)); no hubo sesión de aceptación por rol con usuarios de la empresa. Se verificaron la instalación desde un clon nuevo, el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
+**Estado:** proyecto académico. La versión estable `v1.0.0` está en `main` desde el 26/11/2026 (PR #127); `develop` integra los PR #1 a #126 y sigue recibiendo cambios. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`docs/requirements/decisiones-por-delegacion.md`](docs/requirements/decisiones-por-delegacion.md)); no hubo sesión de aceptación por rol con usuarios de la empresa. Se verificaron la instalación desde un clon nuevo, el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
 
 ## Funcionalidad presente en `develop`
 
