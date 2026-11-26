@@ -65,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-161 pruebas unitarias y de rutas con `node:test` (161 aprobadas el 2026-11-24), en 37 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+164 pruebas unitarias y de rutas con `node:test` (164 aprobadas el 2026-11-25), en 38 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `api-docs.test.js` (4): Swagger UI se publica en `/api-docs` con sus archivos locales y el mismo contrato `docs/api/openapi.json`; la API sigue igual (401 sin token, 404 fuera de ruta y nada nuevo dentro de `/api`); `API_DOCS=off` no la publica, y sin el archivo del contrato la aplicación arranca y `/api-docs` responde 404 (CR-024, CP-103).
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
@@ -75,6 +75,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `auth.smtp.test.js` (1): la recuperación entrega el correo a un servidor SMTP local con el enlace de un solo uso.
+- `auth.correo-exacto.test.js` (4): la recuperación y el recordatorio de usuario solo responden al correo exacto (no a uno equivalente por la collation) y envían a la dirección guardada, con TLS (auditoría de seguridad, CP-104).
 - `entorno.test.js` (1): falla si se quita la carga de `tests/entorno-pruebas.js` (las pruebas unitarias no usan la base de `.env`).
 - `conexion.test.js` (5): en local la conexión no usa SSL; los valores pegados con espacios o saltos de línea al final se limpian; en la nube va cifrada, verifica el certificado (de la variable, con saltos de línea como `\n`, o de un archivo) y exige TLS 1.2; la zona horaria se valida antes de usarla en SQL.
 - `frontend.routes.test.js` (3): el servidor no publica el código fuente del frontend, `package.json`, `node_modules`, la configuración ni rutas con `..` (404); las direcciones `/`, `/login.html`, `/recuperar.html` y `/dashboard.html` abren la aplicación React; sin build responden 404 y no un error (DEF-028).
@@ -90,9 +91,10 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `mensajes.test.js` (1): los mensajes de la API que ve el usuario llevan tildes y ñ (DEF-029).
 - `materiaPrima.service.test.js` (4): registro de bobinas, validaciones, compra transaccional y rollback por stock insuficiente.
 - `numeros.test.js` (7): lectura estricta de números («2abc», «1e5» y «0x10» no son números), enteros de 1 a 1 000 000, kg con 2 decimales hasta 100 000, metas y avances enteros, ingresos y salidas con tope, bobina única por variante (409) y ventas de 50, 100 o 500 unidades por paquete, hasta 1 000 paquetes y $100 000 000 (DEF-022, CR-018).
-- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 57 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
+- `openapi.test.js` (2): el contrato `docs/api/openapi.json` tiene exactamente las 60 operaciones registradas en Express, y cada ruta protegida declara roles y respuestas 401 y 403.
+- `perfil.test.js` (2): «Mi perfil» de cualquier rol con base de datos simulada (CR-028): sin token 401, validaciones, usuario repetido 409, el rol se ignora, solo los datos propios y sin la clave (CP-115); los mismos datos con otros espacios o mayúsculas responden `cambios: []` sin escribir (CP-116); cambiar la contraseña exige la actual, la nueva de 8 a 128, cuenta la actual equivocada como intento fallido y revoca las demás sesiones (CP-115).
 - `production.service.test.js` (17): edición parcial sin quitar la materia prima (RN-026), plantillas del catálogo con variante y materia prima, administrador y supervisor solo cancelan (CR-013), alcance del supervisor y orden por prioridad, observación del avance en el movimiento (máx. 255), historial del operario por periodo, registro de avance, variante obligatoria al crear y editar, y avance sumado a la variante de la orden (o creada si no existe).
-- `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta.
+- `reportes.service.test.js` (6): límites de periodo calendario, filtro de ventas por rango, páginas de la bitácora (20 por defecto, de 1 a 100, del más reciente al más antiguo) y cumplimiento de la meta por operario (HU-022): porcentaje por operario y total, orden de mayor a menor, operario sin órdenes sin porcentaje, órdenes canceladas excluidas y producido limitado a la meta; lo producido por cada operario dividido por referencia (CP-117).
 - `reportes.filtros.test.js` (4): el detalle de producción filtra por operario y producto con valores enlazados, sin filtros no agrega condiciones, un operario inválido responde 400 (HU-004, CP-107) y el reporte de inventario trae las materias primas con su alerta (HU-023, CP-108).
 - `reportesPdf.test.js` (3): el reporte en PDF es un PDF válido con su título y el nombre de archivo del periodo; uno largo sigue en varias páginas; un periodo o un tipo inválidos se rechazan.
 - `reportesExcel.service.test.js` (3): hojas, montos numéricos con formato, hora local, texto con «=» sin fórmula, periodo inválido y Excel de rendimiento con una fila por operario.
@@ -100,8 +102,9 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `role-access.routes.test.js` (1): permisos HTTP de lectura por rol y registro de ventas solo para administrador y vendedor (DEF-007), con base de datos simulada; el supervisor no consulta el historial de materias primas, pero lista las bobinas, ve el stock bajo y registra consumo (CR-026, CP-113).
 - `sanitize.test.js` (5): sanitización de texto, números, objetos y arreglos dentro del cuerpo (las líneas de una venta) (un número mal escrito como «2abc» queda como texto para que el servicio lo rechace); los campos de texto cuya clave contiene «id» no se convierten en número.
 - `schema.test.js` (5): el esquema se carga en la base indicada por `DB_NAME`, el nombre rechaza caracteres de inyección, `db:init` explica un MySQL apagado o un usuario rechazado (DEF-016), calcula las migraciones pendientes (DEF-017) y la semilla DEMO solo usa columnas de `schema.sql` (DEF-020).
+- `seguridad-auditoria.test.js` (6): cabeceras contra marcos de otro sitio y sin `x-powered-by`, token de recuperación inexistente rechazado sin calcular bcrypt, el supervisor sin el cliente de las ventas en el historial de inventario (CR-021) ni consumo en órdenes de otro supervisor, la línea se valida con la conexión de la transacción y el sanitizador quita U+FFFE y U+FFFF (CP-105 y CP-106).
 - `usuarios.service.test.js` (5): nadie se quita su propio rol de administrador, se desactiva ni se elimina; con otro administrador activo sí se cambia a un admin; siempre queda al menos uno activo; el admin sí cambia su propio nombre o correo (DEF-021).
-- `variantes.test.js` (8): medida «ancho x largo» normalizada, tallas T15 a T30 solo para Cargadera (CR-019), calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
+- `variantes.test.js` (9): medida «ancho x largo» normalizada, tamaño del rollo de las bobinas con su unidad y hasta 2 decimales (CR-027, CP-114), tallas T15 a T30 solo para Cargadera (CR-019), calibre numérico, color de la lista fija (RN-025), rechazo de «eddc», «eew» o «Fdsa», y materia prima obligatoria y existente en la orden (RN-026).
 - `ventas.service.test.js` (8): paquetes de 50, 100 o 500 unidades (CR-018), descuento por paquetes, venta con varios productos (una línea, un descuento y un movimiento por producto; todo o nada si falta stock), reglas de la venta (cliente, al menos un producto, hasta 20, sin variantes repetidas, tope del total), aislamiento del vendedor y comprobante con todas sus líneas (CR-022).
 
 CI: instalación por lockfile, lint, pruebas, build y la suite E2E con MariaDB.
@@ -113,12 +116,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-24, sobre `develop` al PR #110 más la prueba de RF-019 (161 unitarias y 24 E2E):
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-25, sobre `develop` al PR #123 (164 unitarias y 24 E2E):
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 76,8 % | 83,5 % | 75,4 % |
-| Unitarias + E2E | 91,3 % | 83,9 % | 94,1 % |
+| Unitarias | 79,0 % | 82,7 % | 79,0 % |
+| Unitarias + E2E | 91,6 % | 83,7 % | 95,1 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

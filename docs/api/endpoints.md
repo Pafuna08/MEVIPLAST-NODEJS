@@ -11,7 +11,7 @@ El mismo servidor publica el contrato con Swagger UI (CR-024, pedido del instruc
 | Equipo local | http://localhost:3000/api-docs | http://localhost:3000/api-docs/openapi.json |
 | Demostración en Render | https://meviplast.onrender.com/api-docs | https://meviplast.onrender.com/api-docs/openapi.json |
 
-La página se arma con `openapi.json`, el archivo que vigila `openapi.test.js`, así que no se desfasa de las rutas. Agrupa las 57 operaciones por módulo y muestra, en cada una, sus parámetros, cuerpo, respuestas, roles (`x-roles`) y requisito (`x-requisitos`). Para probar: `POST /auth/login`, copiar el `token`, pulsar **Authorize** y pegarlo; «Try it out» envía las peticiones con ese token y la API aplica los mismos roles y validaciones que al panel. Las peticiones son reales: en la demostración, lo que se registre queda en la base.
+La página se arma con `openapi.json`, el archivo que vigila `openapi.test.js`, así que no se desfasa de las rutas. Agrupa las 60 operaciones por módulo y muestra, en cada una, sus parámetros, cuerpo, respuestas, roles (`x-roles`) y requisito (`x-requisitos`). Para probar: `POST /auth/login`, copiar el `token`, pulsar **Authorize** y pegarlo; «Try it out» envía las peticiones con ese token y la API aplica los mismos roles y validaciones que al panel. Las peticiones son reales: en la demostración, lo que se registre queda en la base.
 
 Los archivos de Swagger UI vienen con la dependencia `swagger-ui-express` (no se cargan de internet), así que la página también funciona en la red local de la empresa. `API_DOCS=off` la desactiva y `/api-docs` responde 404. La prueba `backend/tests/api-docs.test.js` lo verifica (CP-103).
 

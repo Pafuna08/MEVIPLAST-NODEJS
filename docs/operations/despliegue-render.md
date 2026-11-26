@@ -62,7 +62,7 @@ Cada fusión en `develop` vuelve a desplegar el servicio (`autoDeploy`). En **Ev
 | Iniciar sesión como `admin` | Entra al panel |
 | Registrar una venta y abrir el comprobante en PDF | La fecha sale en hora de Colombia |
 | Reporte diario | Incluye lo registrado hoy (hora de Colombia) |
-| `https://<servicio>.onrender.com/api-docs` | Swagger UI con las 57 operaciones de la API (CR-024) |
+| `https://<servicio>.onrender.com/api-docs` | Swagger UI con las 60 operaciones de la API (CR-024) |
 
 ## Variables nuevas
 
@@ -95,3 +95,4 @@ node ..\..\Respaldos_MEVIPLAST\herramientas_ADSO\respaldo_nube.js ..\..\Respaldo
 | Fecha | Archivo | Contenido | Restauración de prueba |
 | --- | --- | --- | --- |
 | 16/11/2026 | `meviplast_nube_20261116.sql` (31 kB) | 13 tablas: 6 usuarios, 10 órdenes, 7 ventas ($381 500), 88 eventos de auditoría, 15 migraciones | Correcta en MariaDB 10.4: mismas filas por tabla y el total de las ventas igual a la suma de su detalle |
+| 25/11/2026 | `meviplast_nube_20261125.sql` (124 kB) | 13 tablas con los datos de demostración de tres meses: 6 usuarios, 47 órdenes, 64 ventas ($4 322 295), 563 eventos de auditoría, 17 migraciones | Correcta en MariaDB 10.4: mismas filas por tabla y el total de las ventas igual a la suma de su detalle |
