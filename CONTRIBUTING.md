@@ -15,6 +15,16 @@
 
 Mantén una necesidad coherente por rama. No hagas commits directamente en `main` o `develop`.
 
+## Versiones
+
+`main` guarda solo las versiones entregadas. Después de una versión se sigue trabajando igual: cada cambio entra a `develop` por su rama y su PR. Para entregar una versión nueva:
+
+1. Registra los cambios en `CHANGELOG.md` bajo una sección con el número y la fecha (por ejemplo `## 1.1.0 - AAAA-MM-DD`).
+2. Abre un PR de `develop` a `main` con la plantilla y fusiónalo con un commit de fusión cuando el CI apruebe.
+3. Etiqueta la fusión en `main` con `vX.Y.Z` (`git tag -a v1.1.0 -m "..."` y `git push origin v1.1.0`). Usa el número menor (`1.0.1`) para correcciones y el siguiente (`1.1.0`) para funciones nuevas.
+
+Una corrección urgente sobre lo entregado va en `hotfix/<id>-<tema>` desde `main`, con su PR a `main`, su etiqueta y otro PR de la misma rama a `develop` para no perderla.
+
 ## Commits
 
 Usa Conventional Commits en español o inglés:
