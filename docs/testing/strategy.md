@@ -65,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-170 pruebas unitarias y de rutas con `node:test` (170 aprobadas el 2026-11-27), en 40 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+171 pruebas unitarias y de rutas con `node:test` (171 aprobadas el 2026-11-27), en 41 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `api-docs.test.js` (4): Swagger UI se publica en `/api-docs` con sus archivos locales y el mismo contrato `docs/api/openapi.json`; la API sigue igual (401 sin token, 404 fuera de ruta y nada nuevo dentro de `/api`); `API_DOCS=off` no la publica, y sin el archivo del contrato la aplicación arranca y `/api-docs` responde 404 (CR-024, CP-103).
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
@@ -84,6 +84,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `er.test.js` (2): el diagrama `docs/data/er.md` tiene todas las tablas y columnas de `schema.sql` y sus 17 claves foráneas con la regla de borrado.
 - `health-cors.routes.test.js` (3): health check con base de datos disponible (200) y caída (503 sin exponer el error), y CORS limitado a los orígenes configurados.
 - `inventario.consulta.test.js` (3): el inventario lista solo las líneas del catálogo con valores enlazados y en orden fijo; el historial de movimientos sale del más reciente al más antiguo, se filtra por producto y trae quién registró cada movimiento y su origen (RF-019, CP-112).
+- `inventario.permisos.test.js` (1): los ingresos, salidas e historial de producto terminado responden 403 al supervisor, al operario y al vendedor y no al administrador ni al almacenista; el supervisor sigue consultando las existencias y registrando el consumo de sus órdenes (DEF-044, CP-120).
 - `inventario.service.test.js` (5): variantes del catálogo, rechazo de líneas ajenas, salida manual con ledger, motivo obligatorio (y detalle si es «Otro») y motivo guardado en el movimiento y la auditoría.
 - `longitudes.test.js` (2): un texto más largo que su columna se rechaza con 400 y la variante respeta el largo de medida, calibre y color.
 - `lineas.test.js` (5): nombre de una línea nueva (limpio, de 3 a 60 caracteres, sin símbolos), lista de la tabla con las seis de base si falta, sin consultar la base para una línea de base, 409 si ya existe sin importar mayúsculas y auditoría, y una línea nueva medida en «ancho x largo» (CR-020).

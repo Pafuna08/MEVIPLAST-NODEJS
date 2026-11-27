@@ -1,6 +1,6 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop` al PR #137 (27/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop` al PR #138 (27/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`decisiones-por-delegacion.md`](decisiones-por-delegacion.md)); la sesión de aceptación por rol con usuarios de la empresa no se realizó.
 
@@ -57,7 +57,7 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 | RF-015 | Registrar compras y ajustes | Implementado | MVP | API-05 | CP-009, CP-010, CP-033, CP-062, CP-109 (costo y factura de la compra) |
 | RF-016 | Registrar consumo por orden | Implementado | MVP | API-05 | CP-033, CP-062, CP-113 (CR-026: el supervisor registra el consumo, pero no consulta el historial de movimientos) |
 | RF-017 | Consultar existencias y bajo stock | Implementado | MVP | API-04 | CP-020 |
-| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078, CP-081, CP-082, CP-090 (unidades enteras hasta 1 000 000, DEF-022), CP-095 (tallas de Cargadera, CR-019), CP-096 (líneas nuevas, CR-020) |
+| RF-018 | Registrar ingreso/salida de producto terminado | Implementado | MVP | API-08 | CP-004, CP-005, CP-006, CP-048, CP-067, CP-078, CP-081, CP-082, CP-090 (unidades enteras hasta 1 000 000, DEF-022), CP-095 (tallas de Cargadera, CR-019), CP-096 (líneas nuevas, CR-020), CP-120 (solo administrador y almacenista, DEF-044) |
 | RF-019 | Consultar inventario y movimientos | Implementado | MVP | API-08 | CP-112 (lista del catálogo e historial de movimientos) |
 | RF-020 | Registrar venta por paquetes | Implementado | MVP | API-09 | CP-024, CP-028, CP-078, CP-088 (lista de referencias), CP-091 (paquetes de 50, 100 o 500 y topes de venta, CR-018), CP-098 (varios productos por venta, CR-022) |
 | RF-021 | Descontar stock por venta | Implementado | MVP | API-09 | CP-025, CP-028, CP-031, CP-098 (todo o nada con varios productos) |
