@@ -11,10 +11,10 @@ flowchart LR
   Routes --> Controllers[Controladores]
   Controllers --> Services[Servicios]
   Services --> MySQL[(MySQL meviplast_db)]
-  Services -->|recuperación de cuenta| SMTP[Servidor SMTP]
+  Services -->|recuperación de cuenta| Correo[Servicio de correo: SMTP en la red local o API HTTPS de Brevo en Render]
 ```
 
-La API también genera los comprobantes de venta (datos que el panel imprime) y los reportes en Excel (`exceljs`, en `reportesExcel.service.js`). En cada petición protegida, `verificarToken` comprueba la firma del token y que el usuario siga activo y con el mismo rol (ADR-004).
+La API también genera los comprobantes de venta y los reportes en PDF (`pdfkit`, en `comprobantePdf.service.js` y `reportesPdf.service.js`; el panel los abre en otra pestaña) y en Excel (`exceljs`, en `reportesExcel.service.js`), y publica su contrato con Swagger UI en `/api-docs` (`utils/apiDocs.js`, CR-024). En cada petición protegida, `verificarToken` comprueba la firma del token y que el usuario siga activo y con el mismo rol (ADR-004).
 
 En desarrollo, Vite sirve el panel y proxifica `/api` al puerto `PORT` de `backend/.env` (por defecto 3000). En ejecución compilada, Vite genera `frontend/dist` y Express publica solo esa carpeta: la página base, los paquetes compilados y las imágenes. Las direcciones `/`, `/login.html`, `/recuperar.html` y `/dashboard.html` abren la misma aplicación, que carga la página que corresponde; cualquier otra dirección responde 404. El código fuente, `package.json`, `node_modules` y la configuración del frontend no se publican (DEF-028).
 
