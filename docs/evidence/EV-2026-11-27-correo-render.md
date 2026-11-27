@@ -26,4 +26,14 @@
 | Pruebas unitarias (`npm test`) | 168 de 168; CP-118 en `auth.brevo.test.js`: envío por Brevo sin SMTP, recordatorio por Brevo, enlace borrado si Brevo rechaza, 503 sin remitente |
 | Lint del backend; `git diff --check` | Sin errores |
 
-Pendiente en Render: crear la cuenta de Brevo con el buzón del proyecto, verificar el remitente y escribir `BREVO_API_KEY`, `SMTP_FROM` y `FRONTEND_URL` en el panel (pasos en `docs/operations/despliegue-render.md`, sección 6). La prueba en Render se agrega a esta evidencia cuando esté hecha.
+## Prueba en Render (27/11/2026)
+
+Configuración: cuenta de Brevo creada por el usuario con el buzón del proyecto; clave de API restringida a «Emails transaccionales» y escrita como `BREVO_API_KEY` en el panel de Render. `SMTP_FROM` y `FRONTEND_URL` vienen de `render.yaml` (PR #132). Despliegue `6b373f8`.
+
+| Prueba | Resultado |
+| --- | --- |
+| `POST /api/auth/recordar-usuario` con un correo que no existe | 200 (antes 503): el servicio ya tiene el correo configurado |
+| Recordatorio de usuario con el correo del administrador | 200; enviado por Brevo al buzón del proyecto |
+| Recuperación de contraseña con el correo del administrador | 200; el enlace quedó guardado en la base de la nube (solo se guarda si Brevo acepta el envío), con vencimiento a los 30 minutos |
+
+La clave de Brevo vence a 1 año y también tras 90 días sin uso: si se vence, se genera otra y se cambia `BREVO_API_KEY` en Render.

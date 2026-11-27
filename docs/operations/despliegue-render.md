@@ -108,4 +108,6 @@ Render (plan gratuito) no deja salir conexiones a los puertos SMTP, así que la 
 3. En Render, **meviplast → Environment → Add Environment Variable**: `BREVO_API_KEY` con la clave → **Save**. Render vuelve a desplegar solo.
 4. Probar en `https://meviplast.onrender.com/recuperar.html` con el correo de una cuenta: debe llegar el mensaje. Si la API responde 503, falta `BREVO_API_KEY` o `SMTP_FROM`; si responde 500, el registro del servicio muestra el motivo que dio Brevo.
 
+La clave de Brevo vence en la fecha que se elija al crearla (máximo 1 año) y también tras 90 días sin uso. Si la recuperación vuelve a responder 500, revisar en Brevo si la clave venció, generar otra y cambiar `BREVO_API_KEY` en Render.
+
 Los correos salen con remitente `@gmail.com` pero desde los servidores de Brevo, así que algunos pueden llegar a la carpeta de spam. Cada cuenta recibe la recuperación en el correo que tiene guardado: si es uno de ejemplo, el mensaje no llega a nadie; cada usuario puede poner su correo real en «Mi perfil».
