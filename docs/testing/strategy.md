@@ -65,7 +65,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 
 ## Cobertura automatizada
 
-164 pruebas unitarias y de rutas con `node:test` (164 aprobadas el 2026-11-25), en 38 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
+168 pruebas unitarias y de rutas con `node:test` (168 aprobadas el 2026-11-27), en 39 archivos. `npm test` y la cobertura cargan antes `tests/entorno-pruebas.js`, que apunta `DB_NAME` a una base que no existe: ninguna prueba unitaria puede leer ni escribir en la base configurada en `.env`.
 
 - `api-docs.test.js` (4): Swagger UI se publica en `/api-docs` con sus archivos locales y el mismo contrato `docs/api/openapi.json`; la API sigue igual (401 sin token, 404 fuera de ruta y nada nuevo dentro de `/api`); `API_DOCS=off` no la publica, y sin el archivo del contrato la aplicación arranca y `/api-docs` responde 404 (CR-024, CP-103).
 - `auditoria.test.js` (7): archivo diario de accesos con campos sensibles ocultos, borrado de los archivos de log más viejos que la retención, `LOG_DIR=off`, filtros de la bitácora en el servidor, páginas de 20 (máximo 100), filtros inválidos (400) y formato del CSV de archivo (CR-016).
@@ -75,6 +75,7 @@ Los navegadores ocupan unos 300 MB y por defecto se guardan en el perfil del usu
 - `auth.middleware.test.js` (6): token válido, usuario desactivado, rol cambiado, usuario eliminado, token vencido y falta de token (DEF-011).
 - `auth.recovery.test.js` (3): correo inválido, token inválido o vencido y consumo del token en una transacción.
 - `auth.smtp.test.js` (1): la recuperación entrega el correo a un servidor SMTP local con el enlace de un solo uso.
+- `auth.brevo.test.js` (4): con `BREVO_API_KEY` la recuperación y el recordatorio salen por la API HTTPS de Brevo sin abrir SMTP; si Brevo rechaza el envío, el enlace se borra; sin remitente responde que falta configurar el correo (DEF-042, CP-118).
 - `auth.correo-exacto.test.js` (4): la recuperación y el recordatorio de usuario solo responden al correo exacto (no a uno equivalente por la collation) y envían a la dirección guardada, con TLS (auditoría de seguridad, CP-104).
 - `entorno.test.js` (1): falla si se quita la carga de `tests/entorno-pruebas.js` (las pruebas unitarias no usan la base de `.env`).
 - `conexion.test.js` (5): en local la conexión no usa SSL; los valores pegados con espacios o saltos de línea al final se limpian; en la nube va cifrada, verifica el certificado (de la variable, con saltos de línea como `\n`, o de un archivo) y exige TLS 1.2; la zona horaria se valida antes de usarla en SQL.

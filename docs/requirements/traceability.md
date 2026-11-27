@@ -42,7 +42,7 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 |---|---|---|---|---|---|
 | RF-001 | Autenticar usuario | Implementado | MVP | API-01 | CP-027 (pendiente), CP-046 |
 | RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054, CP-089 (siempre queda un administrador activo, DEF-021), CP-111 (permisos fijos por rol, CR-025) |
-| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061 |
+| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061, CP-118 (envío por la API de Brevo donde SMTP está bloqueado, DEF-042) |
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051, CP-115 (la contraseña actual equivocada en «Mi perfil» cuenta como intento fallido) |
 | RF-005 | Cerrar sesión | Implementado | MVP | API-01 | CP-110 (el token queda revocado en el servidor) |
 | RF-006 | Registrar auditoría | Implementado | MVP | — | CP-083 (inicios de sesión en el archivo de accesos, CR-016) |
