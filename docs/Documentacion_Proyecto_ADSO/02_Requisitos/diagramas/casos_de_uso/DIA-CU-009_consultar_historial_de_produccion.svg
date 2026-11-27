@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="746" viewBox="0 0 1600 746" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1600" height="746" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-CU-009 · CU-009 Consultar historial de producción</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">EP-001 Gestión de producción · diagrama del caso de uso con sus actores, relaciones y API</text>
+<text x="1556" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1556" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<rect x="390" y="128" width="820" height="368" rx="16" fill="#F8FAFD" stroke="#1F3864" stroke-width="2"/>
+<text x="412" y="160" font-size="16" font-weight="700" fill="#1F3864" text-anchor="start">Sistema MEVIPLAST</text>
+<line x1="230" y1="208" x2="628.9" y2="289.2" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="230" y1="384" x2="600.5" y2="345" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1370" y1="324" x2="1014" y2="324" stroke="#3E4C63" stroke-width="1.8"/>
+
+<g filter="url(#sombra)"><ellipse cx="800" cy="324" rx="214" ry="58" fill="#E6F4EC" stroke="#2E7D57" stroke-width="3"/></g>
+<text x="800" y="318" font-size="13" font-weight="700" fill="#2E7D57" text-anchor="middle">CU-009</text>
+<text x="800" y="339" font-size="17" font-weight="600" fill="#1B2A41" text-anchor="middle">Consultar historial de producción</text>
+<circle cx="200" cy="212" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="176" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="190" x2="200" y2="232" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="206" x2="224" y2="206" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,262 200,232 219,262" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="290" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="200" y="308" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<circle cx="200" cy="388" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="352" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="366" x2="200" y2="408" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="382" x2="224" y2="382" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,438 200,408 219,438" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="466" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Supervisor</text>
+<text x="200" y="484" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol supervisor</text>
+<circle cx="1400" cy="328" r="58" fill="#EEF2F8"/>
+<circle cx="1400" cy="292" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1400" y1="306" x2="1400" y2="348" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1376" y1="322" x2="1424" y2="322" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1381,378 1400,348 1419,378" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1400" y="406" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Operario</text>
+<text x="1400" y="424" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol operario</text>
+<path d="M70 526 h1438 l22 22 v100 h-1460 z" fill="#FFFCEB" stroke="#C9B458" stroke-width="1.4"/>
+<path d="M1508 526 v22 h22" fill="none" stroke="#C9B458" stroke-width="1.4"/>
+<text x="92" y="556" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-004   ·   Requisito: RF-024, RF-009   ·   Reglas: —</text>
+<text x="92" y="579" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Reportes → producción con filtros por operario y producto; operario: Mi historial</text>
+<text x="92" y="602" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: GET /api/reportes/produccion/detalle   ·   GET /api/produccion/mis-registros (operario)</text>
+<text x="92" y="625" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Producción del periodo filtrada por operario y producto; el operario ve solo sus avances.</text>
+
+<line x1="44" y1="700" x2="1556" y2="700" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="722" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
+</svg>

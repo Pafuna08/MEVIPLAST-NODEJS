@@ -1,56 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" font-family="Helvetica, Arial, sans-serif">
-<rect width="1400" height="560" fill="#fff"/>
-<text x="24" y="36" font-size="20" font-weight="bold" fill="#1F3864">DIA-ACT-01 · Actores y sistemas externos de MEVIPLAST</text>
-<line x1="180" y1="348" x2="700" y2="204" stroke="#1F3864" stroke-width="1.8"/>
-<polygon points="685.8929226074378,215.179909098032 700,204 682.1515286441459,201.66931978614483" fill="#fff" stroke="#1F3864" stroke-width="1.8"/>
-<line x1="440" y1="348" x2="700" y2="204" stroke="#1F3864" stroke-width="1.8"/>
-<polygon points="688.8928646298739,218.16444647240732 700,204 682.1006323148042,205.90069368130943" fill="#fff" stroke="#1F3864" stroke-width="1.8"/>
-<line x1="700" y1="348" x2="700" y2="204" stroke="#1F3864" stroke-width="1.8"/>
-<polygon points="707.0095301615557,220.57909789205195 700,204 692.9904698384443,220.57909789205195" fill="#fff" stroke="#1F3864" stroke-width="1.8"/>
-<line x1="960" y1="348" x2="700" y2="204" stroke="#1F3864" stroke-width="1.8"/>
-<polygon points="717.8993676851958,205.90069368130943 700,204 711.1071353701261,218.16444647240732" fill="#fff" stroke="#1F3864" stroke-width="1.8"/>
-<line x1="1220" y1="348" x2="700" y2="204" stroke="#1F3864" stroke-width="1.8"/>
-<polygon points="717.8484713558541,201.66931978614483 700,204 714.1070773925622,215.179909098032" fill="#fff" stroke="#1F3864" stroke-width="1.8"/>
-<circle cx="700" cy="102" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="113" x2="700" y2="146" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="682" y1="123" x2="718" y2="123" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="146" x2="686" y2="170" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="146" x2="714" y2="170" stroke="#1F3864" stroke-width="2.2"/>
-<text x="700" y="190" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Usuario autenticado</text>
-<circle cx="180" cy="362" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="180" y1="373" x2="180" y2="406" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="162" y1="383" x2="198" y2="383" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="180" y1="406" x2="166" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="180" y1="406" x2="194" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<text x="180" y="450" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Administrador</text>
-<circle cx="440" cy="362" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="440" y1="373" x2="440" y2="406" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="422" y1="383" x2="458" y2="383" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="440" y1="406" x2="426" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="440" y1="406" x2="454" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<text x="440" y="450" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Supervisor</text>
-<circle cx="700" cy="362" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="373" x2="700" y2="406" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="682" y1="383" x2="718" y2="383" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="406" x2="686" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="700" y1="406" x2="714" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<text x="700" y="450" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Operario</text>
-<circle cx="960" cy="362" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="960" y1="373" x2="960" y2="406" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="942" y1="383" x2="978" y2="383" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="960" y1="406" x2="946" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="960" y1="406" x2="974" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<text x="960" y="450" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Vendedor</text>
-<circle cx="1220" cy="362" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1220" y1="373" x2="1220" y2="406" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1202" y1="383" x2="1238" y2="383" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1220" y1="406" x2="1206" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1220" y1="406" x2="1234" y2="430" stroke="#1F3864" stroke-width="2.2"/>
-<text x="1220" y="450" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Almacenista</text>
-<rect x="1150" y="112" width="140" height="56" rx="4" fill="#F7F9FC" stroke="#1F4E79" stroke-width="2"/>
-<text x="1220" y="132" font-size="12" text-anchor="middle" fill="#555">«sistema externo»</text>
-<text x="1220" y="152" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Servidor SMTP</text>
-<text x="1220" y="200" font-size="12.5" text-anchor="middle" fill="#555">Envía enlaces de recuperación (INT-01)</text>
-<text x="24" y="520" font-size="13" fill="#555">Cada rol hereda lo que puede hacer el usuario autenticado (iniciar y cerrar sesión). Los permisos propios de cada rol se validan en el servidor (MEV-DOC-03 numeral 8.2).</text>
-<text x="24" y="542" font-size="13" fill="#555">El visitante sin sesión solo accede al sitio público, al inicio de sesión y a la recuperación de cuenta.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="860" viewBox="0 0 1640 860" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1640" height="860" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-ACT-01 · Actores y sistemas externos de MEVIPLAST</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">Cada rol especializa al usuario autenticado; debajo, las vistas del panel que tiene cada uno</text>
+<text x="1596" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1596" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<circle cx="820" cy="214" r="58" fill="#EEF2F8"/>
+<circle cx="820" cy="178" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="820" y1="192" x2="820" y2="234" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="796" y1="208" x2="844" y2="208" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="801,264 820,234 839,264" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="820" y="292" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Usuario autenticado</text>
+<text x="820" y="310" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">cualquier rol con cuenta</text>
+<line x1="150" y1="498" x2="728.9" y2="354.7" stroke="#3E4C63" stroke-width="1.8"/>
+<polygon points="746.3,350 733.3,362.5 728.8,345.8" fill="#fff" stroke="#3E4C63" stroke-width="1.8"/>
+<circle cx="150" cy="564" r="58" fill="#EEF2F8"/>
+<circle cx="150" cy="528" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="150" y1="542" x2="150" y2="584" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="126" y1="558" x2="174" y2="558" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="131,614 150,584 169,614" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="150" y="642" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="150" y="660" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<text x="150" y="692" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Inicio, Usuarios, Materias</text>
+<text x="150" y="710" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">primas, Inventario,</text>
+<text x="150" y="728" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Producción, Ventas, Reportes y</text>
+<text x="150" y="746" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Auditoría</text>
+<line x1="485" y1="498" x2="767.3" y2="358.6" stroke="#3E4C63" stroke-width="1.8"/>
+<polygon points="783.2,350 773.4,365.1 765.2,350" fill="#fff" stroke="#3E4C63" stroke-width="1.8"/>
+<circle cx="485" cy="564" r="58" fill="#EEF2F8"/>
+<circle cx="485" cy="528" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="485" y1="542" x2="485" y2="584" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="461" y1="558" x2="509" y2="558" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="466,614 485,584 504,614" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="485" y="642" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Supervisor</text>
+<text x="485" y="660" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol supervisor</text>
+<text x="485" y="692" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Inicio, Asignar tareas,</text>
+<text x="485" y="710" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Operarios, Seguimiento y</text>
+<text x="485" y="728" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Reportes</text>
+<line x1="820" y1="498" x2="820" y2="368" stroke="#3E4C63" stroke-width="1.8"/>
+<polygon points="820,350 828.6,365.8 811.4,365.8" fill="#fff" stroke="#3E4C63" stroke-width="1.8"/>
+<circle cx="820" cy="564" r="58" fill="#EEF2F8"/>
+<circle cx="820" cy="528" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="820" y1="542" x2="820" y2="584" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="796" y1="558" x2="844" y2="558" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="801,614 820,584 839,614" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="820" y="642" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Operario</text>
+<text x="820" y="660" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol operario</text>
+<text x="820" y="692" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Inicio, Mis tareas, Registrar</text>
+<text x="820" y="710" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">producción y Mi historial</text>
+<line x1="1155" y1="498" x2="872.7" y2="358.6" stroke="#3E4C63" stroke-width="1.8"/>
+<polygon points="856.9,350 874.8,350 866.6,365.1" fill="#fff" stroke="#3E4C63" stroke-width="1.8"/>
+<circle cx="1155" cy="564" r="58" fill="#EEF2F8"/>
+<circle cx="1155" cy="528" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1155" y1="542" x2="1155" y2="584" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1131" y1="558" x2="1179" y2="558" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1136,614 1155,584 1174,614" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1155" y="642" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Vendedor</text>
+<text x="1155" y="660" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol vendedor</text>
+<text x="1155" y="692" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Ventas</text>
+<line x1="1490" y1="498" x2="911.1" y2="354.7" stroke="#3E4C63" stroke-width="1.8"/>
+<polygon points="893.7,350 911.2,345.8 906.7,362.5" fill="#fff" stroke="#3E4C63" stroke-width="1.8"/>
+<circle cx="1490" cy="564" r="58" fill="#EEF2F8"/>
+<circle cx="1490" cy="528" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1490" y1="542" x2="1490" y2="584" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1466" y1="558" x2="1514" y2="558" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1471,614 1490,584 1509,614" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1490" y="642" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Almacenista</text>
+<text x="1490" y="660" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol almacenista</text>
+<text x="1490" y="692" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Materias primas e Inventario</text>
+<g filter="url(#sombra)"><rect x="1272" y="184" width="236" height="92" rx="10" fill="#F4F6F9" stroke="#5B6B82" stroke-width="1.8"/></g>
+<rect x="1286" y="200" width="26" height="18" rx="2" fill="#fff" stroke="#5B6B82" stroke-width="1.5"/>
+<polyline points="1286,200 1299,211 1312,200" fill="none" stroke="#5B6B82" stroke-width="1.5"/>
+<text x="1402" y="212" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">«sistema externo»</text>
+<text x="1390" y="236" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Servicio de correo</text>
+<text x="1390" y="258" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">Brevo (Render) · SMTP (red local)</text>
+<text x="1390" y="300" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">Envía el enlace de recuperación y el</text>
+<text x="1390" y="318" font-size="12.5" font-weight="400" fill="#5F6B7A" text-anchor="middle">recordatorio de usuario (INT-01)</text>
+<rect x="70" y="150" width="330" height="128" rx="10" fill="#F8FAFD" stroke="#D5DCE6"/>
+<text x="90" y="180" font-size="15" font-weight="700" fill="#1F3864" text-anchor="start">Visitante sin sesión</text>
+<text x="90" y="206" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="start">Ve el sitio público y llega al inicio de</text>
+<text x="90" y="226" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="start">sesión y a la recuperación de cuenta.</text>
+<text x="90" y="254" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="start">No es un rol: no tiene permisos en la API.</text>
+<text x="44" y="790" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="start">La flecha con triángulo es una generalización: cada rol hereda lo del usuario autenticado (cerrar sesión y Mi perfil). Los permisos propios de cada rol se validan en el servidor.</text>
+<line x1="44" y1="808" x2="1596" y2="808" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="830" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
 </svg>

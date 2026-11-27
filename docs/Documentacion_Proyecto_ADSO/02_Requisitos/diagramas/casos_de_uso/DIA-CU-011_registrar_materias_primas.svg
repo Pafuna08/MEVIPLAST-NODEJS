@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="618" viewBox="0 0 1600 618" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1600" height="618" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-CU-011 · CU-011 Registrar materias primas</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">EP-002 Gestión de materias primas · diagrama del caso de uso con sus actores, relaciones y API</text>
+<text x="1556" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1556" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<rect x="390" y="128" width="820" height="240" rx="16" fill="#F8FAFD" stroke="#1F3864" stroke-width="2"/>
+<text x="412" y="160" font-size="16" font-weight="700" fill="#1F3864" text-anchor="start">Sistema MEVIPLAST</text>
+<line x1="230" y1="246" x2="586" y2="246" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1370" y1="246" x2="1014" y2="246" stroke="#3E4C63" stroke-width="1.8"/>
+
+<g filter="url(#sombra)"><ellipse cx="800" cy="246" rx="214" ry="58" fill="#FFF2DF" stroke="#A8640A" stroke-width="3"/></g>
+<text x="800" y="240" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-011</text>
+<text x="800" y="261" font-size="17" font-weight="600" fill="#1B2A41" text-anchor="middle">Registrar materias primas</text>
+<circle cx="200" cy="250" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="214" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="228" x2="200" y2="270" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="244" x2="224" y2="244" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,300 200,270 219,300" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="328" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="200" y="346" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<circle cx="1400" cy="250" r="58" fill="#EEF2F8"/>
+<circle cx="1400" cy="214" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1400" y1="228" x2="1400" y2="270" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1376" y1="244" x2="1424" y2="244" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1381,300 1400,270 1419,300" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1400" y="328" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Almacenista</text>
+<text x="1400" y="346" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol almacenista</text>
+<path d="M70 398 h1438 l22 22 v100 h-1460 z" fill="#FFFCEB" stroke="#C9B458" stroke-width="1.4"/>
+<path d="M1508 398 v22 h22" fill="none" stroke="#C9B458" stroke-width="1.4"/>
+<text x="92" y="428" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-006   ·   Requisito: RF-014   ·   Reglas: RN-025 (CR-027)</text>
+<text x="92" y="451" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Materias primas → Registrar material</text>
+<text x="92" y="474" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: POST, DELETE /api/materia-prima (administrador)   ·   PUT /api/materia-prima/{id} (administrador y almacenista)</text>
+<text x="92" y="497" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Bobina por material, tamaño del rollo con su unidad, calibre y color; su peso es la existencia inicial.</text>
+
+<line x1="44" y1="572" x2="1556" y2="572" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="594" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="917" viewBox="0 0 1600 917" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1600" height="917" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-CU-018 · CU-018 Registrar ventas por paquetes</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">EP-003 Gestión de inventario y ventas · diagrama del caso de uso con sus actores, relaciones y API</text>
+<text x="1556" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1556" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<rect x="390" y="128" width="820" height="424" rx="16" fill="#F8FAFD" stroke="#1F3864" stroke-width="2"/>
+<text x="412" y="160" font-size="16" font-weight="700" fill="#1F3864" text-anchor="start">Sistema MEVIPLAST</text>
+<line x1="230" y1="246" x2="586" y2="246" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1370" y1="246" x2="1014" y2="246" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="741.6" y1="301.8" x2="637.4" y2="401.5" stroke="#3E4C63" stroke-width="1.8" stroke-dasharray="7,5"/>
+<polyline points="642.3,389.5 637.4,401.5 649.6,397.1" fill="none" stroke="#3E4C63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="648.1" y="339.7" width="82.8" height="22" rx="11" fill="#fff" stroke="#C9D2DF" stroke-width="1"/>
+<text x="689.5" y="355.7" font-size="12.5" font-weight="400" fill="#3E4C63" text-anchor="middle" font-style="italic">«include»</text>
+<line x1="962.6" y1="401.5" x2="858.4" y2="301.8" stroke="#3E4C63" stroke-width="1.8" stroke-dasharray="7,5"/>
+<polyline points="870.6,306.2 858.4,301.8 863.3,313.8" fill="none" stroke="#3E4C63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="872.7" y="339.7" width="75.6" height="22" rx="11" fill="#fff" stroke="#C9D2DF" stroke-width="1"/>
+<text x="910.5" y="355.7" font-size="12.5" font-weight="400" fill="#3E4C63" text-anchor="middle" font-style="italic">«extend»</text>
+<g filter="url(#sombra)"><ellipse cx="800" cy="246" rx="214" ry="58" fill="#F2EAFA" stroke="#7446A3" stroke-width="3"/></g>
+<text x="800" y="240" font-size="13" font-weight="700" fill="#7446A3" text-anchor="middle">CU-018</text>
+<text x="800" y="261" font-size="17" font-weight="600" fill="#1B2A41" text-anchor="middle">Registrar ventas por paquetes</text>
+<g filter="url(#sombra)"><ellipse cx="595" cy="442" rx="160" ry="42" fill="#F2EAFA" stroke="#7446A3" stroke-width="2"/></g>
+<text x="595" y="437" font-size="13" font-weight="700" fill="#7446A3" text-anchor="middle">CU-019</text>
+<text x="595" y="456" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Actualizar stock automáticamente</text>
+<g filter="url(#sombra)"><ellipse cx="1005" cy="442" rx="160" ry="42" fill="#ffffff" stroke="#7446A3" stroke-width="2"/></g>
+<text x="1005" y="427.5" font-size="13" font-weight="700" fill="#5F6B7A" text-anchor="middle">sin código CU · RF-023</text>
+<text x="1005" y="446.5" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Generar comprobante de venta</text>
+<text x="1005" y="465.5" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">(PDF)</text>
+<circle cx="200" cy="250" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="214" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="228" x2="200" y2="270" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="244" x2="224" y2="244" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,300 200,270 219,300" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="328" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="200" y="346" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<circle cx="1400" cy="250" r="58" fill="#EEF2F8"/>
+<circle cx="1400" cy="214" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1400" y1="228" x2="1400" y2="270" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1376" y1="244" x2="1424" y2="244" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1381,300 1400,270 1419,300" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1400" y="328" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Vendedor</text>
+<text x="1400" y="346" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol vendedor</text>
+<path d="M70 582 h1438 l22 22 v169 h-1460 z" fill="#FFFCEB" stroke="#C9B458" stroke-width="1.4"/>
+<path d="M1508 582 v22 h22" fill="none" stroke="#C9B458" stroke-width="1.4"/>
+<text x="92" y="612" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-013, HU-014   ·   Requisito: RF-020, RF-021   ·   Reglas: RN-018, RN-019 (CR-018, CR-022)</text>
+<text x="92" y="635" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Relación: CU-018 «Registrar ventas por paquetes» incluye siempre a CU-019 «Actualizar stock automáticamente»</text>
+<text x="92" y="658" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Relación: «Generar comprobante de venta (PDF)» (RF-023) extiende a CU-018 «Registrar ventas por paquetes» cuando: al guardar la venta o desde el</text>
+<text x="92" y="681" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">historial</text>
+<text x="92" y="704" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Ventas</text>
+<text x="92" y="727" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: POST /api/ventas</text>
+<text x="92" y="750" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Venta con uno a 20 productos y stock descontado en una sola transacción.</text>
+<rect x="210" y="797" width="1249.1" height="46" rx="8" fill="#F8FAFD" stroke="#D5DCE6"/>
+<line x1="228" y1="820" x2="280" y2="820" stroke="#3E4C63" stroke-width="1.8"/>
+<text x="290" y="825" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">Asociación: el rol tiene el permiso en el servidor</text>
+<line x1="669" y1="820" x2="721" y2="820" stroke="#3E4C63" stroke-width="1.8" stroke-dasharray="7,5"/><polyline points="711,814 721,820 711,826" fill="none" stroke="#3E4C63" stroke-width="2"/>
+<text x="731" y="825" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">«include»: lo ejecuta siempre · «extend»: lo amplía en una condición</text>
+<ellipse cx="1260.2" cy="820" rx="24" ry="11" fill="#fff" stroke="#5F6B7A" stroke-width="1.6"/>
+<text x="1296.2" y="825" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">función sin código CU</text>
+<line x1="44" y1="871" x2="1556" y2="871" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="893" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
+</svg>

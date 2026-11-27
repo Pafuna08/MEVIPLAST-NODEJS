@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="871" viewBox="0 0 1600 871" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1600" height="871" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-CU-020 · CU-020 Generar reporte de producción</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">EP-005 Reportes y seguimiento operacional · diagrama del caso de uso con sus actores, relaciones y API</text>
+<text x="1556" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1556" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<rect x="390" y="128" width="820" height="424" rx="16" fill="#F8FAFD" stroke="#1F3864" stroke-width="2"/>
+<text x="412" y="160" font-size="16" font-weight="700" fill="#1F3864" text-anchor="start">Sistema MEVIPLAST</text>
+<line x1="230" y1="246" x2="586" y2="246" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="230" y1="422" x2="658.8" y2="289.6" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="800" y1="400" x2="800" y2="304" stroke="#3E4C63" stroke-width="1.8" stroke-dasharray="7,5"/>
+<polyline points="805.3,315.9 800,304 794.7,315.9" fill="none" stroke="#3E4C63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="812" y="340" width="75.6" height="22" rx="11" fill="#fff" stroke="#C9D2DF" stroke-width="1"/>
+<text x="849.8" y="356" font-size="12.5" font-weight="400" fill="#3E4C63" text-anchor="middle" font-style="italic">«extend»</text>
+<g filter="url(#sombra)"><ellipse cx="800" cy="246" rx="214" ry="58" fill="#E4F3F5" stroke="#1D7380" stroke-width="3"/></g>
+<text x="800" y="240" font-size="13" font-weight="700" fill="#1D7380" text-anchor="middle">CU-020</text>
+<text x="800" y="261" font-size="17" font-weight="600" fill="#1B2A41" text-anchor="middle">Generar reporte de producción</text>
+<g filter="url(#sombra)"><ellipse cx="800" cy="442" rx="160" ry="42" fill="#E4F3F5" stroke="#1D7380" stroke-width="2"/></g>
+<text x="800" y="437" font-size="13" font-weight="700" fill="#1D7380" text-anchor="middle">CU-023</text>
+<text x="800" y="456" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Exportar reportes (PDF y Excel)</text>
+<circle cx="200" cy="250" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="214" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="228" x2="200" y2="270" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="244" x2="224" y2="244" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,300 200,270 219,300" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="328" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="200" y="346" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<circle cx="200" cy="426" r="58" fill="#EEF2F8"/>
+<circle cx="200" cy="390" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="200" y1="404" x2="200" y2="446" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="176" y1="420" x2="224" y2="420" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="181,476 200,446 219,476" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="504" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Supervisor</text>
+<text x="200" y="522" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol supervisor</text>
+<path d="M70 582 h1438 l22 22 v123 h-1460 z" fill="#FFFCEB" stroke="#C9B458" stroke-width="1.4"/>
+<path d="M1508 582 v22 h22" fill="none" stroke="#C9B458" stroke-width="1.4"/>
+<text x="92" y="612" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-021   ·   Requisito: RF-024   ·   Reglas: —</text>
+<text x="92" y="635" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Relación: CU-023 «Exportar reportes (PDF y Excel)» extiende a CU-020 «Generar reporte de producción» cuando: «Abrir PDF» o «Descargar Excel»</text>
+<text x="92" y="658" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Reportes → Reporte de producción</text>
+<text x="92" y="681" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: GET /api/reportes/produccion   ·   GET /api/reportes/produccion/detalle</text>
+<text x="92" y="704" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Órdenes y unidades del periodo, por producto y por referencia.</text>
+<rect x="210" y="751" width="1008.2" height="46" rx="8" fill="#F8FAFD" stroke="#D5DCE6"/>
+<line x1="228" y1="774" x2="280" y2="774" stroke="#3E4C63" stroke-width="1.8"/>
+<text x="290" y="779" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">Asociación: el rol tiene el permiso en el servidor</text>
+<line x1="669" y1="774" x2="721" y2="774" stroke="#3E4C63" stroke-width="1.8" stroke-dasharray="7,5"/><polyline points="711,768 721,774 711,780" fill="none" stroke="#3E4C63" stroke-width="2"/>
+<text x="731" y="779" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">«include»: lo ejecuta siempre · «extend»: lo amplía en una condición</text>
+<line x1="44" y1="825" x2="1556" y2="825" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="847" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
+</svg>
