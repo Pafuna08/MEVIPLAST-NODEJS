@@ -2264,6 +2264,7 @@
           "Inventario"
         ],
         "summary": "Ingreso manual de una variante del catálogo",
+        "description": "DEF-044: solo el administrador y el almacenista; el supervisor recibe 403 (no tiene la vista de Inventario: ve las existencias con GET /inventario y el reporte de inventario).",
         "x-requisitos": "RF-018",
         "requestBody": {
           "required": true,
@@ -2344,7 +2345,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
         ]
       }
@@ -2355,6 +2355,7 @@
           "Inventario"
         ],
         "summary": "Movimientos de inventario",
+        "description": "DEF-044: solo el administrador y el almacenista; el supervisor recibe 403 (no tiene la vista de Inventario: ve las existencias con GET /inventario y el reporte de inventario).",
         "x-requisitos": "RF-019",
         "responses": {
           "200": {
@@ -2376,7 +2377,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
         ]
       }
@@ -2387,6 +2387,7 @@
           "Inventario"
         ],
         "summary": "Movimientos de una variante",
+        "description": "DEF-044: solo el administrador y el almacenista; el supervisor recibe 403 (no tiene la vista de Inventario: ve las existencias con GET /inventario y el reporte de inventario).",
         "x-requisitos": "RF-019",
         "parameters": [
           {
@@ -2419,7 +2420,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
         ]
       }
@@ -2430,6 +2430,7 @@
           "Inventario"
         ],
         "summary": "Salida manual (sin saldo negativo, RN-015)",
+        "description": "DEF-044: solo el administrador y el almacenista; el supervisor recibe 403 (no tiene la vista de Inventario: ve las existencias con GET /inventario y el reporte de inventario).",
         "x-requisitos": "RF-018",
         "parameters": [
           {
@@ -2503,7 +2504,6 @@
         },
         "x-roles": [
           "admin",
-          "supervisor",
           "almacenista"
         ]
       }

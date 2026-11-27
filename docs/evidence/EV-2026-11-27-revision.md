@@ -33,6 +33,8 @@
 
 El supervisor tiene permiso en la API para los ingresos y salidas manuales de producto terminado (`POST /inventario` y `/inventario/{id}/salida`), pero el panel no le muestra la vista de Inventario. Los documentos y el diagrama de CU-016 lo dicen así. Es el mismo patrón de DEF-007 (permiso de venta sin vista), que se resolvió quitando el permiso; aquí la decisión queda para el equipo.
 
+**Decisión (27/11/2026):** el equipo decidió quitar el permiso (DEF-044, PR #138, [`EV-2026-11-27-permisos-inventario.md`](EV-2026-11-27-permisos-inventario.md)).
+
 ### Verificación
 
 - `npm test --prefix backend`: 170 de 170. `openapi.test.js` y `api-docs.test.js`: 6 de 6 después de cambiar Swagger.

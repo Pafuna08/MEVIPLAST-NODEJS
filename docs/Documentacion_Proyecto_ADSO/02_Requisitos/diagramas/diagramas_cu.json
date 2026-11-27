@@ -156,7 +156,7 @@
   {
     "archivo": "casos_de_uso/DIA-CU-016_registrar_productos_terminados_ingresos_y_salida",
     "ancho": 1600,
-    "alto": 769,
+    "alto": 618,
     "caso": "CU-016",
     "titulo": "DIA-CU-016 · CU-016 Registrar productos terminados (ingresos y salidas)"
   },

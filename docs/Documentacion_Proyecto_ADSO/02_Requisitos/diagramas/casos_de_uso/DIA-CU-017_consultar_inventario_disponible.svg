@@ -47,10 +47,10 @@
 <text x="1400" y="484" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol vendedor</text>
 <path d="M70 526 h1438 l22 22 v100 h-1460 z" fill="#FFFCEB" stroke="#C9B458" stroke-width="1.4"/>
 <path d="M1508 526 v22 h22" fill="none" stroke="#C9B458" stroke-width="1.4"/>
-<text x="92" y="556" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-012   ·   Requisito: RF-019   ·   Reglas: —</text>
-<text x="92" y="579" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Inventario (administrador y almacenista); Ventas (vendedor); reporte de inventario (supervisor)</text>
-<text x="92" y="602" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: GET /api/inventario   ·   GET /api/inventario/movimientos (sin el vendedor)</text>
-<text x="92" y="625" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Existencias por variante; el vendedor solo consulta.</text>
+<text x="92" y="556" font-size="14" font-weight="600" fill="#1B2A41" text-anchor="start">Historia: HU-012   ·   Requisito: RF-019   ·   Reglas: — (historial: DEF-044)</text>
+<text x="92" y="579" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">En el panel: Inventario (administrador y almacenista); Ventas (vendedor); Inicio y reporte de inventario (supervisor)</text>
+<text x="92" y="602" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">API: GET /api/inventario   ·   GET /api/inventario/movimientos (solo administrador y almacenista)</text>
+<text x="92" y="625" font-size="14" font-weight="400" fill="#1B2A41" text-anchor="start">Resultado: Existencias por variante; el supervisor y el vendedor solo consultan las existencias.</text>
 
 <line x1="44" y1="700" x2="1556" y2="700" stroke="#D5DCE6" stroke-width="1"/>
 <text x="44" y="722" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>

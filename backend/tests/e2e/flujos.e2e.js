@@ -237,7 +237,9 @@ test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
       ["GET", "/produccion/supervisores", ["admin"]],
       ["GET", "/produccion/plantillas", ["admin", "supervisor"]],
       ["GET", "/inventario", ["admin", "supervisor", "almacenista", "vendedor"]],
-      ["GET", "/inventario/movimientos", ["admin", "supervisor", "almacenista"]],
+      // DEF-044: los ingresos, salidas e historial de producto terminado ya no son del supervisor
+      ["GET", "/inventario/movimientos", ["admin", "almacenista"]],
+      ["POST", "/inventario", ["admin", "almacenista"]],
       ["GET", "/ventas", ["admin", "vendedor"]],
       ["POST", "/ventas", ["admin", "vendedor"]],
       ["GET", "/reportes/produccion", ["admin", "supervisor"]],
