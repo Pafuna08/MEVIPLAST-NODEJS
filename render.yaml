@@ -47,7 +47,7 @@ services:
       # Dirección pública del servicio (https://meviplast.onrender.com o la que asigne Render), para los
       # enlaces de recuperación de contraseña
       - key: FRONTEND_URL
-        sync: false
+        value: https://meviplast.onrender.com
       # MEVI-127: el plan gratuito de Render bloquea los puertos SMTP (25, 465 y 587) desde septiembre de 2025.
       # Con BREVO_API_KEY el correo de recuperación sale por la API HTTPS de Brevo; SMTP_FROM es el remitente
       # verificado en Brevo («MEVIPLAST <correo>»). Sin BREVO_API_KEY se usa SMTP (equipo local o plan pago).
@@ -64,4 +64,4 @@ services:
       - key: SMTP_PASSWORD
         sync: false
       - key: SMTP_FROM
-        sync: false
+        value: "MEVIPLAST <meviplast@gmail.com>"

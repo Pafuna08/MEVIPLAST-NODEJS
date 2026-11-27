@@ -47,8 +47,8 @@ $env:DB_DEMO="false"; $env:ADMIN_PASSWORD="<contraseña larga y privada>"; npm r
 3. Escribir los valores que Render pide (los marcados `sync: false`):
    - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`: los de Aiven.
    - `DB_SSL_CA`: el contenido completo de `ca.pem` (desde `-----BEGIN CERTIFICATE-----` hasta `-----END CERTIFICATE-----`).
-   - `FRONTEND_URL`: la dirección que asigne Render, por ejemplo `https://meviplast.onrender.com`. Se puede completar después del primer despliegue.
-   - Correo de recuperación: el plan gratuito de Render bloquea los puertos SMTP (25, 465 y 587) desde septiembre de 2025, así que Gmail por SMTP no sale de Render. Se usa la API HTTPS de Brevo (gratis, 300 correos al día): `BREVO_API_KEY` con la clave de la API y `SMTP_FROM` con el remitente verificado en Brevo, por ejemplo `MEVIPLAST <correo-del-proyecto@gmail.com>`. Los demás `SMTP_*` se dejan vacíos. Ver la sección 6.
+   - `FRONTEND_URL`: viene en `render.yaml` con `https://meviplast.onrender.com`; si Render asigna otra dirección, se cambia allí.
+   - Correo de recuperación: el plan gratuito de Render bloquea los puertos SMTP (25, 465 y 587) desde septiembre de 2025, así que Gmail por SMTP no sale de Render. Se usa la API HTTPS de Brevo (gratis, 300 correos al día): solo hace falta `BREVO_API_KEY`; el remitente (`SMTP_FROM`) y `FRONTEND_URL` ya vienen en `render.yaml`. Los demás `SMTP_*` se dejan vacíos. Ver la sección 6.
    - `JWT_SECRET` lo genera Render solo.
 4. **Apply**. Render instala, compila el panel (`npm run build --prefix frontend`) y arranca `node server.js`. El despliegue queda listo cuando `GET /api/health` responde 200.
 
@@ -101,10 +101,11 @@ node ..\..\Respaldos_MEVIPLAST\herramientas_ADSO\respaldo_nube.js ..\..\Respaldo
 
 Render (plan gratuito) no deja salir conexiones a los puertos SMTP, así que la recuperación de contraseña y el recordatorio de usuario usan la API de Brevo por HTTPS (MEVI-127). En el equipo local se sigue usando Gmail por SMTP; si existe `BREVO_API_KEY`, el servidor usa Brevo en su lugar.
 
-1. Crear una cuenta gratuita en [brevo.com](https://www.brevo.com) con el buzón del proyecto y confirmarla desde ese buzón.
-2. **Senders, Domains & Dedicated IPs → Senders → Add a sender**: nombre `MEVIPLAST` y el correo del proyecto. Brevo envía un código a ese buzón para verificarlo.
-3. **SMTP & API → API Keys → Generate a new API key**. Copiarla: Brevo la muestra una sola vez. No se guarda en Git.
-4. En Render, **meviplast → Environment**: `BREVO_API_KEY` con la clave, `SMTP_FROM` con `MEVIPLAST <correo-del-proyecto>` y `FRONTEND_URL` con `https://meviplast.onrender.com`. Al guardar, Render vuelve a desplegar.
-5. Probar en `https://meviplast.onrender.com/recuperar.html` con el correo de una cuenta: debe llegar el mensaje. Si la API responde 503, falta `BREVO_API_KEY` o `SMTP_FROM`; si responde 500, el registro del servicio muestra el motivo que dio Brevo.
+`render.yaml` ya trae `FRONTEND_URL` y `SMTP_FROM` (no son secretos), así que en Render solo falta la clave:
+
+1. Entrar a [brevo.com](https://www.brevo.com) con **Continuar con Google** usando el buzón del proyecto. El correo de la cuenta queda como remitente verificado; si Brevo pide confirmarlo, llega un código a ese buzón.
+2. **SMTP & API → API Keys → Generate a new API key** y copiarla (Brevo la muestra una sola vez; no se guarda en Git).
+3. En Render, **meviplast → Environment → Add Environment Variable**: `BREVO_API_KEY` con la clave → **Save**. Render vuelve a desplegar solo.
+4. Probar en `https://meviplast.onrender.com/recuperar.html` con el correo de una cuenta: debe llegar el mensaje. Si la API responde 503, falta `BREVO_API_KEY` o `SMTP_FROM`; si responde 500, el registro del servicio muestra el motivo que dio Brevo.
 
 Los correos salen con remitente `@gmail.com` pero desde los servidores de Brevo, así que algunos pueden llegar a la carpeta de spam. Cada cuenta recibe la recuperación en el correo que tiene guardado: si es uno de ejemplo, el mensaje no llega a nadie; cada usuario puede poner su correo real en «Mi perfil».
