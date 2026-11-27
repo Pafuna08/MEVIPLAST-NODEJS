@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop, "feature/**", "fix/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+      - name: Lint backend
+        run: npm run lint --prefix backend
+      - name: Lint frontend
+        run: npm run lint --prefix frontend
+      - name: Audit backend dependencies for critical advisories
+        run: npm audit --prefix backend --audit-level=critical
+      - name: Run backend tests with coverage (minimum 58% of lines)
+        run: npm run test:coverage --prefix backend
+      - name: Audit frontend dependencies for critical advisories
+        run: npm audit --prefix frontend --audit-level=critical
+      - name: Scan repository for secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+      - name: Build React frontend
+        run: npm run build --prefix frontend
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: validate
+    services:
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MYSQL_ROOT_PASSWORD: e2e-root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pe2e-root"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+      - name: Run unit and end-to-end tests against MariaDB with coverage (minimum 75% of lines)
+        run: npm run test:coverage:total --prefix backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: e2e-root
+          E2E_DB_NAME: meviplast_e2e

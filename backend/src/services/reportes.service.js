@@ -1,5 +1,261 @@
 const { pool } = require("../config/database");
 
+const periodosValidos = new Set(["diario", "semanal", "mensual", "anual"]);
+
+function limitesPeriodo(periodo, ahora = new Date()) {
+  if (!periodosValidos.has(periodo)) {
+    throw new Error("El periodo debe ser diario, semanal, mensual o anual");
+  }
+  const inicio = new Date(
+    ahora.getFullYear(),
+    ahora.getMonth(),
+    ahora.getDate(),
+  );
+  if (periodo === "semanal") {
+    const diasDesdeLunes = (inicio.getDay() + 6) % 7;
+    inicio.setDate(inicio.getDate() - diasDesdeLunes);
+  } else if (periodo === "mensual") {
+    inicio.setDate(1);
+  } else if (periodo === "anual") {
+    inicio.setMonth(0, 1);
+  }
+
+  const fin = new Date(inicio);
+  if (periodo === "diario") fin.setDate(fin.getDate() + 1);
+  if (periodo === "semanal") fin.setDate(fin.getDate() + 7);
+  if (periodo === "mensual") fin.setMonth(fin.getMonth() + 1);
+  if (periodo === "anual") fin.setFullYear(fin.getFullYear() + 1);
+
+  const formato = (fecha) =>
+    `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
+  return { desde: formato(inicio), hasta: formato(fin), hastaInclusivo: formato(new Date(fin.getTime() - 86400000)) };
+}
+
+// HU-004 / RF-024: filtros opcionales del historial de producción por operario y por producto
+function filtrosProduccion({ operario_id, producto } = {}) {
+  const filtros = { operarioId: null, producto: null };
+  if (operario_id !== undefined && operario_id !== null && operario_id !== "") {
+    const id = Number(operario_id);
+    if (!Number.isInteger(id) || id <= 0) throw filtroInvalido("El operario del filtro no es válido");
+    filtros.operarioId = id;
+  }
+  if (producto !== undefined && producto !== null && producto !== "") {
+    if (typeof producto !== "string" || !producto.trim() || producto.length > 200) {
+      throw filtroInvalido("El producto del filtro no es válido");
+    }
+    filtros.producto = producto.trim();
+  }
+  return filtros;
+}
+
+async function detalleProduccion(periodo, ahora = new Date(), filtrosPedidos = {}) {
+  const rango = limitesPeriodo(periodo, ahora);
+  const filtros = filtrosProduccion(filtrosPedidos);
+  const base = "mi.tipo = 'produccion' AND mi.fecha >= ? AND mi.fecha < ?";
+  let condicion = base;
+  const valores = [rango.desde, rango.hasta];
+  if (filtros.operarioId) {
+    condicion += " AND mi.usuario_id = ?";
+    valores.push(filtros.operarioId);
+  }
+  if (filtros.producto) {
+    condicion += " AND i.producto = ?";
+    valores.push(filtros.producto);
+  }
+  const [detalle] = await pool.query(
+    `SELECT mi.id, mi.fecha, mi.cantidad, mi.produccion_id AS orden_id,
+            i.producto, u.nombre AS operario
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     LEFT JOIN usuarios u ON u.id = mi.usuario_id
+     WHERE ${condicion}
+     ORDER BY mi.fecha DESC, mi.id DESC`,
+    valores,
+  );
+  const [resumen] = await pool.query(
+    `SELECT COUNT(*) AS movimientos, COALESCE(SUM(mi.cantidad), 0) AS unidades
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE ${condicion}`,
+    valores,
+  );
+  const [porProducto] = await pool.query(
+    `SELECT i.producto, SUM(mi.cantidad) AS unidades
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE ${condicion}
+     GROUP BY i.producto ORDER BY unidades DESC`,
+    valores,
+  );
+  // Opciones de los filtros: operarios y productos con producción en el periodo, sin filtrar
+  const [operarios] = await pool.query(
+    `SELECT DISTINCT u.id, u.nombre
+     FROM movimientos_inventario mi
+     JOIN usuarios u ON u.id = mi.usuario_id
+     WHERE ${base}
+     ORDER BY u.nombre`,
+    [rango.desde, rango.hasta],
+  );
+  const [productos] = await pool.query(
+    `SELECT DISTINCT i.producto
+     FROM movimientos_inventario mi
+     JOIN inventario i ON i.id = mi.inventario_id
+     WHERE ${base}
+     ORDER BY i.producto`,
+    [rango.desde, rango.hasta],
+  );
+  const operario = operarios.find((fila) => fila.id === filtros.operarioId);
+  return {
+    periodo,
+    ...rango,
+    filtros: {
+      operario_id: filtros.operarioId,
+      operario: filtros.operarioId ? operario?.nombre || `#${filtros.operarioId}` : null,
+      producto: filtros.producto,
+    },
+    opciones: { operarios, productos: productos.map((fila) => fila.producto) },
+    resumen: resumen[0],
+    porProducto,
+    detalle,
+  };
+}
+
+async function detalleVentas(periodo, ahora = new Date()) {
+  const rango = limitesPeriodo(periodo, ahora);
+  // CR-022: una fila por producto vendido, con la venta a la que pertenece (para abrir su comprobante)
+  const [detalle] = await pool.query(
+    `SELECT d.id, v.id AS venta_id, CONCAT('V-', LPAD(v.id, 6, '0')) AS numero, v.fecha, v.cliente,
+            d.producto, d.cantidad, d.precio_unitario, d.total
+     FROM ventas_detalle d
+     JOIN ventas v ON v.id = d.venta_id
+     WHERE v.fecha >= ? AND v.fecha < ?
+     ORDER BY v.fecha DESC, v.id DESC, d.id`,
+    [rango.desde, rango.hasta],
+  );
+  const [resumen] = await pool.query(
+    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(v.total), 0) AS total_vendido,
+            COALESCE((SELECT SUM(d.cantidad) FROM ventas_detalle d JOIN ventas v2 ON v2.id = d.venta_id
+                      WHERE v2.fecha >= ? AND v2.fecha < ?), 0) AS unidades
+     FROM ventas v WHERE v.fecha >= ? AND v.fecha < ?`,
+    [rango.desde, rango.hasta, rango.desde, rango.hasta],
+  );
+  const [porProducto] = await pool.query(
+    `SELECT d.producto, SUM(d.cantidad) AS unidades, SUM(d.total) AS total
+     FROM ventas_detalle d JOIN ventas v ON v.id = d.venta_id
+     WHERE v.fecha >= ? AND v.fecha < ?
+     GROUP BY d.producto ORDER BY total DESC`,
+    [rango.desde, rango.hasta],
+  );
+  return { periodo, ...rango, resumen: resumen[0], porProducto, detalle };
+}
+
+// HU-022 / RF-027: cumplimiento de la meta por operario. Cuenta las órdenes
+// asignadas al operario que se crearon en el periodo, sin las canceladas:
+// cumplimiento = unidades producidas de esas órdenes / meta de esas órdenes.
+// Lo producido de cada orden se limita a su meta.
+function porcentaje(producido, meta) {
+  return meta > 0 ? Math.round((producido / meta) * 1000) / 10 : null;
+}
+
+function calcularCumplimiento(filas, unidadesPorUsuario = new Map()) {
+  const operarios = filas.map((fila) => {
+    const meta = Number(fila.meta || 0);
+    const producido = Number(fila.producido || 0);
+    return {
+      id: fila.id,
+      nombre: fila.nombre,
+      ordenes: Number(fila.ordenes || 0),
+      finalizadas: Number(fila.finalizadas || 0),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+      unidades_periodo: Number(unidadesPorUsuario.get(fila.id) || 0),
+    };
+  });
+  operarios.sort(
+    (a, b) =>
+      (b.cumplimiento ?? -1) - (a.cumplimiento ?? -1) ||
+      a.nombre.localeCompare(b.nombre, "es"),
+  );
+  const sumar = (campo) => operarios.reduce((total, o) => total + o[campo], 0);
+  const meta = sumar("meta");
+  const producido = sumar("producido");
+  return {
+    resumen: {
+      operarios: operarios.length,
+      con_ordenes: operarios.filter((o) => o.ordenes > 0).length,
+      ordenes: sumar("ordenes"),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+      unidades_periodo: sumar("unidades_periodo"),
+    },
+    operarios,
+  };
+}
+
+async function rendimientoOperarios(periodo, ahora = new Date()) {
+  const rango = limitesPeriodo(periodo, ahora);
+  const [filas] = await pool.query(
+    `SELECT u.id, u.nombre,
+            COUNT(p.id) AS ordenes,
+            COALESCE(SUM(p.estado = 'finalizado'), 0) AS finalizadas,
+            COALESCE(SUM(p.cantidad), 0) AS meta,
+            COALESCE(SUM(LEAST(p.cantidad_producida, p.cantidad)), 0) AS producido
+     FROM usuarios u
+     LEFT JOIN produccion p
+       ON p.responsable_id = u.id AND p.estado <> 'cancelado'
+      AND p.fecha_inicio >= ? AND p.fecha_inicio < ?
+     WHERE u.rol = 'operario' AND u.activo = 1
+     GROUP BY u.id, u.nombre`,
+    [rango.desde, rango.hasta],
+  );
+  const [unidades] = await pool.query(
+    `SELECT usuario_id, SUM(cantidad) AS unidades
+     FROM movimientos_inventario
+     WHERE tipo = 'produccion' AND fecha >= ? AND fecha < ?
+     GROUP BY usuario_id`,
+    [rango.desde, rango.hasta],
+  );
+  const unidadesPorUsuario = new Map(
+    unidades.map((fila) => [fila.usuario_id, Number(fila.unidades)]),
+  );
+  // MEVI-120: lo de cada operario por referencia (línea, medida, calibre y color), con las mismas órdenes del
+  // cumplimiento, para la gráfica por operario y su ventana de detalle
+  const [referencias] = await pool.query(
+    `SELECT p.responsable_id AS operario_id, p.producto, p.medida, p.calibre, p.color,
+            COUNT(*) AS ordenes, SUM(p.cantidad) AS meta,
+            SUM(LEAST(p.cantidad_producida, p.cantidad)) AS producido
+     FROM produccion p
+     JOIN usuarios u ON u.id = p.responsable_id AND u.rol = 'operario' AND u.activo = 1
+     WHERE p.estado <> 'cancelado' AND p.fecha_inicio >= ? AND p.fecha_inicio < ?
+     GROUP BY p.responsable_id, p.producto, p.medida, p.calibre, p.color
+     ORDER BY producido DESC`,
+    [rango.desde, rango.hasta],
+  );
+  const porOperario = new Map();
+  for (const fila of referencias) {
+    if (fila.operario_id === undefined || fila.operario_id === null) continue;
+    const meta = Number(fila.meta || 0);
+    const producido = Number(fila.producido || 0);
+    const lista = porOperario.get(fila.operario_id) || [];
+    lista.push({
+      producto: fila.producto,
+      medida: fila.medida,
+      calibre: fila.calibre,
+      color: fila.color,
+      ordenes: Number(fila.ordenes || 0),
+      meta,
+      producido,
+      cumplimiento: porcentaje(producido, meta),
+    });
+    porOperario.set(fila.operario_id, lista);
+  }
+  const resultado = calcularCumplimiento(filas, unidadesPorUsuario);
+  resultado.operarios = resultado.operarios.map((operario) => ({ ...operario, referencias: porOperario.get(operario.id) || [] }));
+  return { periodo, ...rango, ...resultado };
+}
+
 async function resumenProduccion() {
   const [filas] = await pool.query(
     `SELECT estado, COUNT(*) AS total, SUM(cantidad) AS cantidad_total
@@ -12,43 +268,138 @@ async function resumenVentas({ desde, hasta } = {}) {
   const condiciones = [];
   const valores = [];
   if (desde) {
-    condiciones.push("fecha >= ?");
+    condiciones.push("v.fecha >= ?");
     valores.push(desde);
   }
   if (hasta) {
-    condiciones.push("fecha <= ?");
+    condiciones.push("v.fecha <= ?");
     valores.push(hasta);
   }
   const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
 
   const [totales] = await pool.query(
-    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(total), 0) AS total_vendido
-     FROM ventas ${where}`,
+    `SELECT COUNT(*) AS numero_ventas, COALESCE(SUM(v.total), 0) AS total_vendido
+     FROM ventas v ${where}`,
     valores
   );
+  // CR-022: las unidades y el total por producto salen de las líneas de cada venta
   const [porProducto] = await pool.query(
-    `SELECT producto, SUM(cantidad) AS unidades, SUM(total) AS total
-     FROM ventas ${where} GROUP BY producto ORDER BY total DESC`,
+    `SELECT d.producto, SUM(d.cantidad) AS unidades, SUM(d.total) AS total
+     FROM ventas_detalle d JOIN ventas v ON v.id = d.venta_id
+     ${where} GROUP BY d.producto ORDER BY total DESC`,
     valores
   );
 
   return { resumen: totales[0], porProducto };
 }
 
+// HU-023 / RF-026: existencias de producto terminado y de materias primas en el mismo reporte
 async function resumenInventario() {
-  const [filas] = await pool.query("SELECT producto, cantidad, ubicacion FROM inventario ORDER BY cantidad ASC");
-  return filas;
+  const [productos] = await pool.query("SELECT producto, cantidad FROM inventario ORDER BY cantidad ASC");
+  const [materiasPrimas] = await pool.query(
+    `SELECT nombre, cantidad, unidad, stock_minimo, cantidad <= stock_minimo AS bajo_stock
+     FROM materia_prima ORDER BY cantidad ASC`,
+  );
+  return {
+    productos,
+    materias_primas: materiasPrimas.map((fila) => ({ ...fila, bajo_stock: Boolean(Number(fila.bajo_stock)) })),
+  };
 }
 
-async function bitacoraAuditoria(limite = 100) {
-  const [filas] = await pool.query(
+function filtroInvalido(mensaje) {
+  const error = new Error(mensaje);
+  error.statusCode = 400;
+  return error;
+}
+
+// RF-029 con CR-016: el administrador elige qué buscar (fechas, usuario, acción, módulo y texto del
+// detalle) y el servidor filtra toda la tabla y devuelve una página (20 por defecto, máximo 100).
+async function bitacoraAuditoria(filtros = {}) {
+  const condiciones = [];
+  const valores = [];
+  const fecha = /^\d{4}-\d{2}-\d{2}$/;
+  // DEF-023: «2026-13-45» o «2026-02-30» tienen el formato pero no existen; antes se ignoraban sin aviso
+  const valida = (texto) => {
+    const dia = new Date(`${texto}T00:00:00Z`);
+    return !Number.isNaN(dia.getTime()) && dia.toISOString().slice(0, 10) === texto;
+  };
+  const { desde, hasta, usuario_id, accion, tabla, texto } = filtros;
+  if (desde !== undefined && desde !== "") {
+    if (!fecha.test(desde)) throw filtroInvalido("La fecha inicial debe tener el formato AAAA-MM-DD");
+    if (!valida(desde)) throw filtroInvalido("La fecha inicial no es una fecha válida");
+    condiciones.push("a.fecha >= ?");
+    valores.push(`${desde} 00:00:00`);
+  }
+  if (hasta !== undefined && hasta !== "") {
+    if (!fecha.test(hasta)) throw filtroInvalido("La fecha final debe tener el formato AAAA-MM-DD");
+    if (!valida(hasta)) throw filtroInvalido("La fecha final no es una fecha válida");
+    if (desde && desde > hasta) throw filtroInvalido("La fecha inicial no puede ser posterior a la final");
+    condiciones.push("a.fecha < DATE_ADD(?, INTERVAL 1 DAY)");
+    valores.push(hasta);
+  }
+  if (usuario_id !== undefined && usuario_id !== "") {
+    const id = Number(usuario_id);
+    if (!Number.isInteger(id) || id <= 0) throw filtroInvalido("El usuario del filtro no es válido");
+    condiciones.push("a.usuario_id = ?");
+    valores.push(id);
+  }
+  if (accion !== undefined && accion !== "") {
+    if (!/^[A-Z_]{1,100}$/.test(accion)) throw filtroInvalido("La acción del filtro no es válida");
+    condiciones.push("a.accion = ?");
+    valores.push(accion);
+  }
+  if (tabla !== undefined && tabla !== "") {
+    if (!/^[a-z_]{1,60}$/.test(tabla)) throw filtroInvalido("El módulo del filtro no es válido");
+    condiciones.push("a.tabla_afectada = ?");
+    valores.push(tabla);
+  }
+  if (texto !== undefined && String(texto).trim() !== "") {
+    const buscado = String(texto).trim();
+    if (buscado.length > 100) throw filtroInvalido("El texto a buscar admite máximo 100 caracteres");
+    condiciones.push("a.detalle LIKE ?");
+    valores.push(`%${buscado.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
+  }
+  const porPagina = Math.min(Math.max(Math.trunc(Number(filtros.porPagina)) || 20, 1), 100);
+  const pagina = Math.max(Math.trunc(Number(filtros.pagina)) || 1, 1);
+  const donde = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+
+  const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM auditoria a ${donde}`, valores);
+  const [registros] = await pool.query(
     `SELECT a.*, u.usuario AS realizado_por
      FROM auditoria a
      LEFT JOIN usuarios u ON u.id = a.usuario_id
-     ORDER BY a.fecha DESC LIMIT ?`,
-    [limite]
+     ${donde}
+     ORDER BY a.fecha DESC, a.id DESC LIMIT ? OFFSET ?`,
+    [...valores, porPagina, (pagina - 1) * porPagina],
   );
-  return filas;
+  // Valores para las listas de los filtros: solo lo que existe en la bitácora
+  const [acciones] = await pool.query("SELECT DISTINCT accion FROM auditoria ORDER BY accion");
+  const [tablas] = await pool.query("SELECT DISTINCT tabla_afectada FROM auditoria ORDER BY tabla_afectada");
+  const [usuarios] = await pool.query(
+    "SELECT DISTINCT u.id, u.usuario FROM auditoria a JOIN usuarios u ON u.id = a.usuario_id ORDER BY u.usuario",
+  );
+  return {
+    registros,
+    total: Number(total),
+    pagina,
+    porPagina,
+    paginas: Math.max(Math.ceil(Number(total) / porPagina), 1),
+    opciones: {
+      acciones: acciones.map((fila) => fila.accion),
+      tablas: tablas.map((fila) => fila.tabla_afectada),
+      usuarios: usuarios.map((fila) => ({ id: fila.id, usuario: fila.usuario })),
+    },
+  };
 }
 
-module.exports = { resumenProduccion, resumenVentas, resumenInventario, bitacoraAuditoria };
+module.exports = {
+  limitesPeriodo,
+  resumenProduccion,
+  resumenVentas,
+  detalleProduccion,
+  detalleVentas,
+  calcularCumplimiento,
+  rendimientoOperarios,
+  resumenInventario,
+  bitacoraAuditoria,
+};

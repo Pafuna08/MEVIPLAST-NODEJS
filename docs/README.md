@@ -1,0 +1,20 @@
+# Documentación del repositorio
+
+- [Paquete documental ADSO](Documentacion_Proyecto_ADSO/LEEME.md): los Word y Excel de las plantillas del instructor (formulación, requisitos, diseño, calidad, manuales, cierre y evaluación), con su [Índice Maestro](Documentacion_Proyecto_ADSO/00_Gobierno_Documental/Indice_Maestro.xlsx)
+- [Estado del proyecto y brechas](project-status.md)
+- [Trazabilidad y estado por historia](requirements/traceability.md)
+- [Decisiones del equipo por delegación del cliente](requirements/decisiones-por-delegacion.md)
+- [Manual de usuario](user-guide.md)
+- [Arquitectura](architecture/overview.md) y [diagramas DIA-001 a DIA-005](architecture/diagramas.md)
+- [Catálogo API](api/endpoints.md) y [contrato OpenAPI](api/openapi.json), que la aplicación publica con Swagger UI en `/api-docs`
+- [Esquema de datos](data/schema.md) y [diagrama entidad-relación](data/er.md)
+- [Estrategia de pruebas](testing/strategy.md)
+- [Índice de evidencias](evidence/README.md)
+- [ADR-001: panel React](adr/ADR-001-panel-react.md)
+- [ADR-002: backend en Node.js en lugar de Django](adr/ADR-002-backend-node.md)
+- [ADR-003: movimientos de stock en transacción (ledger)](adr/ADR-003-ledger-movimientos.md)
+- [ADR-004: autenticación con JWT y permisos por rol](adr/ADR-004-autenticacion-jwt.md)
+- [Respaldo y restauración](operations/backup-restore.md)
+- [Decisión de licencia](legal/licensing.md)
+- [Declaración de uso de IA, borrador por firmar](legal/ai-use.md)
+- [Evaluación frente a la arquitectura ADSO del 2026-10-20 (histórica)](adso-review-2026-10-20.md)

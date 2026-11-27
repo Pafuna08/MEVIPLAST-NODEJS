@@ -2,24 +2,51 @@
   "name": "meviplast",
   "version": "1.0.0",
   "description": "Sistema Web MEVIPLAST - Gestion de produccion, materia prima, inventario, ventas, seguridad y reportes",
+  "license": "UNLICENSED",
+  "private": true,
   "main": "server.js",
   "scripts": {
+    "prestart": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "db:init": "node src/config/initDb.js"
+    "db:init": "node src/config/initDb.js",
+    "auditoria:archivar": "node src/config/archivarAuditoria.js",
+    "test": "node --require ./tests/entorno-pruebas.js --test",
+    "lint": "eslint .",
+    "test:e2e": "node --test tests/e2e/flujos.e2e.js",
+    "test:coverage": "node --require ./tests/entorno-pruebas.js --test --experimental-test-coverage --test-coverage-include=src/** --test-coverage-lines=58",
+    "test:coverage:total": "node --require ./tests/entorno-pruebas.js --test --experimental-test-coverage --test-coverage-include=src/** --test-coverage-lines=75 tests/*.test.js tests/e2e/flujos.e2e.js",
+    "test:perf": "node tests/perf/carga.perf.js",
+    "test:browser": "node tests/browser/navegadores.browser.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.10.0"
+    "mysql2": "^3.10.0",
+    "nodemailer": "^10.2.1",
+    "pdfkit": "^0.20.2",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "nodemon": "^3.1.4",
+    "playwright-core": "1.64.0"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    },
+    "nodemon": {
+      "minimatch": "^11.0.5"
+    }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

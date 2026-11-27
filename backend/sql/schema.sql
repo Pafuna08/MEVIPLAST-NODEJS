@@ -16,10 +16,27 @@ CREATE TABLE IF NOT EXISTS usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
   usuario VARCHAR(60) NOT NULL UNIQUE,
+  correo VARCHAR(254) NULL,
   password_hash VARCHAR(255) NOT NULL,
-  rol ENUM('admin', 'supervisor', 'operario') NOT NULL,
+  rol ENUM('admin', 'supervisor', 'operario', 'vendedor', 'almacenista') NOT NULL,
   activo TINYINT(1) NOT NULL DEFAULT 1,
-  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  intentos_fallidos INT NOT NULL DEFAULT 0,
+  bloqueado_hasta DATETIME NULL,
+  sesion_version INT NOT NULL DEFAULT 0,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_usuarios_correo (correo)
+);
+
+CREATE TABLE IF NOT EXISTS tokens_recuperacion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  expira_en DATETIME NOT NULL,
+  usado_en DATETIME NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tokens_recuperacion_usuario (usuario_id),
+  INDEX idx_tokens_recuperacion_expira (expira_en),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 -- EP-004 Seguridad: bitacora / auditoria de acciones
@@ -40,6 +57,10 @@ CREATE TABLE IF NOT EXISTS materia_prima (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
   tipo VARCHAR(60) NOT NULL,
+  medida VARCHAR(80) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
+  peso_rollo DECIMAL(10,2) NULL,
   cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
   unidad VARCHAR(20) NOT NULL DEFAULT 'kg',
   proveedor VARCHAR(120) NULL,
@@ -50,21 +71,57 @@ CREATE TABLE IF NOT EXISTS materia_prima (
 -- ---------------------------------------------------------
 -- EP-001 Produccion
 -- ---------------------------------------------------------
+-- RN-012 / CR-020: líneas de producto terminado. Las seis de la reunión inicial vienen de base;
+-- el administrador agrega otras desde el panel. No se borran: órdenes, existencias y ventas las nombran.
+CREATE TABLE IF NOT EXISTS lineas_producto (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(60) NOT NULL UNIQUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO lineas_producto (id, nombre) VALUES
+  (1, 'Adhesivo PP'),
+  (2, 'Adhesivo Seguridad'),
+  (3, 'Sencilla PP'),
+  (4, 'Bolsas para la basura'),
+  (5, 'Cargadera'),
+  (6, 'Troquel riñón');
+
 CREATE TABLE IF NOT EXISTS produccion (
   id INT AUTO_INCREMENT PRIMARY KEY,
   producto VARCHAR(120) NOT NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL,
   materia_prima_id INT NULL,
+  supervisor_id INT NULL,
   responsable_id INT NULL,
   estado ENUM('pendiente', 'en_proceso', 'finalizado', 'cancelado') NOT NULL DEFAULT 'pendiente',
   prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
   cantidad_producida DECIMAL(10,2) NOT NULL DEFAULT 0,
-  lote VARCHAR(80) NULL,
   observaciones VARCHAR(500) NULL,
   fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_fin DATETIME NULL,
   FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE SET NULL,
+  FOREIGN KEY (supervisor_id) REFERENCES usuarios(id) ON DELETE SET NULL,
   FOREIGN KEY (responsable_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS plantillas_produccion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  producto VARCHAR(120) NOT NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  materia_prima_id INT NULL,
+  prioridad ENUM('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
+  creado_por INT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_plantilla_variante (producto, medida, calibre, color),
+  FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE SET NULL,
+  FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------
@@ -72,22 +129,74 @@ CREATE TABLE IF NOT EXISTS produccion (
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS inventario (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  producto VARCHAR(120) NOT NULL,
+  producto VARCHAR(255) NOT NULL,
+  familia VARCHAR(80) NULL,
+  medida VARCHAR(40) NULL,
+  calibre VARCHAR(40) NULL,
+  color VARCHAR(80) NULL,
   cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
-  ubicacion VARCHAR(80) NULL,
+  UNIQUE KEY uq_inventario_variante (familia, medida, calibre, color),
   actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS ventas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   cliente VARCHAR(120) NOT NULL,
-  producto VARCHAR(120) NOT NULL,
-  cantidad DECIMAL(10,2) NOT NULL,
-  precio_unitario DECIMAL(10,2) NOT NULL,
-  total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad * precio_unitario) STORED,
+  total DECIMAL(12,2) NOT NULL DEFAULT 0,
   usuario_id INT NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+-- CR-022: líneas de la venta (un producto por línea); el total de la venta es la suma de sus líneas
+CREATE TABLE IF NOT EXISTS ventas_detalle (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  venta_id INT NOT NULL,
+  inventario_id INT NULL,
+  producto VARCHAR(255) NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  precio_unitario DECIMAL(12,4) NOT NULL,
+  cantidad_paquetes INT NOT NULL,
+  unidades_paquete INT NOT NULL,
+  precio_paquete DECIMAL(12,2) NOT NULL,
+  total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_paquetes * precio_paquete) STORED,
+  INDEX idx_ventas_detalle_venta (venta_id),
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
+  FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_materia_prima (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  materia_prima_id INT NOT NULL,
+  usuario_id INT NULL,
+  produccion_id INT NULL,
+  tipo ENUM('compra', 'ajuste_entrada', 'ajuste_salida', 'consumo_produccion') NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  costo DECIMAL(12,2) NULL,
+  factura VARCHAR(40) NULL,
+  observaciones VARCHAR(255) NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_mov_materia_fecha (materia_prima_id, fecha),
+  FOREIGN KEY (materia_prima_id) REFERENCES materia_prima(id) ON DELETE RESTRICT,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (produccion_id) REFERENCES produccion(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_inventario (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  inventario_id INT NOT NULL,
+  usuario_id INT NULL,
+  produccion_id INT NULL,
+  venta_id INT NULL,
+  tipo ENUM('saldo_inicial', 'ingreso_manual', 'produccion', 'salida_manual', 'venta') NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  observaciones VARCHAR(255) NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_mov_inventario_fecha (inventario_id, fecha),
+  FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE RESTRICT,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (produccion_id) REFERENCES produccion(id) ON DELETE SET NULL,
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------

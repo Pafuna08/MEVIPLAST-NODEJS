@@ -1,0 +1,128 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { once } = require("node:events");
+const jwt = require("jsonwebtoken");
+
+process.env.JWT_SECRET = "test-only-secret-for-route-authorization";
+
+const app = require("../src/app");
+const { pool } = require("../src/config/database");
+
+test("las lecturas de materias primas y producción respetan los roles", async (t) => {
+  const originalQuery = pool.query;
+  // Un id por rol, para que el middleware encuentre a cada usuario activo con su rol
+  const ids = { admin: 1, supervisor: 2, operario: 3, vendedor: 4, almacenista: 5 };
+  pool.query = async (sql, params = []) => {
+    if (sql.includes("FROM usuarios WHERE id = ?")) {
+      const rol = Object.keys(ids).find((clave) => ids[clave] === params[0]);
+      return [[{ activo: 1, rol }], []];
+    }
+    if (sql.includes("FROM materia_prima WHERE id = ?")) {
+      return [[{ id: 1, nombre: "Resina" }], []];
+    }
+    return [[], []];
+  };
+  t.after(() => {
+    pool.query = originalQuery;
+  });
+
+  const server = app.listen(0, "127.0.0.1");
+  t.after(
+    () =>
+      new Promise((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      }),
+  );
+  await once(server, "listening");
+  const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
+
+  async function get(path, rol) {
+    const token = jwt.sign({ id: ids[rol], rol }, process.env.JWT_SECRET);
+    return fetch(`${baseUrl}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  async function post(path, rol, body) {
+    const token = jwt.sign({ id: ids[rol], rol }, process.env.JWT_SECRET);
+    return fetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  for (const rol of ["vendedor", "operario"]) {
+    const response = await get("/materia-prima/1", rol);
+    assert.equal(response.status, 403, `${rol} no debe leer materias primas`);
+  }
+
+  for (const rol of ["admin", "supervisor", "almacenista"]) {
+    const response = await get("/materia-prima/1", rol);
+    assert.equal(response.status, 200, `${rol} debe leer materias primas`);
+  }
+
+  for (const rol of ["vendedor", "almacenista"]) {
+    const response = await get("/produccion", rol);
+    assert.equal(response.status, 403, `${rol} no debe listar producción`);
+  }
+
+  for (const rol of ["admin", "supervisor", "operario"]) {
+    const response = await get("/produccion", rol);
+    assert.equal(response.status, 200, `${rol} debe listar producción`);
+  }
+
+  // CR-021: el supervisor no ve ventas: ni la lista, ni comprobantes, ni el reporte o su Excel
+  for (const ruta of ["/ventas", "/ventas/1/comprobante", "/reportes/ventas?periodo=diario", "/reportes/ventas/detalle?periodo=diario", "/reportes/ventas/detalle/excel?periodo=diario"]) {
+    const response = await get(ruta, "supervisor");
+    assert.equal(response.status, 403, `el supervisor no debe ver ${ruta}`);
+  }
+
+  // CP-113 · CR-026: el supervisor ya no consulta el historial de materias primas (compras con costo y
+  // factura); sigue listando las bobinas para sus órdenes y viendo el stock bajo
+  for (const ruta of ["/materia-prima/movimientos", "/materia-prima/1/movimientos"]) {
+    assert.equal((await get(ruta, "supervisor")).status, 403, `el supervisor no debe ver ${ruta}`);
+    for (const rol of ["admin", "almacenista"]) {
+      assert.equal((await get(ruta, rol)).status, 200, `${rol} debe ver ${ruta}`);
+    }
+  }
+  for (const ruta of ["/materia-prima", "/materia-prima/bajo-stock"]) {
+    assert.equal((await get(ruta, "supervisor")).status, 200, `el supervisor debe consultar ${ruta}`);
+  }
+  // Y sigue registrando el consumo de sus órdenes (desde Seguimiento), pero no compras: la cantidad inválida
+  // responde 400 sin llegar a la base, lo que prueba que el rol pasó
+  const consumo = await post("/materia-prima/movimientos", "supervisor", { materia_prima_id: 1, tipo: "consumo_produccion", cantidad: "abc" });
+  assert.equal(consumo.status, 400, "el supervisor debe poder registrar consumo");
+  const compra = await post("/materia-prima/movimientos", "supervisor", { materia_prima_id: 1, tipo: "compra", cantidad: 1 });
+  assert.equal(compra.status, 403, "el supervisor no registra compras");
+
+  // DEF-007: el supervisor no registra ventas
+  for (const rol of ["supervisor", "operario", "almacenista"]) {
+    const response = await post("/ventas", rol, {});
+    assert.equal(response.status, 403, `${rol} no debe registrar ventas`);
+  }
+  for (const rol of ["admin", "vendedor"]) {
+    const response = await post("/ventas", rol, {});
+    assert.notEqual(response.status, 403, `${rol} debe poder registrar ventas`);
+  }
+
+  const userWithoutEmail = await post("/usuarios", "admin", {
+    nombre: "Usuario Prueba",
+    usuario: "prueba",
+    password: "clave123",
+    rol: "operario",
+  });
+  assert.equal(userWithoutEmail.status, 400);
+
+  const userWithInvalidEmail = await post("/usuarios", "admin", {
+    nombre: "Usuario Prueba",
+    usuario: "prueba",
+    correo: "correo-invalido",
+    password: "clave123",
+    rol: "operario",
+  });
+  assert.equal(userWithInvalidEmail.status, 400);
+});

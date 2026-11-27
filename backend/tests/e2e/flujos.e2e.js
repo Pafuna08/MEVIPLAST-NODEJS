@@ -1,0 +1,813 @@
+// Pruebas extremo a extremo contra una base MySQL/MariaDB real y desechable.
+// Uso: npm run test:e2e --prefix backend
+// Crea la base E2E_DB_NAME (por defecto meviplast_e2e), ejecuta los flujos y la elimina.
+// Nunca apunta a meviplast_db: el nombre debe empezar por "meviplast_e2e".
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const { once } = require("node:events");
+const bcrypt = require("bcryptjs");
+const ExcelJS = require("exceljs");
+const mysql = require("mysql2/promise");
+const { leerEsquema } = require("../../src/config/schema");
+
+const DB = process.env.E2E_DB_NAME || "meviplast_e2e";
+if (!/^meviplast_e2e\w*$/.test(DB)) {
+  throw new Error(`E2E_DB_NAME debe empezar por "meviplast_e2e" (recibido: ${DB})`);
+}
+process.env.DB_NAME = DB;
+process.env.JWT_SECRET = "e2e-only-secret";
+process.env.LOGIN_MAX_INTENTOS = "5";
+process.env.LOGIN_BLOQUEO_MINUTOS = "15";
+
+const conexion = {
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  multipleStatements: true,
+};
+const CLAVE = "E2e-clave-123";
+const ROLES = ["admin", "supervisor", "operario", "vendedor", "almacenista"];
+const sqlDir = path.join(__dirname, "..", "..", "sql");
+
+async function prepararBase() {
+  const raiz = await mysql.createConnection(conexion);
+  await raiz.query(`DROP DATABASE IF EXISTS \`${DB}\``);
+  await raiz.query(`CREATE DATABASE \`${DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  await raiz.changeUser({ database: DB });
+  await raiz.query(leerEsquema());
+  const hash = await bcrypt.hash(CLAVE, 4);
+  for (const rol of ROLES) {
+    await raiz.query(
+      "INSERT INTO usuarios (nombre, usuario, correo, password_hash, rol) VALUES (?, ?, ?, ?, ?)",
+      [`E2E ${rol}`, `e2e_${rol}`, `e2e_${rol}@example.test`, hash, rol],
+    );
+  }
+  // RN-026: toda orden indica su materia prima; esta bobina la usan las órdenes de los flujos
+  await raiz.query(
+    "INSERT INTO materia_prima (nombre, tipo, medida, calibre, color, cantidad, stock_minimo) VALUES ('PEBD base E2E', 'PEBD', '10 x 15', '2', 'Transparente', 1000, 0)",
+  );
+  return raiz;
+}
+
+test("flujos E2E de MEVIPLAST contra MySQL", async (t) => {
+  const db = await prepararBase();
+  const [[{ id: bobina }]] = await db.query("SELECT id FROM materia_prima WHERE nombre = 'PEBD base E2E'");
+  const app = require("../../src/app");
+  const { pool } = require("../../src/config/database");
+  const server = app.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await pool.end();
+    if (process.env.E2E_KEEP_DB !== "true") await db.query(`DROP DATABASE IF EXISTS \`${DB}\``);
+    await db.end();
+  });
+
+  async function llamar(metodo, ruta, token, cuerpo) {
+    const respuesta = await fetch(`${base}${ruta}`, {
+      method: metodo,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
+    });
+    const texto = await respuesta.text();
+    return { status: respuesta.status, body: texto ? JSON.parse(texto) : null };
+  }
+  const login = (usuario, password = CLAVE) => llamar("POST", "/auth/login", null, { usuario, password });
+  const tokens = {};
+  const ids = {};
+  for (const rol of ROLES) {
+    const r = await login(`e2e_${rol}`);
+    assert.equal(r.status, 200, `login de ${rol}`);
+    tokens[rol] = r.body.token;
+    ids[rol] = r.body.usuario.id;
+  }
+
+  await t.test("health responde 200 con la base real", async () => {
+    const r = await llamar("GET", "/health");
+    assert.equal(r.status, 200);
+    assert.equal(r.body.baseDatos, "ok");
+  });
+
+  await t.test("CP-028: orden → asignación → avance → inventario → venta → reportes", async () => {
+    const sinVariante = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Bolsas para la basura", cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
+    });
+    assert.equal(sinVariante.status, 400, "la orden exige medida, calibre y color");
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Bolsas para la basura", medida: "40x60 cm", calibre: "2", color: "Negro",
+      cantidad: 1000, prioridad: "alta", materia_prima_id: bobina,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    // RN-025: la medida se guarda normalizada y un dato sin formato se rechaza en el servidor
+    assert.equal(orden.body.medida, "40 x 60 cm");
+    const invalida = await llamar("POST", "/inventario", tokens.admin, {
+      familia: "Bolsas para la basura", medida: "eddc", calibre: "eew", color: "Transparente", cantidad: 233,
+    });
+    assert.equal(invalida.status, 400, "medida y calibre sin formato se rechazan");
+    // RN-025: el color debe ser de la lista; RN-026: la orden exige materia prima
+    const colorInventado = await llamar("POST", "/inventario", tokens.admin, {
+      familia: "Bolsas para la basura", medida: "10 x 15", calibre: "2", color: "Fdsa", cantidad: 5,
+    });
+    assert.equal(colorInventado.status, 400, "un color fuera de la lista se rechaza");
+    const sinMateria = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Bolsas para la basura", medida: "10 x 15", calibre: "2", color: "Negro", cantidad: 10, prioridad: "media",
+    });
+    assert.equal(sinMateria.status, 400);
+    assert.match(sinMateria.body.mensaje, /materia prima/);
+    // CR-014: la orden del administrador queda pendiente para los supervisores, sin supervisor fijo
+    assert.equal(orden.body.supervisor_id, null);
+    const ordenId = orden.body.id;
+
+    const asignada = await llamar("PUT", `/produccion/${ordenId}/asignar`, tokens.supervisor, { responsable_id: ids.operario });
+    assert.equal(asignada.status, 200, JSON.stringify(asignada.body));
+    assert.equal(Number(asignada.body.supervisor_id), ids.supervisor, "el supervisor que asigna toma la orden");
+
+    const tareas = await llamar("GET", "/produccion", tokens.operario);
+    assert.ok(tareas.body.some((o) => o.id === ordenId), "el operario ve su orden");
+
+    assert.equal((await llamar("PUT", `/produccion/${ordenId}/estado`, tokens.operario, { estado: "en_proceso" })).status, 200);
+    const exceso = await llamar("POST", `/produccion/${ordenId}/avance`, tokens.operario, { cantidad: 1500 });
+    assert.equal(exceso.status, 400);
+    assert.match(exceso.body.mensaje, /supera la meta pendiente/);
+    const avance = await llamar("POST", `/produccion/${ordenId}/avance`, tokens.operario, { cantidad: 1000, observaciones: "E2E-01" });
+    assert.equal(avance.status, 200, JSON.stringify(avance.body));
+    assert.equal(avance.body.estado, "finalizado");
+
+    // El avance entra a la variante exacta de la orden
+    const [variantes] = await db.query("SELECT id, medida, calibre, color, cantidad FROM inventario WHERE familia = 'Bolsas para la basura'");
+    assert.equal(variantes.length, 1);
+    const [stock] = variantes;
+    assert.deepEqual([stock.medida, stock.calibre, stock.color], ["40 x 60 cm", "2", "Negro"]);
+    assert.equal(Number(stock.cantidad), 1000);
+    const [[mov]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE produccion_id = ? AND tipo = 'produccion'", [ordenId]);
+    assert.equal(Number(mov.n), 1);
+
+    // Mi historial: el operario ve su avance del día con la observación; otros roles no tienen acceso
+    const historial = await llamar("GET", "/produccion/mis-registros?periodo=diario", tokens.operario);
+    assert.equal(historial.status, 200, JSON.stringify(historial.body));
+    const registro = historial.body.detalle.find((d) => Number(d.orden_id) === ordenId);
+    assert.ok(registro, "el avance aparece en el historial del operario");
+    assert.equal(registro.observaciones, "E2E-01");
+    assert.equal((await llamar("GET", "/produccion/mis-registros?periodo=diario", tokens.supervisor)).status, 403);
+    assert.equal((await llamar("GET", "/produccion/mis-registros?periodo=quincenal", tokens.operario)).status, 400);
+
+    const venta = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente E2E", inventario_id: stock.id, cantidad_paquetes: 5, unidades_paquete: 100, precio_paquete: 12000,
+    });
+    assert.equal(venta.status, 201, JSON.stringify(venta.body));
+    assert.equal(Number(venta.body.total), 60000);
+    const [[despues]] = await db.query("SELECT cantidad FROM inventario WHERE id = ?", [stock.id]);
+    assert.equal(Number(despues.cantidad), 500);
+
+    const reporteProd = await llamar("GET", "/reportes/produccion/detalle?periodo=semanal", tokens.supervisor);
+    assert.equal(reporteProd.status, 200);
+    assert.ok(reporteProd.body.detalle.some((d) => Number(d.orden_id) === ordenId));
+    const reporteVentas = await llamar("GET", "/reportes/ventas/detalle?periodo=semanal", tokens.admin);
+    assert.equal(reporteVentas.status, 200);
+    assert.ok(reporteVentas.body.detalle.some((d) => d.cliente === "Cliente E2E"));
+
+    const ventasVendedor = await llamar("GET", "/ventas", tokens.vendedor);
+    assert.ok(ventasVendedor.body.every((v) => v.usuario_id === ids.vendedor));
+
+    // RF-023: comprobante imprimible de la venta
+    const comprobante = await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.vendedor);
+    assert.equal(comprobante.status, 200, JSON.stringify(comprobante.body));
+    assert.equal(comprobante.body.numero, `V-${String(venta.body.id).padStart(6, "0")}`);
+    assert.equal(comprobante.body.cliente, "Cliente E2E");
+    assert.equal(comprobante.body.items.length, 1);
+    assert.equal(comprobante.body.items[0].familia, "Bolsas para la basura");
+    assert.equal(Number(comprobante.body.total), 60000);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.admin)).status, 200);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.almacenista)).status, 403);
+    assert.equal((await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.supervisor)).status, 403, "CR-021");
+    assert.equal((await llamar("GET", "/ventas/999999/comprobante", tokens.admin)).status, 404);
+    // El comprobante en PDF, para abrirlo en otra pestaña
+    const pdf = await fetch(`${base}/ventas/${venta.body.id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.vendedor}` } });
+    assert.equal(pdf.status, 200);
+    assert.equal(pdf.headers.get("content-type"), "application/pdf");
+    assert.match(pdf.headers.get("content-disposition"), /inline; filename="comprobante-V-\d{6}\.pdf"/);
+    assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+    const pdfSupervisor = await fetch(`${base}/ventas/${venta.body.id}/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.supervisor}` } });
+    assert.equal(pdfSupervisor.status, 403, "CR-021");
+    assert.equal((await fetch(`${base}/ventas/999999/comprobante/pdf`, { headers: { Authorization: `Bearer ${tokens.admin}` } })).status, 404);
+
+    // RF-028: el detalle del periodo se descarga en Excel con los mismos datos
+    const descargar = (ruta, token) => fetch(`${base}${ruta}`, { headers: { Authorization: `Bearer ${token}` } });
+    const excel = await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.admin);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.supervisor)).status, 403, "CR-021");
+    // RF-028: el mismo detalle en PDF, para abrirlo en otra pestaña
+    for (const [ruta, token] of [["/reportes/ventas/detalle/pdf?periodo=semanal", tokens.admin], ["/reportes/produccion/detalle/pdf?periodo=mensual", tokens.supervisor], ["/reportes/rendimiento/pdf?periodo=anual", tokens.supervisor]]) {
+      const pdf = await descargar(ruta, token);
+      assert.equal(pdf.status, 200, ruta);
+      assert.equal(pdf.headers.get("content-type"), "application/pdf");
+      assert.match(pdf.headers.get("content-disposition"), /^inline; filename="reporte-\w+-\w+-\d{4}-\d{2}-\d{2}\.pdf"$/);
+      assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+    }
+    assert.equal((await descargar("/reportes/ventas/detalle/pdf?periodo=semanal", tokens.supervisor)).status, 403, "CR-021");
+    assert.equal((await descargar("/reportes/produccion/detalle/pdf?periodo=quincenal", tokens.admin)).status, 400);
+    assert.equal(excel.status, 200);
+    assert.match(excel.headers.get("content-type"), /spreadsheetml/);
+    assert.match(excel.headers.get("content-disposition"), /reporte-ventas-semanal-\d{4}-\d{2}-\d{2}\.xlsx/);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(Buffer.from(await excel.arrayBuffer()));
+    const filas = [];
+    libro.getWorksheet("Detalle").eachRow((fila) => filas.push(fila.values));
+    assert.ok(filas.some((valores) => valores.includes("Cliente E2E")), "el Excel incluye la venta del periodo");
+    assert.equal((await descargar("/reportes/produccion/detalle/excel?periodo=semanal", tokens.admin)).status, 200);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=semanal", tokens.vendedor)).status, 403);
+    assert.equal((await descargar("/reportes/ventas/detalle/excel?periodo=quincenal", tokens.admin)).status, 400);
+  });
+
+  await t.test("CP-029: acceso directo a endpoints con el token de cada rol", async () => {
+    const matriz = [
+      ["GET", "/usuarios", ["admin"]],
+      ["GET", "/materia-prima", ["admin", "supervisor", "almacenista"]],
+      // CR-026: el historial de materias primas ya no es del supervisor
+      ["GET", "/materia-prima/movimientos", ["admin", "almacenista"]],
+      ["POST", "/materia-prima", ["admin"]],
+      ["GET", "/produccion", ["admin", "supervisor", "operario"]],
+      ["GET", "/produccion/operarios", ["admin", "supervisor"]],
+      ["GET", "/produccion/supervisores", ["admin"]],
+      ["GET", "/produccion/plantillas", ["admin", "supervisor"]],
+      ["GET", "/inventario", ["admin", "supervisor", "almacenista", "vendedor"]],
+      ["GET", "/inventario/movimientos", ["admin", "supervisor", "almacenista"]],
+      ["GET", "/ventas", ["admin", "vendedor"]],
+      ["POST", "/ventas", ["admin", "vendedor"]],
+      ["GET", "/reportes/produccion", ["admin", "supervisor"]],
+      ["GET", "/reportes/ventas", ["admin"]],
+      ["GET", "/reportes/auditoria", ["admin"]],
+      ["GET", "/lineas", ["admin", "supervisor", "almacenista", "vendedor"]],
+      ["POST", "/lineas", ["admin"]],
+    ];
+    for (const [metodo, ruta, permitidos] of matriz) {
+      assert.equal((await llamar(metodo, ruta, null, metodo === "POST" ? {} : undefined)).status, 401, `${ruta} sin token`);
+      for (const rol of ROLES) {
+        const r = await llamar(metodo, ruta, tokens[rol], metodo === "POST" ? {} : undefined);
+        const denegado = r.status === 403 && /No tienes permisos/.test(r.body?.mensaje || "");
+        assert.equal(denegado, !permitidos.includes(rol), `${metodo} ${ruta} con rol ${rol} respondió ${r.status}`);
+      }
+    }
+  });
+
+  await t.test("CP-031: ventas concurrentes no dejan stock negativo", async () => {
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, {
+      familia: "Adhesivo PP", medida: "10x15", calibre: "2", color: "Transparente", cantidad: 1500,
+    });
+    assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
+    const [[variante]] = await db.query("SELECT id FROM inventario WHERE familia = 'Adhesivo PP' AND medida = '10 x 15'");
+    const ventas = await Promise.all(
+      Array.from({ length: 5 }, (_, i) =>
+        llamar("POST", "/ventas", tokens.vendedor, {
+          cliente: `Concurrente ${i}`, inventario_id: variante.id, cantidad_paquetes: 1, unidades_paquete: 500, precio_paquete: 10000,
+        }),
+      ),
+    );
+    assert.equal(ventas.filter((v) => v.status === 201).length, 3);
+    assert.equal(ventas.filter((v) => v.status !== 201).length, 2);
+    const [[final]] = await db.query("SELECT cantidad FROM inventario WHERE id = ?", [variante.id]);
+    assert.equal(Number(final.cantidad), 0);
+    const [[movs]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE inventario_id = ? AND tipo = 'venta'", [variante.id]);
+    assert.equal(Number(movs.n), 3);
+  });
+
+  await t.test("HU-019: bloqueo tras 5 intentos y desbloqueo por el administrador", async () => {
+    for (let intento = 1; intento <= 4; intento += 1) {
+      assert.equal((await login("e2e_almacenista", "clave-erronea")).status, 401);
+    }
+    assert.equal((await login("e2e_almacenista", "clave-erronea")).status, 423);
+    assert.equal((await login("e2e_almacenista")).status, 423, "bloqueada aun con la clave correcta");
+
+    const usuarios = await llamar("GET", "/usuarios", tokens.admin);
+    assert.equal(Number(usuarios.body.find((u) => u.id === ids.almacenista).bloqueado), 1);
+    assert.equal((await llamar("PUT", `/usuarios/${ids.almacenista}/desbloquear`, tokens.admin)).status, 200);
+    assert.equal((await login("e2e_almacenista")).status, 200);
+
+    const [acciones] = await db.query("SELECT accion FROM auditoria WHERE accion IN ('BLOQUEO_CUENTA', 'DESBLOQUEAR_USUARIO')");
+    assert.deepEqual(acciones.map((a) => a.accion).sort(), ["BLOQUEO_CUENTA", "DESBLOQUEAR_USUARIO"]);
+  });
+
+  await t.test("ADR-004: el token deja de servir al desactivar al usuario o cambiarle el rol", async () => {
+    const vendedor = `/usuarios/${ids.vendedor}`;
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 200);
+
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { activo: 0 })).status, 200);
+    const inactivo = await llamar("GET", "/ventas", tokens.vendedor);
+    assert.equal(inactivo.status, 401);
+    assert.match(inactivo.body.mensaje, /ya no es válida/);
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { activo: 1 })).status, 200);
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 200, "vuelve a servir al reactivarlo");
+
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "almacenista" })).status, 200);
+    assert.equal((await llamar("GET", "/ventas", tokens.vendedor)).status, 401, "el token conserva el rol anterior");
+    assert.equal((await llamar("PUT", vendedor, tokens.admin, { rol: "vendedor" })).status, 200);
+  });
+
+  await t.test("DEF-021: el administrador no se quita el rol, no se desactiva ni se elimina, y siempre queda uno activo", async () => {
+    const propio = `/usuarios/${ids.admin}`;
+    const quitarRol = await llamar("PUT", propio, tokens.admin, { rol: "operario" });
+    assert.equal(quitarRol.status, 400);
+    assert.match(quitarRol.body.mensaje, /No puedes quitarte el rol de administrador/);
+    assert.match((await llamar("PUT", propio, tokens.admin, { activo: 0 })).body.mensaje, /No puedes desactivar tu propia cuenta/);
+    assert.match((await llamar("DELETE", propio, tokens.admin)).body.mensaje, /No puedes eliminar tu propia cuenta/);
+    const [[yo]] = await db.query(`SELECT rol, activo FROM \`${DB}\`.usuarios WHERE id = ?`, [ids.admin]);
+    assert.deepEqual({ rol: yo.rol, activo: Number(yo.activo) }, { rol: "admin", activo: 1 });
+
+    // Un admin sí puede desactivar a otro admin, y cambiar el rol de un admin inactivo; el único admin activo sigue sin poder eliminarse
+    const creado = await llamar("POST", "/usuarios", tokens.admin, { nombre: "Admin dos", usuario: "e2e_admin2", correo: "admin2@e2e.local", password: CLAVE, rol: "admin" });
+    assert.equal(creado.status, 201);
+    const otro = `/usuarios/${creado.body.id}`;
+    assert.equal((await llamar("PUT", otro, tokens.admin, { activo: 0 })).status, 200);
+    const token2 = (await login("e2e_admin2")).body;
+    assert.equal(token2.token, undefined, "el admin desactivado ya no entra");
+    await db.query(`UPDATE \`${DB}\`.usuarios SET activo = 0 WHERE id = ?`, [ids.admin]);
+    await db.query(`UPDATE \`${DB}\`.usuarios SET activo = 1 WHERE id = ?`, [creado.body.id]);
+    const admin2 = (await login("e2e_admin2")).body.token;
+    const ultimo = await llamar("PUT", propio, admin2, { rol: "supervisor" });
+    assert.equal(ultimo.status, 200, "el admin inactivo puede cambiar de rol: no es el último activo");
+    assert.match((await llamar("DELETE", otro, admin2)).body.mensaje, /No puedes eliminar tu propia cuenta/);
+    await db.query(`UPDATE \`${DB}\`.usuarios SET rol = 'admin', activo = 1 WHERE id = ?`, [ids.admin]);
+    const borrar = await llamar("DELETE", otro, tokens.admin);
+    assert.equal(borrar.status, 204);
+  });
+
+  await t.test("DEF-022 / CR-018: topes, enteros y números limpios; la base no recorta nada", async () => {
+    const contar = async (tabla) => Number((await db.query(`SELECT COUNT(*) AS n FROM \`${DB}\`.${tabla}`))[0][0].n);
+    const [ordenes, ventas, bobinas] = [await contar("produccion"), await contar("ventas"), await contar("materia_prima")];
+    const orden = { producto: "Adhesivo PP", medida: "10 x 15", calibre: "2", color: "Transparente", materia_prima_id: bobina, prioridad: "media" };
+    for (const [cantidad, mensaje] of [[1e12, /máximo 1.000.000/], [10.5, /entero/], ["2abc", /entero/]]) {
+      const r = await llamar("POST", "/produccion", tokens.admin, { ...orden, cantidad });
+      assert.equal(r.status, 400, `meta ${cantidad}`);
+      assert.match(r.body.mensaje, mensaje);
+    }
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 1e12 });
+    assert.equal(ingreso.status, 400);
+    const [[variante]] = await db.query(`SELECT id FROM \`${DB}\`.inventario WHERE cantidad > 0 LIMIT 1`);
+    assert.equal((await llamar("POST", `/inventario/${variante.id}/salida`, tokens.almacenista, { cantidad: 1.5, motivo: "Merma" })).status, 400);
+    const venta = { cliente: "Cliente topes", inventario_id: variante.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 };
+    for (const [cambio, mensaje] of [[{ unidades_paquete: 60 }, /50, 100 o 500/], [{ cantidad_paquetes: 1001 }, /máximo 1.000/],
+      [{ cantidad_paquetes: "2abc" }, /entero/], [{ precio_paquete: 1e15 }, /máximo \$100.000.000/]]) {
+      const r = await llamar("POST", "/ventas", tokens.vendedor, { ...venta, ...cambio });
+      assert.equal(r.status, 400, JSON.stringify(cambio));
+      assert.match(r.body.mensaje, mensaje);
+    }
+    // MEVI-115: el tamaño del rollo tiene tope por unidad de medida
+    const enorme = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", tamano_rollo: 201, unidad_medida: "pulgadas", calibre: "2", color: "Transparente", peso_rollo: 10 });
+    assert.equal(enorme.status, 400, JSON.stringify(enorme.body));
+    assert.equal((await llamar("PUT", `/materia-prima/${bobina}`, tokens.admin, { stock_minimo: -3 })).status, 400);
+    const conEspacio = await llamar("POST", "/usuarios", tokens.admin, { nombre: "Con espacio", usuario: "con espacio", correo: "espacio@e2e.local", password: CLAVE, rol: "operario" });
+    assert.equal(conEspacio.status, 400);
+    assert.deepEqual([await contar("produccion"), await contar("ventas"), await contar("materia_prima")], [ordenes, ventas, bobinas], "nada se guardó");
+    // Respaldo en la base: en modo estricto un valor que no cabe en la columna da error, no se recorta
+    await assert.rejects(pool.query("UPDATE inventario SET cantidad = 1e12 WHERE id = ?", [variante.id]), /Out of range/);
+  });
+
+  await t.test("DEF-013 / RF-015 / RF-016: compras, ajustes y consumo por orden de materia prima", async () => {
+    const creada = await llamar("POST", "/materia-prima", tokens.admin, {
+      tipo: "PEBD", tamano_rollo: "27,5", unidad_medida: "pulgadas", calibre: "2", color: "Azul", peso_rollo: 100,
+    });
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.medida, "27.5 pulg");
+    // Una sola bobina por variante: «27.50» pulgadas es la misma (409)
+    const repetida = await llamar("POST", "/materia-prima", tokens.admin, { tipo: "PEBD", tamano_rollo: "27.50", unidad_medida: "pulgadas", calibre: "2", color: "Azul", peso_rollo: 10 });
+    assert.equal(repetida.status, 409, "la bobina ya existe con esa variante");
+    const materiaId = creada.body.id;
+    const saldo = async () => Number((await db.query("SELECT cantidad FROM materia_prima WHERE id = ?", [materiaId]))[0][0].cantidad);
+    const mover = (token, cuerpo) => llamar("POST", "/materia-prima/movimientos", token, { materia_prima_id: materiaId, ...cuerpo });
+
+    assert.equal((await mover(tokens.almacenista, { tipo: "compra", cantidad: 50, observaciones: "Remisión E2E" })).status, 201);
+    assert.equal(await saldo(), 150);
+    const exceso = await mover(tokens.almacenista, { tipo: "ajuste_salida", cantidad: 999 });
+    assert.equal(exceso.status, 400);
+    assert.match(exceso.body.mensaje, /Stock insuficiente/);
+    assert.equal(await saldo(), 150, "el ajuste rechazado no cambia el saldo");
+
+    // Consumo: solo en una orden activa que usa esa bobina, y solo admin o supervisor
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Sencilla PP", medida: "20x30 cm", calibre: "1.5", color: "Transparente",
+      cantidad: 200, prioridad: "media", materia_prima_id: materiaId,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const otra = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Bolsas para la basura", medida: "40x60 cm", calibre: "2", color: "Negro",
+      cantidad: 100, prioridad: "baja", materia_prima_id: bobina,
+    });
+    assert.equal((await mover(tokens.almacenista, { tipo: "consumo_produccion", cantidad: 5, produccion_id: orden.body.id })).status, 403);
+    assert.equal((await mover(tokens.supervisor, { tipo: "compra", cantidad: 5 })).status, 403);
+    const sinAsociar = await mover(tokens.supervisor, { tipo: "consumo_produccion", cantidad: 5, produccion_id: otra.body.id });
+    assert.equal(sinAsociar.status, 400);
+    assert.match(sinAsociar.body.mensaje, /no está asociada/);
+    assert.equal((await mover(tokens.supervisor, { tipo: "consumo_produccion", cantidad: 30, produccion_id: orden.body.id })).status, 201);
+    assert.equal(await saldo(), 120);
+    const [[consumo]] = await db.query(
+      "SELECT COUNT(*) AS n FROM movimientos_materia_prima WHERE materia_prima_id = ? AND tipo = 'consumo_produccion' AND produccion_id = ?",
+      [materiaId, orden.body.id],
+    );
+    assert.equal(Number(consumo.n), 1);
+  });
+
+  await t.test("salida manual de inventario: el motivo es obligatorio y queda en el movimiento", async () => {
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, {
+      familia: "Sencilla PP", medida: "8 x 12", calibre: "1", color: "Natural", cantidad: 100,
+    });
+    assert.ok([200, 201].includes(ingreso.status), JSON.stringify(ingreso.body));
+    const variante = ingreso.body.id;
+    // Sin límites en el HTML: el servidor rechaza textos más largos que su columna
+    const medidaLarga = await llamar("POST", "/inventario", tokens.almacenista, {
+      familia: "Sencilla PP", medida: "8".repeat(41), calibre: "1", color: "Natural", cantidad: 10,
+    });
+    assert.equal(medidaLarga.status, 400, JSON.stringify(medidaLarga.body));
+    const clienteLargo = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "C".repeat(121), inventario_id: variante, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 100,
+    });
+    assert.equal(clienteLargo.status, 400);
+    assert.match(clienteLargo.body.mensaje, /máximo 120 caracteres/);
+    const sinMotivo = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5 });
+    assert.equal(sinMotivo.status, 400);
+    const otroSinDetalle = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5, motivo: "Otro" });
+    assert.equal(otroSinDetalle.status, 400);
+    const valida = await llamar("POST", `/inventario/${variante}/salida`, tokens.almacenista, { cantidad: 5, motivo: "Muestra para cliente", detalle: "Feria E2E" });
+    assert.equal(valida.status, 200, JSON.stringify(valida.body));
+    const [[mov]] = await db.query(
+      "SELECT observaciones FROM movimientos_inventario WHERE inventario_id = ? AND tipo = 'salida_manual' ORDER BY id DESC LIMIT 1", [variante],
+    );
+    assert.equal(mov.observaciones, "Muestra para cliente: Feria E2E");
+    const [[saldo]] = await db.query("SELECT cantidad FROM inventario WHERE id = ?", [variante]);
+    assert.equal(Number(saldo.cantidad), 95, "los intentos rechazados no descontaron stock");
+  });
+
+  await t.test("la migración de bloqueo se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("ALTER TABLE usuarios DROP COLUMN bloqueado_hasta, DROP COLUMN intentos_fallidos");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_login_lockout.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [columnas] = await db.query(
+      "SELECT column_name AS nombre FROM information_schema.columns WHERE table_schema = ? AND table_name = 'usuarios' AND column_name IN ('intentos_fallidos', 'bloqueado_hasta')",
+      [DB],
+    );
+    assert.equal(columnas.length, 2);
+    assert.equal((await login("e2e_admin")).status, 200);
+  });
+
+  await t.test("edición de órdenes: solo pendientes sin avance y con la variante completa", async () => {
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Troquel riñón", medida: "12 x 18", calibre: "2", color: "Transparente",
+      cantidad: 100, prioridad: "baja", materia_prima_id: bobina,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const id = orden.body.id;
+    assert.equal((await llamar("PUT", `/produccion/${id}`, tokens.admin, { medida: "20 x 30" })).status, 400);
+    const editada = await llamar("PUT", `/produccion/${id}`, tokens.supervisor, {
+      medida: "20 x 30", calibre: "3", color: "Blanco", cantidad: 150, prioridad: "alta",
+    });
+    assert.equal(editada.status, 200, JSON.stringify(editada.body));
+    assert.deepEqual(
+      [editada.body.medida, editada.body.calibre, editada.body.color, Number(editada.body.cantidad), editada.body.prioridad],
+      ["20 x 30", "3", "Blanco", 150, "alta"],
+    );
+    // La orden de CP-028 ya tiene avance: no se puede editar
+    const [[conAvance]] = await db.query("SELECT id FROM produccion WHERE cantidad_producida > 0 LIMIT 1");
+    assert.equal((await llamar("PUT", `/produccion/${conAvance.id}`, tokens.admin, { cantidad: 5000 })).status, 400);
+
+    // CR-013: el administrador y el supervisor no inician ni finalizan; solo cancelan
+    assert.equal((await llamar("PUT", `/produccion/${id}/estado`, tokens.supervisor, { estado: "en_proceso" })).status, 400);
+    assert.equal((await llamar("PUT", `/produccion/${id}/estado`, tokens.admin, { estado: "finalizado" })).status, 400);
+    const cancelada = await llamar("PUT", `/produccion/${id}/estado`, tokens.supervisor, { estado: "cancelado" });
+    assert.equal(cancelada.status, 200, JSON.stringify(cancelada.body));
+    assert.equal(cancelada.body.estado, "cancelado");
+  });
+
+  await t.test("CR-014: si falta el supervisor, el administrador asigna el operario desde su panel", async () => {
+    const orden = await llamar("POST", "/produccion", tokens.admin, {
+      producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 50, prioridad: "media", materia_prima_id: bobina,
+    });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    const visibles = await llamar("GET", "/produccion", tokens.supervisor);
+    assert.ok(visibles.body.some((o) => o.id === orden.body.id), "los supervisores ven la orden pendiente");
+    const asignada = await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario });
+    assert.equal(asignada.status, 200, JSON.stringify(asignada.body));
+    assert.equal(Number(asignada.body.responsable_id), ids.operario);
+    assert.equal(asignada.body.supervisor_id, null, "asignar como administrador no cambia el supervisor");
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.operario, { responsable_id: ids.operario })).status, 403);
+  });
+
+  await t.test("HU-022: cumplimiento de la meta por operario en el periodo", async () => {
+    const reporte = async (token, periodo = "anual") => llamar("GET", `/reportes/rendimiento?periodo=${periodo}`, token);
+    const fila = (cuerpo) => cuerpo.operarios.find((o) => o.id === ids.operario);
+    const antes = await reporte(tokens.supervisor);
+    assert.equal(antes.status, 200, JSON.stringify(antes.body));
+    const previo = fila(antes.body);
+    assert.ok(previo, "el operario activo aparece aunque no tenga órdenes");
+
+    const variante = { producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", prioridad: "media", materia_prima_id: bobina };
+    const orden = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 200 });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
+    assert.equal((await llamar("PUT", `/produccion/${orden.body.id}/estado`, tokens.operario, { estado: "en_proceso" })).status, 200);
+    assert.equal((await llamar("POST", `/produccion/${orden.body.id}/avance`, tokens.operario, { cantidad: 50 })).status, 200);
+
+    // Una orden cancelada no cuenta para la meta
+    const cancelada = await llamar("POST", "/produccion", tokens.admin, { ...variante, cantidad: 999 });
+    assert.equal((await llamar("PUT", `/produccion/${cancelada.body.id}/asignar`, tokens.admin, { responsable_id: ids.operario })).status, 200);
+    assert.equal((await llamar("PUT", `/produccion/${cancelada.body.id}/estado`, tokens.admin, { estado: "cancelado" })).status, 200);
+
+    const despues = await reporte(tokens.admin);
+    assert.equal(despues.status, 200);
+    const actual = fila(despues.body);
+    assert.equal(actual.ordenes, previo.ordenes + 1);
+    assert.equal(actual.meta, previo.meta + 200);
+    assert.equal(actual.producido, previo.producido + 50);
+    assert.equal(actual.unidades_periodo, previo.unidades_periodo + 50);
+    assert.equal(actual.cumplimiento, Math.round((actual.producido / actual.meta) * 1000) / 10);
+    assert.ok(actual.cumplimiento >= 0 && actual.cumplimiento <= 100);
+    assert.ok(despues.body.operarios.every((o) => o.nombre !== "E2E supervisor"), "solo lista operarios");
+
+    assert.equal((await reporte(tokens.operario)).status, 403);
+    assert.equal((await reporte(tokens.vendedor)).status, 403);
+    assert.equal((await reporte(tokens.admin, "quincenal")).status, 400);
+    const excel = await fetch(`${base}/reportes/rendimiento/excel?periodo=anual`, { headers: { Authorization: `Bearer ${tokens.supervisor}` } });
+    assert.equal(excel.status, 200);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(Buffer.from(await excel.arrayBuffer()));
+    const nombres = [];
+    libro.getWorksheet("Por operario").eachRow((r) => nombres.push(r.getCell(1).value));
+    assert.ok(nombres.includes("E2E operario"), "el Excel trae la fila del operario");
+  });
+
+  await t.test("plantillas: una por variante, con la variante y la materia prima obligatorias", async () => {
+    const base = { producto: "Bolsas para la basura", medida: "15 x 20", calibre: "2", color: "Blanco", cantidad: 300, materia_prima_id: bobina };
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, { producto: "Bolsas para la basura", cantidad: 300, materia_prima_id: bobina })).status, 400);
+    const sinMateria = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, materia_prima_id: undefined });
+    assert.equal(sinMateria.status, 400, "RN-026: la plantilla exige materia prima");
+    assert.match(sinMateria.body.mensaje, /materia prima/);
+    const creada = await llamar("POST", "/produccion/plantillas", tokens.admin, base);
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.medida, "15 x 20");
+    assert.equal((await llamar("POST", "/produccion/plantillas", tokens.admin, base)).status, 409);
+    const otraVariante = await llamar("POST", "/produccion/plantillas", tokens.admin, { ...base, color: "Negro" });
+    assert.equal(otraVariante.status, 201, "la misma línea admite otra variante");
+  });
+
+  await t.test("la migración de variante en plantillas se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("DELETE FROM plantillas_produccion");
+    await db.query(
+      "ALTER TABLE plantillas_produccion DROP INDEX uq_plantilla_variante, DROP COLUMN medida, DROP COLUMN calibre, DROP COLUMN color, ADD UNIQUE KEY producto (producto)",
+    );
+    await db.query("INSERT INTO plantillas_produccion (producto, cantidad) VALUES ('Sencilla PP', 100)");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261027_template_variant.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [indices] = await db.query(
+      "SELECT DISTINCT index_name AS nombre FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'plantillas_produccion' AND non_unique = 0",
+      [DB],
+    );
+    assert.deepEqual(indices.map((i) => i.nombre).sort(), ["PRIMARY", "uq_plantilla_variante"]);
+    const [[anterior]] = await db.query("SELECT producto, medida FROM plantillas_produccion");
+    assert.deepEqual([anterior.producto, anterior.medida], ["Sencilla PP", null], "la plantilla existente se conserva");
+  });
+
+  await t.test("DEF-023: respuestas 400 y 404 en lugar de 200 o 500; solo se eliminan órdenes pendientes sin avance", async () => {
+    const roto = await fetch(`${base}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{malo" });
+    assert.equal(roto.status, 400);
+    const orden = { producto: "Sencilla PP", medida: "6 x 9", calibre: "1", color: "Natural", cantidad: 20, materia_prima_id: bobina };
+    const pendiente = await llamar("POST", "/produccion", tokens.admin, orden);
+    assert.equal(pendiente.status, 201);
+    assert.equal((await llamar("DELETE", `/produccion/${pendiente.body.id}`, tokens.admin)).status, 204, "pendiente sin avance");
+    assert.equal((await llamar("DELETE", `/produccion/${pendiente.body.id}`, tokens.admin)).status, 404, "ya no existe");
+    const [[conAvance]] = await db.query(`SELECT id FROM \`${DB}\`.produccion WHERE cantidad_producida > 0 LIMIT 1`);
+    const rechazo = await llamar("DELETE", `/produccion/${conAvance.id}`, tokens.admin);
+    assert.equal(rechazo.status, 400);
+    assert.match(rechazo.body.mensaje, /Solo se pueden eliminar órdenes pendientes sin avance/);
+    assert.equal((await db.query(`SELECT COUNT(*) AS n FROM \`${DB}\`.produccion WHERE id = ?`, [conAvance.id]))[0][0].n, 1);
+    assert.equal((await llamar("PUT", "/usuarios/999999", tokens.admin, { nombre: "Nadie" })).status, 404);
+    assert.equal((await llamar("DELETE", "/usuarios/999999", tokens.admin)).status, 404);
+    assert.equal((await llamar("PUT", `/materia-prima/${bobina}`, tokens.admin, { cantidad: 99999 })).status, 400);
+    assert.equal((await llamar("PUT", "/materia-prima/999999", tokens.admin, { proveedor: "Nadie" })).status, 404);
+    assert.equal((await llamar("POST", "/materia-prima/movimientos", tokens.almacenista, { materia_prima_id: bobina, tipo: "regalo", cantidad: 1 })).status, 400);
+    assert.equal((await llamar("GET", "/reportes/auditoria?desde=2026-13-45", tokens.admin)).status, 400);
+  });
+
+  await t.test("CR-016: inicios de sesión fuera de la tabla, auditoría filtrada y archivo de lo antiguo", async () => {
+    // 1. Ya hubo inicios de sesión de los cinco roles en esta prueba y ninguno quedó en la tabla
+    const [[logins]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'LOGIN'");
+    assert.equal(Number(logins.n), 0, "los inicios de sesión van al archivo de accesos");
+
+    // 3. El administrador filtra en el servidor y recibe una página con el total
+    const bloqueos = await llamar("GET", "/reportes/auditoria?accion=BLOQUEO_CUENTA&porPagina=5", tokens.admin);
+    assert.equal(bloqueos.status, 200, JSON.stringify(bloqueos.body));
+    assert.ok(bloqueos.body.total >= 1);
+    assert.ok(bloqueos.body.registros.every((evento) => evento.accion === "BLOQUEO_CUENTA"));
+    assert.ok(bloqueos.body.opciones.acciones.includes("BLOQUEO_CUENTA"));
+    const vacio = await llamar("GET", "/reportes/auditoria?desde=2000-01-01&hasta=2000-01-31", tokens.admin);
+    assert.deepEqual([vacio.body.total, vacio.body.registros.length], [0, 0]);
+    assert.equal((await llamar("GET", "/reportes/auditoria?desde=09/11/2026", tokens.admin)).status, 400);
+
+    // 4. Lo que tiene más de 12 meses pasa a auditoria-AAAA.csv y sale de la tabla; lo reciente se queda
+    await db.query(
+      `INSERT INTO auditoria (usuario_id, accion, tabla_afectada, detalle, fecha) VALUES
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 1; con punto y coma', DATE_SUB(NOW(), INTERVAL 25 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'antiguo 2', DATE_SUB(NOW(), INTERVAL 13 MONTH)),
+       (NULL, 'PRUEBA_ARCHIVO', 'ventas', 'reciente', DATE_SUB(NOW(), INTERVAL 2 MONTH))`,
+    );
+    const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "meviplast-archivo-"));
+    try {
+      const { archivarAuditoria } = require("../../src/services/archivoAuditoria.service");
+      const simulado = await archivarAuditoria({ meses: 12, directorio: dir, simular: true });
+      assert.equal(simulado.archivados, 2);
+      assert.equal(fs.readdirSync(dir).length, 0, "--simular no escribe ni borra");
+      const resultado = await archivarAuditoria({ meses: 12, directorio: dir });
+      assert.equal(resultado.archivados, 2);
+      const contenido = fs.readdirSync(dir).map((nombre) => fs.readFileSync(path.join(dir, nombre), "utf8")).join("");
+      assert.match(contenido, /^\uFEFFid;fecha;usuario_id;usuario;accion;tabla;detalle/);
+      assert.match(contenido, /"antiguo 1; con punto y coma"/);
+      assert.match(contenido, /antiguo 2/);
+      const [quedan] = await db.query("SELECT detalle FROM auditoria WHERE accion = 'PRUEBA_ARCHIVO'");
+      assert.deepEqual(quedan.map((fila) => fila.detalle), ["reciente"]);
+      const [[registro]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'ARCHIVAR_AUDITORIA'");
+      assert.equal(Number(registro.n), 1, "el archivo queda registrado en la auditoría");
+      assert.equal((await archivarAuditoria({ meses: 12, directorio: dir })).archivados, 0, "una segunda corrida no repite");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  await t.test("CR-015: la migración que quita ubicación y lote se aplica sobre una base anterior y es idempotente", async () => {
+    await db.query("ALTER TABLE inventario ADD COLUMN ubicacion VARCHAR(80) NULL");
+    await db.query("ALTER TABLE produccion ADD COLUMN lote VARCHAR(80) NULL");
+    const [[antes]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261109_drop_unused_columns.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [columnas] = await db.query(
+      "SELECT column_name AS nombre FROM information_schema.columns WHERE table_schema = ? AND ((table_name = 'inventario' AND column_name = 'ubicacion') OR (table_name = 'produccion' AND column_name = 'lote'))",
+      [DB],
+    );
+    assert.equal(columnas.length, 0, "las dos columnas se eliminan");
+    const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario) AS inventario, (SELECT COUNT(*) FROM produccion) AS produccion");
+    assert.deepEqual([Number(despues.inventario), Number(despues.produccion)], [Number(antes.inventario), Number(antes.produccion)], "no se pierden filas");
+  });
+
+  await t.test("CR-019: Cargadera usa tallas T15 a T30 y la migración pasa «15 x 20» a T15", async () => {
+    const orden = { producto: "Cargadera", calibre: "2", color: "Blanco", cantidad: 40, prioridad: "media", materia_prima_id: bobina };
+    const conTalla = await llamar("POST", "/produccion", tokens.admin, { ...orden, medida: "t20" });
+    assert.equal(conTalla.status, 201, JSON.stringify(conTalla.body));
+    assert.equal(conTalla.body.medida, "T20");
+    const conAnchoLargo = await llamar("POST", "/produccion", tokens.admin, { ...orden, medida: "15 x 20" });
+    assert.equal(conAnchoLargo.status, 400);
+    assert.match(conAnchoLargo.body.mensaje, /Cargadera debe ser T15, T20, T25 o T30/);
+    const otraLinea = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Sencilla PP", medida: "T15", calibre: "1", color: "Natural", cantidad: 5 });
+    assert.equal(otraLinea.status, 400, "las demás líneas siguen con ancho x largo");
+    // Base anterior: existencias, orden y plantilla de Cargadera en «15 x 20»
+    await db.query("INSERT INTO inventario (producto, familia, medida, calibre, color, cantidad) VALUES ('Cargadera · 15 x 20 · calibre 3 · Negro', 'Cargadera', '15 x 20', '3', 'Negro', 70)");
+    await db.query("INSERT INTO produccion (producto, medida, calibre, color, cantidad, materia_prima_id) VALUES ('Cargadera', '15 x 20', '3', 'Negro', 10, ?)", [bobina]);
+    await db.query("INSERT INTO plantillas_produccion (producto, medida, calibre, color, cantidad, materia_prima_id, prioridad) VALUES ('Cargadera', '15 x 20', '3', 'Negro', 10, ?, 'media')", [bobina]);
+    const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261110_cargadera_tallas.sql"), "utf8");
+    await db.query(migracion);
+    await db.query(migracion);
+    const [[inventario]] = await db.query("SELECT medida, producto, cantidad FROM inventario WHERE familia = 'Cargadera' AND calibre = '3' AND color = 'Negro'");
+    assert.deepEqual({ medida: inventario.medida, producto: inventario.producto, cantidad: Number(inventario.cantidad) },
+      { medida: "T15", producto: "Cargadera · T15 · calibre 3 · Negro", cantidad: 70 });
+    const [[quedan]] = await db.query("SELECT (SELECT COUNT(*) FROM inventario WHERE familia = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') + (SELECT COUNT(*) FROM plantillas_produccion WHERE producto = 'Cargadera' AND medida = '15 x 20') AS n");
+    assert.equal(Number(quedan.n), 0, "no queda ninguna Cargadera en «15 x 20»");
+  });
+
+  await t.test("CR-020: el administrador crea una línea nueva y se usa en órdenes, inventario y ventas", async () => {
+    const antes = await llamar("GET", "/lineas", tokens.vendedor);
+    assert.equal(antes.status, 200);
+    assert.deepEqual(antes.body.slice(0, 6), ["Adhesivo PP", "Adhesivo Seguridad", "Sencilla PP", "Bolsas para la basura", "Cargadera", "Troquel riñón"]);
+    assert.equal((await llamar("POST", "/lineas", tokens.supervisor, { nombre: "Bolsa de regalo" })).status, 403, "solo el administrador");
+    assert.equal((await llamar("POST", "/lineas", tokens.admin, { nombre: "<b>x</b>" })).status, 400);
+    const creada = await llamar("POST", "/lineas", tokens.admin, { nombre: "  bolsa   de regalo " });
+    assert.equal(creada.status, 201, JSON.stringify(creada.body));
+    assert.equal(creada.body.nombre, "Bolsa de regalo");
+    const repetida = await llamar("POST", "/lineas", tokens.admin, { nombre: "BOLSA DE REGALO" });
+    assert.equal(repetida.status, 409);
+    assert.equal((await llamar("POST", "/lineas", tokens.admin, { nombre: "troquel rinon" })).status, 409, "la intercalación ignora tildes");
+    assert.ok((await llamar("GET", "/lineas", tokens.almacenista)).body.includes("Bolsa de regalo"));
+
+    // La línea nueva se mide en «ancho x largo» (RN-025) y sirve en órdenes e inventario
+    const orden = await llamar("POST", "/produccion", tokens.admin, { producto: "Bolsa de regalo", medida: "20x30", calibre: "2", color: "Rojo", cantidad: 30, prioridad: "media", materia_prima_id: bobina });
+    assert.equal(orden.status, 201, JSON.stringify(orden.body));
+    assert.equal((await llamar("POST", "/produccion", tokens.admin, { producto: "Bolsa de regalo", medida: "T20", calibre: "2", color: "Rojo", cantidad: 30, prioridad: "media", materia_prima_id: bobina })).status, 400);
+    assert.ok((await llamar("GET", "/produccion", tokens.admin)).body.some((o) => o.id === orden.body.id), "la orden aparece en la lista");
+    const ingreso = await llamar("POST", "/inventario", tokens.almacenista, { familia: "Bolsa de regalo", medida: "20 x 30", calibre: "2", color: "Rojo", cantidad: 100 });
+    assert.equal(ingreso.status, 201, JSON.stringify(ingreso.body));
+    const variante = (await llamar("GET", "/inventario", tokens.vendedor)).body.find((i) => i.familia === "Bolsa de regalo");
+    assert.equal(variante?.producto, "Bolsa de regalo · 20 x 30 · calibre 2 · Rojo");
+    const venta = await llamar("POST", "/ventas", tokens.vendedor, { cliente: "Cliente E2E", inventario_id: variante.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 });
+    assert.equal(venta.status, 201, JSON.stringify(venta.body));
+    const [[auditada]] = await db.query("SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'CREAR_LINEA_PRODUCTO' AND detalle LIKE '%Bolsa de regalo%'");
+    assert.equal(Number(auditada.n), 1);
+  });
+
+  await t.test("CR-022: una venta con varios productos, un comprobante y todo o nada", async () => {
+    for (const ingreso of [
+      { familia: "Sencilla PP", medida: "30 x 40", calibre: "1", color: "Verde", cantidad: 1000 },
+      { familia: "Adhesivo Seguridad", medida: "10 x 15", calibre: "2", color: "Azul", cantidad: 500 },
+    ]) assert.equal((await llamar("POST", "/inventario", tokens.almacenista, ingreso)).status, 201);
+    const existencias = async () => (await llamar("GET", "/inventario", tokens.almacenista)).body;
+    const buscar = (lista, familia, color) => lista.find((i) => i.familia === familia && i.color === color);
+    let lista = await existencias();
+    const a = buscar(lista, "Sencilla PP", "Verde");
+    const b = buscar(lista, "Adhesivo Seguridad", "Azul");
+
+    const venta = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [
+        { inventario_id: a.id, cantidad_paquetes: 2, unidades_paquete: 100, precio_paquete: 5000 },
+        { inventario_id: b.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 3000 },
+      ],
+    });
+    assert.equal(venta.status, 201, JSON.stringify(venta.body));
+    assert.equal(Number(venta.body.total), 13000, "el total es la suma de las líneas");
+    assert.equal(venta.body.items.length, 2);
+    lista = await existencias();
+    assert.deepEqual([Number(buscar(lista, "Sencilla PP", "Verde").cantidad), Number(buscar(lista, "Adhesivo Seguridad", "Azul").cantidad)], [800, 450]);
+    const comprobante = await llamar("GET", `/ventas/${venta.body.id}/comprobante`, tokens.vendedor);
+    assert.equal(comprobante.status, 200);
+    assert.deepEqual(comprobante.body.items.map((item) => Number(item.total)), [10000, 3000]);
+    const [[movimientos]] = await db.query("SELECT COUNT(*) AS n FROM movimientos_inventario WHERE venta_id = ?", [venta.body.id]);
+    assert.equal(Number(movimientos.n), 2, "un movimiento por producto");
+
+    // Si a un producto le falta stock no se guarda nada
+    const [[antes]] = await db.query("SELECT (SELECT COUNT(*) FROM ventas) AS ventas, (SELECT COUNT(*) FROM ventas_detalle) AS lineas");
+    const sinStock = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [
+        { inventario_id: a.id, cantidad_paquetes: 1, unidades_paquete: 100, precio_paquete: 5000 },
+        { inventario_id: b.id, cantidad_paquetes: 10, unidades_paquete: 50, precio_paquete: 3000 },
+      ],
+    });
+    assert.equal(sinStock.status, 400);
+    assert.match(sinStock.body.mensaje, /Producto 2: stock insuficiente/);
+    const [[despues]] = await db.query("SELECT (SELECT COUNT(*) FROM ventas) AS ventas, (SELECT COUNT(*) FROM ventas_detalle) AS lineas");
+    assert.deepEqual(despues, antes, "ni encabezado ni líneas");
+    assert.equal(Number(buscar(await existencias(), "Sencilla PP", "Verde").cantidad), 800, "el primer producto no se descuenta");
+    const repetida = await llamar("POST", "/ventas", tokens.vendedor, {
+      cliente: "Cliente varios",
+      items: [1, 2].map(() => ({ inventario_id: a.id, cantidad_paquetes: 1, unidades_paquete: 50, precio_paquete: 1000 })),
+    });
+    assert.equal(repetida.status, 400);
+
+    // El reporte muestra una fila por producto y cuenta la venta una sola vez
+    const reporte = await llamar("GET", "/reportes/ventas/detalle?periodo=anual", tokens.admin);
+    assert.equal(reporte.body.detalle.filter((fila) => fila.venta_id === venta.body.id).length, 2);
+    const [[{ n: ventasDelAnio }]] = await db.query("SELECT COUNT(*) AS n FROM ventas WHERE YEAR(fecha) = YEAR(NOW())");
+    assert.equal(Number(reporte.body.resumen.numero_ventas), Number(ventasDelAnio));
+    const listado = (await llamar("GET", "/ventas", tokens.vendedor)).body.find((v) => v.id === venta.body.id);
+    assert.equal(listado.items.length, 2);
+  });
+
+  await t.test("CR-022: la migración pasa cada venta anterior a una venta de una línea y es idempotente", async () => {
+    const nombre = `${DB}_ventas`;
+    const raiz = await mysql.createConnection(conexion);
+    try {
+      await raiz.query(`DROP DATABASE IF EXISTS \`${nombre}\``);
+      await raiz.query(`CREATE DATABASE \`${nombre}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+      await raiz.changeUser({ database: nombre });
+      // Tablas como estaban antes de CR-022
+      await raiz.query(`
+        CREATE TABLE usuarios (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(120));
+        CREATE TABLE inventario (id INT AUTO_INCREMENT PRIMARY KEY, producto VARCHAR(255), familia VARCHAR(80), cantidad DECIMAL(10,2));
+        CREATE TABLE ventas (
+          id INT AUTO_INCREMENT PRIMARY KEY, cliente VARCHAR(120) NOT NULL, producto VARCHAR(255) NOT NULL,
+          cantidad DECIMAL(10,2) NOT NULL, precio_unitario DECIMAL(12,4) NOT NULL, inventario_id INT NULL,
+          cantidad_paquetes INT NOT NULL, unidades_paquete INT NOT NULL, precio_paquete DECIMAL(12,2) NOT NULL,
+          total DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_paquetes * precio_paquete) STORED,
+          usuario_id INT NULL, fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+          FOREIGN KEY (inventario_id) REFERENCES inventario(id) ON DELETE SET NULL);
+        CREATE TABLE movimientos_inventario (id INT AUTO_INCREMENT PRIMARY KEY, venta_id INT NULL,
+          FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL);
+        INSERT INTO usuarios (nombre) VALUES ('Vendedor');
+        INSERT INTO inventario (producto, familia, cantidad) VALUES ('Cargadera · T15 · calibre 2 · Blanco', 'Cargadera', 100);
+        INSERT INTO ventas (cliente, producto, cantidad, precio_unitario, inventario_id, cantidad_paquetes, unidades_paquete, precio_paquete, usuario_id)
+          VALUES ('Tienda A', 'Cargadera · T15 · calibre 2 · Blanco', 500, 90, 1, 5, 100, 9000, 1),
+                 ('Tienda B', 'Producto antiguo', 50, 120, NULL, 1, 50, 6000, NULL);
+        INSERT INTO movimientos_inventario (venta_id) VALUES (1);`);
+      const migracion = fs.readFileSync(path.join(sqlDir, "migrations", "20261111_ventas_detalle.sql"), "utf8");
+      await raiz.query(migracion);
+      await raiz.query(migracion);
+      const [columnas] = await raiz.query("SELECT column_name AS c FROM information_schema.columns WHERE table_schema = ? AND table_name = 'ventas' ORDER BY ordinal_position", [nombre]);
+      assert.deepEqual(columnas.map((f) => f.c), ["id", "cliente", "total", "usuario_id", "fecha"]);
+      const [ventas] = await raiz.query("SELECT id, cliente, total FROM ventas ORDER BY id");
+      assert.deepEqual(ventas.map((v) => [v.cliente, Number(v.total)]), [["Tienda A", 45000], ["Tienda B", 6000]], "el total se conserva");
+      const [lineas] = await raiz.query("SELECT venta_id, inventario_id, producto, cantidad, total FROM ventas_detalle ORDER BY venta_id");
+      assert.deepEqual(lineas.map((l) => [l.venta_id, l.inventario_id, l.producto, Number(l.cantidad), Number(l.total)]), [
+        [1, 1, "Cargadera · T15 · calibre 2 · Blanco", 500, 45000],
+        [2, null, "Producto antiguo", 50, 6000],
+      ], "una línea por venta anterior, sin repetirse al aplicar dos veces");
+      const [[movimiento]] = await raiz.query("SELECT venta_id FROM movimientos_inventario");
+      assert.equal(movimiento.venta_id, 1, "los movimientos siguen enlazados a su venta");
+    } finally {
+      await raiz.query(`DROP DATABASE IF EXISTS \`${nombre}\``);
+      await raiz.end();
+    }
+  });
+});

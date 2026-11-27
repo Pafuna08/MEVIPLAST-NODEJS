@@ -1,0 +1,123 @@
+# Declaración de uso de herramientas de IA
+
+**Estado: firmada por el equipo el 09/11/2026 (sección 5). Ampliada el 16/11/2026 hasta el PR #100 con autorización de Pablo E. Fuenmayor Osuna; falta que Carlos Herrera Sibaja confirme la ampliación.**
+
+Declarar el uso de IA no invalida el trabajo. Lo que sí lo invalida es entregar algo que el equipo no comprende ni puede sustentar (guía de repositorio, numeral 13). Las decisiones de alcance, licencia, aceptación y responsabilidad del producto corresponden a los autores humanos.
+
+## 1. Herramientas
+
+| Herramienta | Modalidad | Periodo | Quién la usó |
+|---|---|---|---|
+| Claude Code (Anthropic) | Asistente en Visual Studio Code con acceso al repositorio, la terminal y GitHub, siempre con permiso del usuario | Octubre y noviembre de 2026 (PR #13 a #100) | Pablo E. Fuenmayor Osuna |
+| GitHub Copilot | Asistente de código en Visual Studio Code (sugerencias y autocompletado) | Sobre todo al inicio del desarrollo (sprints 1 a 7, agosto a octubre de 2026) | Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja |
+
+## 2. Uso realizado con Claude Code
+
+### Documentación (suite ADSO)
+
+- Revisión de las guías del SENA (ADSO-AD-001, EST-TEC-01, guía de repositorio, plantillas ADSO-REQ-01 y ADSO-BAC-01) frente al código real.
+- Generación de los documentos DOC-01 a DOC-10, el índice maestro, la matriz de trazabilidad, la lista de chequeo y la guía de sustentación, mediante scripts que leen una sola fuente de datos.
+- Diagramas de casos de uso UML y capturas del sistema real, tomadas con datos de demostración sobre una base desechable.
+- Correcciones pedidas por el instructor: "numeral" en lugar de "§", historias de usuario ordenadas por rol y nombre del instructor.
+
+### Código y repositorio (pull requests en `develop`)
+
+| PR | Cambio |
+|---|---|
+| #13 | Licencia propietaria (`LICENSE`); el equipo eligió el tipo de licencia |
+| #14 | ESLint en backend y frontend, ejecutado en CI |
+| #15 | Pruebas del registro de avance de producción (RF-010) |
+| #16 | CORS restringido por `CORS_ORIGINS` y `GET /api/health` |
+| #17 | Bloqueo de cuenta tras 5 intentos fallidos durante 15 minutos (HU-019); el equipo aprobó los valores |
+| #18 | Corrección DEF-008: el saneador vaciaba textos cuya clave contenía "id" |
+| #19 | Pruebas E2E contra MySQL y su ejecución en CI |
+| #20 | Corrección DEF-009: `db:init` ignoraba `DB_NAME` |
+| #21 | Evidencia de la ejecución E2E, el respaldo, la prueba de restauración y la migración del bloqueo |
+| #22 | ADR-002: backend en Node.js; el motivo (recomendación del instructor y dominio de JavaScript) lo dio el equipo |
+| #23 | Tildes, lista de roles y plurales en la interfaz |
+| #24 | Este borrador de declaración de uso de IA |
+| #25 | ADR-003 (ledger de movimientos) y ADR-004 (JWT), redactados a partir del código |
+| #26 | Corrección DEF-011: el token de un usuario desactivado o con el rol cambiado deja de servir; token vencido responde 401 |
+| #27 | Comprobante de venta imprimible (RF-023) |
+| #28 | Exportación de reportes a Excel (RF-028) |
+| #29 | Actualización de `nodemailer` y `body-parser` por alertas de seguridad, con prueba SMTP |
+| #30 | Pruebas de rendimiento (RNF-004) y de navegadores (RNF-007), con su evidencia |
+| #31 | Revisión de la documentación del repositorio contra el código actual |
+| #32 | README, arquitectura, esquema y guías al día |
+| #33 | Corrección DEF-013: formulario de movimientos de materia prima restaurado, con prueba E2E y de navegadores; la decisión de restaurarlo la tomó el equipo |
+| #34 | Prueba de instalación limpia; correcciones DEF-014 (datos demo por rol) y DEF-015 (ruta de migraciones) |
+| #35 | Medición de la cobertura de pruebas y mínimo exigido en CI |
+| #36 | Contrato OpenAPI y prueba de correspondencia con las rutas |
+| #37 | Diagrama entidad-relación y prueba de correspondencia con el esquema |
+| #38 | Registros estructurados del servidor |
+| #39 | Sin textos de ejemplo en los formularios del panel (pedido por el equipo) y lockfile del frontend al día |
+| #40 | Entrada del CHANGELOG del PR #39 |
+| #41 | Motivo obligatorio en la salida manual de inventario (observación del equipo en pruebas) |
+| #42 | Vista de auditoría en el panel (observación del equipo en pruebas) |
+| #43 | Medida, calibre y color en las órdenes de producción, para que el avance entre a la variante correcta del inventario (observación del equipo en pruebas) |
+| #44 | Prioridad que ordena las órdenes, edición de la orden en su misma fila y retiro del campo «Lote» (observaciones del equipo en pruebas; el equipo pidió a la IA proponer el uso de la prioridad) |
+| #45 | Medida, calibre y color en las plantillas de órdenes frecuentes (mejora pendiente que el equipo pidió aplicar) |
+| #46 | Evidencia de la prueba de navegadores repetida (RNF-007) |
+| #47 | Trazabilidad del repositorio al día con los PR #39 a #46 |
+| #48 | Prefijos de rama y uso de la plantilla de PR en `CONTRIBUTING.md`; el equipo detectó que seis ramas usaban `feat/` y que los PR #43 a #47 no seguían la plantilla, y pidió seguir la guía al pie de la letra |
+| #49 | Evidencia de las migraciones de variante en `meviplast_db` (autorizadas por el equipo) y corrección del aviso sobre `schema_migrations` |
+| #52 | Registro de la revisión de Carlos (PR #12 a #50) en la documentación |
+| #51 | Validación sin atributos en el HTML por indicación del instructor: validación propia en el panel y control de largo en el servidor; la IA propuso mantener una validación propia y cubrir el largo en el servidor, y el equipo eligió |
+| #53 | Instalación limpia desde un clon nuevo y corrección de dos mensajes de `db:init` (DEF-016, DEF-017); el equipo pidió hacer la instalación sin esperar a Carlos, que la repetirá después |
+| #54 | Actualización de `vite` y `minimatch` por 3 alertas moderadas de `npm audit` en herramientas de desarrollo |
+| #55 | El supervisor ya no registra ventas (DEF-007); la IA propuso las opciones y el equipo eligió retirar el permiso |
+| #56 | Reporte de rendimiento de operarios (HU-022); la IA propuso dos indicadores y el equipo eligió el % de cumplimiento de la meta |
+| #57 | Registro de las decisiones tomadas por el equipo con la delegación de MEVIPLAST; el equipo informó que la empresa aprobó el alcance en la reunión inicial y que no habrá otra reunión |
+| #58 | Prueba de la recuperación por correo con la cuenta Gmail del proyecto (CP-030); la IA configuró el envío y revisó la base y el registro, y el equipo creó la contraseña de aplicación y confirmó los correos recibidos |
+| #60 | Reconstrucción del paquete documental sobre las plantillas institucionales del instructor y diagramas de arquitectura en Mermaid; la IA llenó las plantillas con el contenido existente del proyecto y generó los diagramas desde el código, y el equipo pidió actualizar todo y revisa los documentos |
+| #50 | Ajustes de la segunda ronda de pruebas manuales del equipo: menú desde los reportes, confirmaciones, bienvenida por rol, Mis tareas y Mi historial, tarjetas de Inicio, botones y dos cambios de reglas decididos por el equipo (CR-013 y CR-014); la IA propuso el diseño de Mis tareas y Mi historial y limitar la confirmación a los registros irreversibles, y el equipo eligió |
+| #59 | Registro de la instalación limpia que hizo Carlos en su equipo (RNF-009); la instalación la hizo él |
+| #61 a #63 | Esta declaración completada con las respuestas del equipo, y sus firmas; Carlos confirmó la suya por su cuenta |
+| #64 | División del panel en módulos comunes y un archivo por vista (DT-001), sin cambiar su comportamiento |
+| #65 | Ronda de ajustes pedida por el equipo: formato de medida, calibre y color (RN-025), retiro de la ubicación y del lote (CR-015), campos numéricos y auditoría más liviana con los inicios de sesión en archivo (CR-016, recomendación del instructor) |
+| #66 a #71 | Ajustes del panel, materia prima obligatoria y colores de una lista fija (RN-026, CR-017), numeración de los sprints como en el tablero del equipo, documentación al día y corrección DEF-020 (`db:init` en una base nueva) |
+| #72 a #75 | Tercera ronda de pruebas de casos límite: siempre queda un administrador activo (DEF-021), topes de cantidades y modo estricto (DEF-022, CR-018; los topes los eligió el equipo), respuestas 400 y 404 (DEF-023; el equipo eligió que solo se borren órdenes pendientes sin avance) y pruebas unitarias aisladas de la base real |
+| #76 a #80 | Paquete ADSO en el repositorio (pedido del instructor), contraste WCAG AA (DEF-024), ventanas usables con teclado (DEF-025) y registro de las decisiones del cliente por delegación |
+| #81 a #85 | Selectores sin opción elegida, orden fija al registrar avance, tallas de Cargadera (CR-019; el equipo eligió convertir «15 x 20» a T15), crear línea y material desde los selectores (CR-020) y su registro en el paquete ADSO |
+| #86 | Órdenes del administrador en una tabla con detalle en una ventana (sugerencia del instructor) |
+| #87 | El supervisor ya no ve ventas (CR-021); la IA recomendó dejarle solo los reportes de producción y rendimiento y el equipo lo aprobó; comprobante desde el reporte de ventas (pedido del equipo) |
+| #88 | Ventas con varios productos (CR-022); la IA propuso dos diseños y el equipo eligió encabezado y detalle |
+| #89 y #90 | Comprobante y reportes en PDF en otra pestaña (observación del instructor; los reportes en PDF los pidió el equipo) |
+| #91 a #93 | Despliegue de demostración en Render con la base en Aiven (CR-023, pedido del equipo); las cuentas, los planes y las variables secretas las configuró el equipo en los paneles de Render y Aiven |
+| #94 | Columna del correo legible en el celular (DEF-027, detectado por el equipo) |
+| #95, #97 y #99 | Registro de los cambios en el paquete ADSO y revisión de coherencia de todo el proyecto, pedida por el equipo |
+| #96 | Sitio, login y recuperación en React y publicación solo del build (DEF-028, observación del instructor) |
+| #98 | Tildes y ñ en los mensajes de la API (DEF-029), guía de despliegue y respaldo de la base de la nube |
+| #100 | Esta ampliación de la declaración, autorizada por Pablo |
+
+Además, operaciones sobre la base de datos local, siempre con autorización explícita: respaldo de `meviplast_db`, prueba de restauración en una base aparte y aplicación de las migraciones `20261027_login_lockout.sql`, `20261027_production_variant.sql` y `20261027_template_variant.sql` (EV-2026-10-27-04 y EV-2026-10-27-06), y después `20261109_drop_unused_columns.sql`, `20261110_cargadera_tallas.sql`, `20261110_lineas_producto.sql` y `20261111_ventas_detalle.sql`, cada una con un respaldo previo. El 11/11/2026, por pedido del equipo, se volvieron a cargar `meviplast_prueba` y `meviplast_db` con datos de ejemplo coherentes, también con respaldo previo. La base de la demostración en Aiven se cargó con contraseñas aleatorias que el equipo guarda fuera del repositorio, y se respaldó el 16/11/2026.
+
+### Uso anterior al PR #13
+
+- PR #11 y `docs/adso-review-2026-10-20.md` (alineación del repositorio con la guía): el borrador anterior de esta declaración ya mencionaba asistencia de IA en la documentación del repositorio. El equipo confirma que usó IA antes del PR #13; ese apoyo corresponde al uso de GitHub Copilot descrito en la sección 1.
+- Código de los sprints 1 a 7: sí se usó IA. GitHub Copilot en Visual Studio Code, sobre todo al inicio del desarrollo, por los dos integrantes.
+
+## 3. Validación humana
+
+- Cada cambio de código pasó por un pull request con lint, pruebas unitarias y pruebas E2E en GitHub Actions antes de fusionarse (al PR #56: 77 unitarias y 15 E2E, más 14 flujos en Edge, Chrome y Firefox; al PR #98: 134 unitarias, 24 E2E y 54 flujos).
+- Revisión de Carlos Herrera Sibaja: aprobó en GitHub 75 PR (#12 a #54, #59 y #64 a #94) y dio visto bueno a 8 más en su commit de fusión (#55 a #58 y #60 a #63). Los PR #95 en adelante quedan pendientes de su revisión.
+- Los documentos se contrastaron con el código, las pruebas y las capturas. Revisión del equipo: Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja revisaron los documentos (confirmado el 09/11/2026).
+
+## 4. Limitaciones detectadas
+
+- No se pudo abrir Word de forma automática, así que la estructura de los documentos se validó con scripts; después los revisaron los dos integrantes. En Word falta actualizar la tabla de contenido de cada documento.
+- La IA no conoce decisiones que no están escritas (por ejemplo, por qué se cambió Django por Node.js). Esas respuestas las dio el equipo.
+- La IA no registró la aceptación del cliente como firmada: MEVIPLAST aprobó el alcance en la reunión inicial y delegó las decisiones en el equipo, y así se documentó ([`../requirements/decisiones-por-delegacion.md`](../requirements/decisiones-por-delegacion.md)).
+- La IA no tiene acceso a los paneles de Render ni de Aiven: crear las cuentas, elegir los planes y escribir las variables secretas lo hizo el equipo, y la IA verificó el resultado desde afuera (dirección pública y pruebas).
+- Otras: ninguna adicional reportada por el equipo.
+
+## 5. Responsables
+
+Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja asumen la autoría del proyecto y su sustentación, y declaran que comprenden y pueden explicar el código y los documentos entregados.
+
+| Nombre | Firma | Fecha |
+|---|---|---|
+| Pablo E. Fuenmayor Osuna | Firmado: Pablo E. Fuenmayor Osuna | 09/11/2026 |
+| Carlos Herrera Sibaja | Firmado: Carlos Herrera Sibaja | 09/11/2026 |
+
+Ampliación del 16/11/2026 (PR #59 a #100): la autorizó Pablo E. Fuenmayor Osuna. Carlos Herrera Sibaja debe confirmarla; hasta entonces su firma corresponde a la versión del 09/11/2026.

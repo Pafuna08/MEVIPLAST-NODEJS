@@ -1,0 +1,134 @@
+# MEVIPLAST
+
+Sistema web interno para apoyar la gestión de producción, materias primas, inventario terminado, ventas y reportes de MEVIPLAST.
+
+**Estado:** proyecto académico. La versión estable `v1.0.0` está en `main` desde el 26/11/2026 (PR #127); `develop` integra los PR #1 a #126 y sigue recibiendo cambios. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`docs/requirements/decisiones-por-delegacion.md`](docs/requirements/decisiones-por-delegacion.md)); no hubo sesión de aceptación por rol con usuarios de la empresa. Se verificaron la instalación desde un clon nuevo, el respaldo y la restauración, el rendimiento con 5 usuarios y la compatibilidad con Edge, Chrome y Firefox en un equipo local; no se ha probado en el servidor de MEVIPLAST ni se ha medido la disponibilidad.
+
+## Funcionalidad presente en `develop`
+
+- Autenticación con JWT y contraseñas almacenadas con bcryptjs.
+- Recuperación de contraseña y recordatorio de usuario por correo, con enlace de un solo uso vigente 30 minutos.
+- Bloqueo temporal de la cuenta tras 5 intentos fallidos seguidos (15 minutos, configurable); el administrador puede desbloquearla.
+- Panel React/Vite con vistas para Administrador, Supervisor, Operario, Vendedor y Almacenista.
+- Gestión de usuarios, materias primas, producción, inventario terminado, ventas y reportes.
+- Órdenes de producción con línea, medida, calibre, color y prioridad: la del administrador queda pendiente para los supervisores y la toma el que asigna el operario (si falta el supervisor, asigna el administrador); el operario la inicia y se finaliza sola al completar la meta; administrador y supervisor solo la cancelan. Plantillas de órdenes frecuentes. Toda orden y toda plantilla indican la materia prima con la que se produce (RN-026).
+- Variante con formato único (RN-025): medida «ancho x largo» con unidad opcional, calibre numérico y color de una lista fija de 13; se aplica igual en órdenes, plantillas e inventario. Las bobinas se registran por tamaño del rollo con su unidad, pulgadas o centímetros (CR-027).
+- «Mis tareas» y «Mi historial» por día, semana, mes o año para el operario.
+- Catálogo de materias primas (bobinas PEBD, PEAD y PP con tamaño del rollo, calibre, color y peso de rollo) y de seis líneas de producto terminado con variantes.
+- Movimientos de materias primas e inventario terminado registrados junto con sus saldos en transacciones.
+- Edición de órdenes de producción restringida a órdenes pendientes sin avances registrados.
+- Ventas por paquetes de 50, 100 o 500 unidades, hasta 1 000 paquetes y $100 000 000 por venta, con la lista de referencias en existencia de cada línea para elegir la variante, registradas por el administrador o el vendedor; el vendedor solo consulta sus ventas y el registro descuenta existencias en la transacción.
+- Comprobante de venta con número consecutivo, en PDF generado por el servidor.
+- Reportes de producción, ventas y rendimiento de operarios (% de cumplimiento de la meta) por periodo diario, semanal, mensual o anual, con gráficas por referencia y su detalle, en PDF y en Excel.
+- Bitácora de auditoría con filtros (fechas, usuario, acción, módulo y texto) en páginas de 10; los inicios de sesión y los registros del servidor quedan en archivos diarios (`backend/logs`) y la auditoría de más de 12 meses se archiva en CSV con `npm run auditoria:archivar` (CR-016).
+- «Mi perfil» para todos los roles: nombre, usuario, correo y contraseña con la actual (CR-028).
+- Panel con un solo estilo (íconos en el menú y ventanas de confirmación y de detalle), listas en páginas de 10 y uso en el celular, con las tablas como tarjetas (DEF-040).
+- API REST con autenticación y controles de acceso por rol.
+
+La presencia en código no equivale a aceptación del requisito por usuarios de la empresa: la suite E2E con MySQL cubre los flujos principales, pero la usabilidad no se midió con ellos. El consumo de materia prima asociado a una orden es explícito, no automático. El comprobante de venta y los reportes salen en PDF generado por el servidor, que se abre en otra pestaña para imprimir o descargar; los reportes detallados también se descargan en Excel. Cerrar sesión revoca el token en el servidor (HU-020); el servidor también lo rechaza de inmediato si el usuario se desactiva o cambia de rol, y en todo caso vence a las 8 horas. Consulta el estado historia por historia en [`docs/requirements/traceability.md`](docs/requirements/traceability.md).
+
+## Tecnologías
+
+- Backend: Node.js, Express, JavaScript, JWT, bcryptjs, mysql2, nodemailer (correo de recuperación), exceljs (reportes en Excel) y pdfkit (comprobante de venta y reportes en PDF).
+- Frontend de trabajo: React, JSX y Vite.
+- Sitio público e inicio de sesión: HTML, CSS y JavaScript.
+- Base de datos: MySQL.
+- Node.js: 20 o superior (lo exige `nodemailer` 10); CI configurado con Node.js 22.
+
+## Requisitos previos
+
+- Node.js 20 o superior y npm.
+- MySQL compatible y disponible. En el entorno local del equipo se usa XAMPP.
+- Git para clonar el repositorio.
+
+## Instalación local
+
+Desde la raíz del repositorio, copia el archivo de ejemplo y configura las credenciales de tu MySQL. Cambia `JWT_SECRET` por un valor aleatorio privado.
+
+```powershell
+Copy-Item .env.example backend/.env
+npm ci --prefix backend
+npm ci --prefix frontend
+npm run db:init --prefix backend
+npm start --prefix backend
+```
+
+**Usa `db:init` únicamente con una base local desechable de desarrollo.** El comando crea la base indicada en `DB_NAME` (por defecto `meviplast_db`), ejecuta el esquema y agrega datos de demostración. No lo ejecutes sobre una base real o compartida. Crea una cuenta de demostración por rol, bobinas, órdenes y existencias DEMO, y se puede ejecutar dos veces sin duplicar datos. Requiere MySQL encendido (en XAMPP, el botón «Start» de MySQL); si no responde, muestra en qué servidor y puerto lo buscó.
+
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| Administrador | `admin` | `admin123` |
+| Supervisor | `supervisor` | `super123` |
+| Operario | `operario` | `oper123` |
+| Vendedor | `vendedor` | `vend123` |
+| Almacenista | `almacenista` | `alma123` |
+
+Son solo para desarrollo y pruebas: cámbialas antes de usar el sistema con datos reales.
+
+En una base nueva, `schema.sql` ya trae el esquema final, así que `db:init` registra las migraciones como aplicadas en `schema_migrations` y no muestra avisos.
+
+Para actualizar una base existente se aplican las migraciones de `backend/sql/migrations` después de un respaldo verificado (ver [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md)). En una base existente, `db:init` lista las migraciones que faltan y las aplica en orden solo con `DB_APPLY_MIGRATIONS=true` y `DB_BACKUP_CONFIRMED=true`, y registra cada una en la tabla `schema_migrations`. **Antes de usar esas variables sobre una base existente, compara `schema_migrations` con la carpeta de migraciones:** si alguna se aplicó a mano sin registrarla, se volvería a ejecutar, incluidas las que borran datos fuera del catálogo. En el `meviplast_db` local del equipo están todas registradas (11 de 11, verificado el 2026-10-27, [`docs/evidence/EV-2026-10-27.md`](docs/evidence/EV-2026-10-27.md)). Las credenciales de demostración están definidas en `backend/src/config/initDb.js` y no son adecuadas para producción.
+
+Express publica solo el build de React (`frontend/dist`), que incluye el sitio público, el inicio de sesión, la recuperación de cuenta y el panel; el código fuente y la configuración del frontend no se publican. El script `prestart` de backend compila el frontend al arrancar. El sitio queda disponible en `http://localhost:3000` por defecto, y la documentación de la API con Swagger UI en `http://localhost:3000/api-docs`. El puerto se puede cambiar en `backend/.env`.
+
+Para verificar el despliegue, `GET /api/health` responde 200 si la API y la base de datos están disponibles y 503 si la base de datos no responde.
+
+### Despliegue en la nube
+
+Versión publicada: **https://meviplast.onrender.com** (Render, plan gratuito: si nadie la usa en 15 minutos se duerme y la primera visita tarda entre 30 y 60 segundos). Las cuentas de esa versión tienen contraseñas propias; no son las demo y no están en el repositorio.
+
+El repositorio trae [`render.yaml`](render.yaml) para publicar el panel y la API en Render, con la base en un MySQL 8 administrado (Aiven) por conexión cifrada. Los pasos, las variables y la verificación están en [`docs/operations/despliegue-render.md`](docs/operations/despliegue-render.md). En un servidor público, `db:init` se corre con `DB_DEMO=false` y `ADMIN_PASSWORD`, para no crear las cuentas demo.
+
+El servidor escribe sus registros como una línea JSON por evento, con `fecha`, `nivel`, `modulo` y `mensaje`: el arranque, la conexión a MySQL, cada petición a la API (método, ruta, estado, duración y usuario, nunca el cuerpo) y los errores. Los eventos normales van a la salida estándar y las advertencias y errores a la de errores. El nivel se elige con `LOG_LEVEL` (`info` por defecto) y los campos sensibles se ocultan. Para guardarlos, redirige la salida a un archivo o usa el servicio que ejecute el servidor. La API no acepta llamadas desde otros dominios salvo los listados en `CORS_ORIGINS`; el panel servido por Express no lo necesita.
+
+### Recuperación de cuenta por correo
+
+La pantalla `recuperar.html` permite pedir un enlace de restablecimiento (válido 30 minutos y de un solo uso) o solicitar que se envíe el nombre de usuario. Configura `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` y opcionalmente `SMTP_FROM` en `backend/.env`; usa una contraseña de aplicación del proveedor SMTP y no la guardes en Git. La migración `20261022_recovery_tokens.sql` crea la tabla de tokens. Las cuentas anteriores deben recibir un correo desde Gestión de usuarios antes de poder recuperarlas.
+
+Con Gmail: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_SECURE=false` y, en `SMTP_PASSWORD`, una **contraseña de aplicación** de 16 caracteres (Cuenta de Google → Seguridad → Verificación en 2 pasos activada → Contraseñas de aplicaciones); Google rechaza la contraseña normal de la cuenta. Probado con el buzón del proyecto el 2026-11-08 ([`docs/evidence/EV-2026-11-08-correo.md`](docs/evidence/EV-2026-11-08-correo.md)).
+
+## Desarrollo
+
+Con MySQL activo y el backend ejecutándose, abre otra terminal:
+
+```powershell
+npm run dev --prefix frontend -- --host 127.0.0.1
+```
+
+Vite lee `PORT` desde `backend/.env` y reenvía `/api` al backend. Para forzar otro destino puede definirse `API_PORT` en el entorno de Vite.
+
+## Pruebas y build
+
+```powershell
+npm run lint --prefix backend
+npm run lint --prefix frontend
+npm test --prefix backend
+npm audit --prefix backend --audit-level=critical
+npm run build --prefix frontend
+npm run test:e2e --prefix backend      # requiere MySQL/MariaDB activo; base desechable meviplast_e2e
+npm run test:coverage --prefix backend # cobertura de las unitarias (también test:coverage:total con E2E)
+npm run test:perf --prefix backend     # prueba de carga; base desechable meviplast_perf
+npm run test:browser --prefix backend  # Edge, Chrome y Firefox; ver docs/testing/strategy.md
+```
+
+Hay 164 pruebas unitarias y de rutas (164 aprobadas el 2026-11-25), incluidas las que verifican que el contrato OpenAPI coincide con las rutas de Express y que Swagger UI lo publica en `/api-docs`, y el diagrama entidad-relación y la semilla DEMO con `schema.sql`. Cubren sesión, protección del último administrador, topes y números estrictos, códigos de respuesta 400 y 404, bloqueo por intentos, recuperación de contraseña (incluido el envío por SMTP a un servidor local), health check y CORS, que el servidor no publique el código fuente del frontend (DEF-028), registros en archivos y auditoría filtrada, formato de la variante (RN-025) y tallas de Cargadera (CR-019), catálogo de líneas (CR-020), materia prima obligatoria (RN-026), movimientos de inventario y materias primas, órdenes y avances de producción, ventas por paquetes con uno o varios productos y comprobante (CR-022), reportes por periodo, de rendimiento y en Excel, permisos por rol, validación de largo y sanitización. La suite E2E contra MySQL (23 escenarios, también en CI) recorre el flujo completo por rol, los permisos de 17 operaciones, ventas concurrentes, el bloqueo de cuentas, la invalidación de sesiones, la protección del administrador, los topes de cantidades con la base en modo estricto, las respuestas 400 y 404 y la eliminación solo de órdenes pendientes sin avance, las reglas de las órdenes y plantillas, el reporte de rendimiento, la auditoría filtrada con su archivo las líneas nuevas creadas por el administrador, la venta con varios productos (todo o nada) y las migraciones sobre bases anteriores, incluidas la de las tallas de Cargadera y la de ventas con detalle. La prueba de carga midió un p95 de 60 a 69 ms con 5 usuarios, y la de navegadores pasó 54 de 54 flujos (18 por navegador, incluidos el uso con teclado, crear una línea y un material desde los selectores, las órdenes del administrador en tabla con detalle en una ventana y el comprobante abierto desde el reporte de ventas). La cobertura combinada de unitarias y E2E es del 91,3 % de las líneas de `backend/src` (76,8 % solo con unitarias), y el CI exige un mínimo. `npm audit` reporta 0 vulnerabilidades en backend y frontend (2026-11-16). Nada de esto sustituye una sesión de aceptación con usuarios de la empresa.
+
+## Estructura
+
+```text
+backend/       API, servicios, configuración, SQL y pruebas
+frontend/      aplicación React/Vite: sitio público, login, recuperación y panel
+docs/          arquitectura, API, datos, pruebas y evidencias
+.github/       CI, plantillas de issues y pull request
+```
+
+La estructura documental y los pendientes funcionales se detallan en [`docs/project-status.md`](docs/project-status.md). El contrato actual de endpoints está resumido en [`docs/api/endpoints.md`](docs/api/endpoints.md), y su versión formal en [`docs/api/openapi.json`](docs/api/openapi.json) (OpenAPI 3.0.3), que se consulta y se prueba con Swagger UI en `/api-docs` (CR-024).
+El índice de manuales, diagramas, procedimientos y evidencias está en [`docs/README.md`](docs/README.md), y el paquete documental ADSO (Word y Excel de las plantillas del instructor) en [`docs/Documentacion_Proyecto_ADSO`](docs/Documentacion_Proyecto_ADSO/LEEME.md).
+
+## Git y contribuciones
+
+Se usa Git Flow: `main` para entregas estables, `develop` para integración, `feature/*` para funcionalidades, `fix/*` para correcciones y `docs/*`, `test/*` y `chore/*` para documentación, pruebas y mantenimiento. Las ramas de trabajo se integran mediante pull request a `develop`. Los commits siguen Conventional Commits. Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) y la plantilla del pull request.
+
+## Licencia y terceros
+
+Software propietario: todos los derechos reservados a Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja. Consulta [`LICENSE`](LICENSE) para los términos y [`docs/legal/licensing.md`](docs/legal/licensing.md) para las licencias de las dependencias de terceros.

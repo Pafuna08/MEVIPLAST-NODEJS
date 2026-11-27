@@ -1,0 +1,25 @@
+Licencia de software propietario – MEVIPLAST
+
+Copyright (c) 2026 Pablo E. Fuenmayor Osuna y Carlos Herrera Sibaja.
+Todos los derechos reservados.
+
+Este software, su código fuente, documentación y archivos asociados (el
+"Software") son propiedad de sus autores.
+
+1. No se concede ningún derecho de uso, copia, modificación, fusión,
+   publicación, distribución, sublicencia o venta del Software sin
+   autorización previa y por escrito de los autores.
+
+2. Se permite al Servicio Nacional de Aprendizaje (SENA) y a sus instructores
+   acceder al Software, ejecutarlo y revisarlo con el único fin de evaluar el
+   proyecto formativo.
+
+3. El uso del Software por parte de MEVIPLAST o de cualquier otra organización
+   se rige por el acuerdo escrito que esta celebre con los autores.
+
+4. El Software se entrega "tal cual", sin garantías de ningún tipo. Los autores
+   no serán responsables por daños derivados de su uso.
+
+El Software incluye dependencias de terceros distribuidas bajo sus propias
+licencias (MIT, MIT-0 y BSD-2-Clause). Esas licencias se conservan en sus
+paquetes y se listan en docs/legal/licensing.md.

@@ -1,27 +1,69 @@
 const usuariosService = require("../services/usuarios.service");
+const log = require("../utils/logger").crearLogger("usuarios");
+const ROLES_VALIDOS = [
+  "admin",
+  "supervisor",
+  "operario",
+  "vendedor",
+  "almacenista",
+];
 
 async function listar(req, res) {
   try {
     const usuarios = await usuariosService.listar();
     res.json(usuarios);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al listar usuarios" });
   }
 }
 
 async function crear(req, res) {
   try {
-    const { nombre, usuario, password, rol } = req.body;
-    if (!nombre || !usuario || !password || !rol) {
-      return res.status(400).json({ mensaje: "nombre, usuario, password y rol son obligatorios" });
+    const { nombre, usuario, correo, password, rol } = req.body;
+    if (!nombre || !usuario || !correo || !password || !rol) {
+      return res
+        .status(400)
+        .json({
+          mensaje: "nombre, usuario, correo, password y rol son obligatorios",
+        });
     }
-    const nuevo = await usuariosService.crear({ nombre, usuario, password, rol }, req.usuario.id);
+    // DEF-022: sin espacios ni símbolos raros, para que se pueda escribir igual al iniciar sesión
+    if (!/^[a-z0-9._-]{3,50}$/.test(String(usuario))) {
+      return res.status(400).json({
+        mensaje: "El usuario solo admite letras sin tilde, números, punto, guion y guion bajo, sin espacios (3 a 50 caracteres)",
+      });
+    }
+    const correoNormalizado = correo.trim().toLowerCase();
+    if (
+      correoNormalizado.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado)
+    ) {
+      return res
+        .status(400)
+        .json({ mensaje: "El correo electrónico no es válido" });
+    }
+    if (!ROLES_VALIDOS.includes(rol)) {
+      return res
+        .status(400)
+        .json({ mensaje: `rol debe ser uno de: ${ROLES_VALIDOS.join(", ")}` });
+    }
+    const nuevo = await usuariosService.crear(
+      { nombre, usuario, correo: correoNormalizado, password, rol },
+      req.usuario.id,
+    );
     res.status(201).json(nuevo);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     if (error.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ mensaje: "El nombre de usuario ya existe" });
+      if (error.message.includes("uq_usuarios_correo")) {
+        return res
+          .status(409)
+          .json({ mensaje: "El correo electrónico ya está registrado" });
+      }
+      return res
+        .status(409)
+        .json({ mensaje: "El nombre de usuario ya existe" });
     }
     res.status(500).json({ mensaje: "Error al crear usuario" });
   }
@@ -29,12 +71,52 @@ async function crear(req, res) {
 
 async function actualizar(req, res) {
   try {
-    const { nombre, rol, activo } = req.body;
-    const actualizado = await usuariosService.actualizar(req.params.id, { nombre, rol, activo }, req.usuario.id);
+    const { nombre, correo, rol, activo } = req.body;
+    const correoNormalizado =
+      correo === undefined ? undefined : String(correo).trim().toLowerCase();
+    if (
+      correoNormalizado !== undefined &&
+      (correoNormalizado.length > 254 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado))
+    ) {
+      return res
+        .status(400)
+        .json({ mensaje: "El correo electrónico no es válido" });
+    }
+    if (rol !== undefined && !ROLES_VALIDOS.includes(rol)) {
+      return res
+        .status(400)
+        .json({ mensaje: `rol debe ser uno de: ${ROLES_VALIDOS.join(", ")}` });
+    }
+    if (activo !== undefined && ![0, 1, false, true].includes(activo)) {
+      return res.status(400).json({ mensaje: "activo debe ser 0 o 1" });
+    }
+    const actualizado = await usuariosService.actualizar(
+      req.params.id,
+      { nombre, correo: correoNormalizado, rol, activo },
+      req.usuario.id,
+    );
     res.json(actualizado);
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
+    if (error.code === "ER_DUP_ENTRY") {
+      return res
+        .status(409)
+        .json({ mensaje: "El correo electrónico ya está registrado" });
+    }
+    if (error.statusCode) return res.status(error.statusCode).json({ mensaje: error.message });
     res.status(500).json({ mensaje: "Error al actualizar usuario" });
+  }
+}
+
+async function desbloquear(req, res) {
+  try {
+    const usuario = await usuariosService.desbloquear(req.params.id, req.usuario.id);
+    if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    res.json(usuario);
+  } catch (error) {
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al desbloquear usuario" });
   }
 }
 
@@ -43,9 +125,10 @@ async function eliminar(req, res) {
     await usuariosService.eliminar(req.params.id, req.usuario.id);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
+    if (error.statusCode) return res.status(error.statusCode).json({ mensaje: error.message });
     res.status(500).json({ mensaje: "Error al eliminar usuario" });
   }
 }
 
-module.exports = { listar, crear, actualizar, eliminar };
+module.exports = { listar, crear, actualizar, eliminar, desbloquear };

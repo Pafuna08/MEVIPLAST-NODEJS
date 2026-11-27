@@ -1,7 +1,8 @@
 :root {
   --navy: #001f54;
   --navy-deep: #00152f;
-  --red: #e63946;
+  --red: #d02c3a;
+  --red-claro: #ff8a94;
   --white: #ffffff;
   --gray-50: #f5f5f5;
   --gray-100: #e8edf2;
@@ -45,7 +46,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .btn-login { min-height: 40px; padding: 8px 15px; border-color: var(--red); color: var(--white); background: transparent; }
 .btn-login:hover { background: var(--red); }
 
-.hero { position: relative; min-height: calc(92vh - 74px); margin-top: 74px; display: grid; align-items: center; overflow: hidden; color: var(--white); background: url("../assets/hero-industrial.png") center/cover no-repeat; }
+.hero { position: relative; min-height: calc(92vh - 74px); margin-top: 74px; display: grid; align-items: center; overflow: hidden; color: var(--white); background: url("/assets/hero-industrial.png") center/cover no-repeat; }
 .hero-overlay { position: absolute; inset: 0; background: rgba(0, 18, 43, .58); }
 .hero-content { position: relative; z-index: 1; padding-top: 44px; padding-bottom: 75px; }
 .eyebrow { margin: 0 0 12px; color: var(--red); font-weight: 800; font-size: .78rem; text-transform: uppercase; letter-spacing: .16em; }
@@ -86,7 +87,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .benefits h2 { color: var(--white); }
 .benefit-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #36516f; border: 1px solid #36516f; }
 .benefit { min-height: 260px; padding: 28px; background: #082445; }
-.benefit span { color: var(--red); font-weight: 800; }
+.benefit span { color: var(--red-claro); font-weight: 800; }
 .benefit h3 { color: var(--white); margin-top: 36px; }
 .benefit p { color: #cbd6e2; }
 
@@ -118,11 +119,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .contact-copy > p:not(.eyebrow) { color: #ced8e3; }
 .contact address { display: grid; gap: 8px; margin-top: 30px; font-style: normal; }
 .contact address a { color: #ffb0b7; }
+/* DEF-041: sobre los fondos azul oscuro el rojo de marca no llega a 4,5:1; se usa un rosa claro (6,5:1 a 8,1:1) */
+.benefits .eyebrow, .contact .eyebrow { color: var(--red-claro); }
 .contact-form { padding: 32px; background: var(--white); color: var(--ink); border-radius: 6px; }
 .field { margin-bottom: 16px; }
 .field label { display: block; margin-bottom: 5px; color: var(--navy); font-weight: 700; }
 .field input, .field textarea { width: 100%; padding: 12px; border: 1px solid #bdc8d4; border-radius: 4px; background: #fbfcfd; }
-.field input:focus, .field textarea:focus { outline: 3px solid rgba(230,57,70,.18); border-color: var(--red); }
+.field input:focus, .field textarea:focus { outline: 3px solid rgba(208,44,58,.18); border-color: var(--red); }
 .field.invalid input, .field.invalid textarea { border-color: var(--red); }
 .field small { display: block; min-height: 18px; margin-top: 3px; color: #b8202e; }
 .form-status { min-height: 24px; margin-bottom: 0; color: var(--success); font-weight: 700; }

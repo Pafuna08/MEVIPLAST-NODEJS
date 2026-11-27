@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="815" viewBox="0 0 1400 815" font-family="Helvetica, Arial, sans-serif">
+<rect width="1400" height="815" fill="#fff"/>
+<text x="24" y="36" font-size="20" font-weight="bold" fill="#1F3864">DIA-CU-03 · EP-001 Gestión de producción</text>
+<rect x="360" y="62" width="680" height="731" rx="6" fill="none" stroke="#1F4E79" stroke-width="2.2"/>
+<text x="700" y="88" font-size="16" font-weight="bold" text-anchor="middle" fill="#1F4E79">Sistema MEVIPLAST</text>
+<line x1="194" y1="207" x2="525" y2="165" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="207" x2="525" y2="273" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="357" x2="525" y2="165" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="357" x2="525" y2="273" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="357" x2="525" y2="381" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="531" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="531" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="700" y1="631" x2="700" y2="671" stroke="#1F3864" stroke-width="1.6" stroke-dasharray="7,5"/>
+<polyline points="695.3269798922962,659.9472680719654 700,671 704.6730201077038,659.9472680719654" fill="none" stroke="#1F3864" stroke-width="1.8"/>
+<text x="712" y="656" font-size="13" font-style="italic" fill="#1F3864">«include»</text>
+<ellipse cx="700" cy="165" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="155" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-006</text>
+<text x="700" y="173" font-size="14" text-anchor="middle" fill="#1F3864">Asignar tareas de producción</text>
+<ellipse cx="700" cy="273" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="263" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-010</text>
+<text x="700" y="281" font-size="14" text-anchor="middle" fill="#1F3864">Modificar órdenes pendientes</text>
+<ellipse cx="700" cy="381" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="363" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-009</text>
+<text x="700" y="381" font-size="14" text-anchor="middle" fill="#1F3864">Consultar historial de</text>
+<text x="700" y="397" font-size="14" text-anchor="middle" fill="#1F3864">producción</text>
+<ellipse cx="700" cy="489" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="479" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-007</text>
+<text x="700" y="497" font-size="14" text-anchor="middle" fill="#1F3864">Consultar tareas asignadas</text>
+<ellipse cx="700" cy="597" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+<text x="700" y="587" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-008</text>
+<text x="700" y="605" font-size="14" text-anchor="middle" fill="#1F3864">Registrar producción realizada</text>
+<ellipse cx="700" cy="705" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="702" font-size="14" text-anchor="middle" fill="#1F3864">Incrementar inventario terminado</text>
+<text x="700" y="718" font-size="14" text-anchor="middle" fill="#1F3864">y registrar movimiento</text>
+<circle cx="170" cy="181" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="192" x2="170" y2="225" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="202" x2="188" y2="202" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="225" x2="156" y2="249" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="225" x2="184" y2="249" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="269" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Administrador</text>
+<circle cx="170" cy="331" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="342" x2="170" y2="375" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="352" x2="188" y2="352" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="375" x2="156" y2="399" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="375" x2="184" y2="399" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="419" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Supervisor</text>
+<circle cx="170" cy="505" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="516" x2="170" y2="549" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="526" x2="188" y2="526" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="549" x2="156" y2="573" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="549" x2="184" y2="573" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="593" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Operario</text>
+</svg>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1139" viewBox="0 0 1400 1139" font-family="Helvetica, Arial, sans-serif">
+<rect width="1400" height="1139" fill="#fff"/>
+<text x="24" y="36" font-size="20" font-weight="bold" fill="#1F3864">DIA-CU-01 · Diagrama general de casos de uso (alto nivel)</text>
+<rect x="360" y="62" width="680" height="1055" rx="6" fill="none" stroke="#1F4E79" stroke-width="2.2"/>
+<text x="700" y="88" font-size="16" font-weight="bold" text-anchor="middle" fill="#1F4E79">Sistema MEVIPLAST</text>
+<line x1="194" y1="207" x2="525" y2="165" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="207" x2="525" y2="273" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="381" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="813" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="921" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="693" x2="525" y2="1029" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="993" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="993" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="993" x2="525" y2="813" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="993" x2="525" y2="1029" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="194" y1="843" x2="525" y2="705" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1160" y1="273" x2="875" y2="273" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1206" y1="855" x2="875" y2="813" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1206" y1="855" x2="875" y2="921" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1206" y1="1005" x2="875" y2="921" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="1206" y1="1005" x2="875" y2="1029" stroke="#1F3864" stroke-width="1.6"/>
+<line x1="700" y1="239" x2="700" y2="199" stroke="#1F3864" stroke-width="1.6" stroke-dasharray="7,5"/>
+<polyline points="704.6730201077038,210.05273192803463 700,199 695.3269798922962,210.05273192803463" fill="none" stroke="#1F3864" stroke-width="1.8"/>
+<text x="712" y="224" font-size="13" font-style="italic" fill="#1F3864">«extend»</text>
+<ellipse cx="700" cy="165" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="170" font-size="14" text-anchor="middle" fill="#1F3864">Iniciar y cerrar sesión</text>
+<ellipse cx="700" cy="273" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="278" font-size="14" text-anchor="middle" fill="#1F3864">Recuperar acceso por correo</text>
+<ellipse cx="700" cy="381" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="378" font-size="14" text-anchor="middle" fill="#1F3864">Gestionar usuarios y desbloquear</text>
+<text x="700" y="394" font-size="14" text-anchor="middle" fill="#1F3864">cuentas</text>
+<ellipse cx="700" cy="489" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="494" font-size="14" text-anchor="middle" fill="#1F3864">Consultar reportes y auditoría</text>
+<ellipse cx="700" cy="597" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="602" font-size="14" text-anchor="middle" fill="#1F3864">Gestionar órdenes de producción</text>
+<ellipse cx="700" cy="705" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="710" font-size="14" text-anchor="middle" fill="#1F3864">Registrar producción realizada</text>
+<ellipse cx="700" cy="813" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="818" font-size="14" text-anchor="middle" fill="#1F3864">Gestionar materias primas</text>
+<ellipse cx="700" cy="921" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="926" font-size="14" text-anchor="middle" fill="#1F3864">Gestionar inventario terminado</text>
+<ellipse cx="700" cy="1029" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
+
+<text x="700" y="1034" font-size="14" text-anchor="middle" fill="#1F3864">Registrar y consultar ventas</text>
+<circle cx="170" cy="181" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="192" x2="170" y2="225" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="202" x2="188" y2="202" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="225" x2="156" y2="249" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="225" x2="184" y2="249" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="269" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Usuario</text>
+<circle cx="170" cy="667" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="678" x2="170" y2="711" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="688" x2="188" y2="688" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="711" x2="156" y2="735" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="711" x2="184" y2="735" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="755" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Administrador</text>
+<circle cx="170" cy="967" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="978" x2="170" y2="1011" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="988" x2="188" y2="988" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="1011" x2="156" y2="1035" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="1011" x2="184" y2="1035" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="1055" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Supervisor</text>
+<circle cx="170" cy="817" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="828" x2="170" y2="861" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="152" y1="838" x2="188" y2="838" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="861" x2="156" y2="885" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="170" y1="861" x2="184" y2="885" stroke="#1F3864" stroke-width="2.2"/>
+<text x="170" y="905" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Operario</text>
+<rect x="1160" y="245" width="140" height="56" rx="4" fill="#F7F9FC" stroke="#1F4E79" stroke-width="2"/>
+<text x="1230" y="265" font-size="12" text-anchor="middle" fill="#555">«sistema externo»</text>
+<text x="1230" y="285" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Servidor SMTP</text>
+<circle cx="1230" cy="829" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="840" x2="1230" y2="873" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1212" y1="850" x2="1248" y2="850" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="873" x2="1216" y2="897" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="873" x2="1244" y2="897" stroke="#1F3864" stroke-width="2.2"/>
+<text x="1230" y="917" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Almacenista</text>
+<circle cx="1230" cy="979" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="990" x2="1230" y2="1023" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1212" y1="1000" x2="1248" y2="1000" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="1023" x2="1216" y2="1047" stroke="#1F3864" stroke-width="2.2"/>
+<line x1="1230" y1="1023" x2="1244" y2="1047" stroke="#1F3864" stroke-width="2.2"/>
+<text x="1230" y="1067" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Vendedor</text>
+<text x="24" y="1127" font-size="12" fill="#555">Alto nivel: cada óvalo agrupa los casos de uso detallados de DIA-CU-02 a DIA-CU-06. Todos los roles son «Usuario» (ver DIA-ACT-01).</text>
+</svg>

@@ -1,24 +1,85 @@
 const authService = require("../services/auth.service");
+const { crearLogger, registrarAcceso } = require("../utils/logger");
+const log = crearLogger("auth");
 
 async function iniciarSesion(req, res) {
   try {
     const { usuario, password } = req.body;
 
     if (!usuario || !password) {
-      return res.status(400).json({ mensaje: "Usuario y contrasena son obligatorios" });
+      return res.status(400).json({ mensaje: "Usuario y contraseña son obligatorios" });
     }
 
     const resultado = await authService.login(usuario, password);
+    // CR-016: los accesos van al archivo accesos-AAAA-MM-DD.log; el bloqueo de cuenta sigue en auditoría
+    const acceso = { usuario: String(usuario).slice(0, 60), ip: req.ip };
 
     if (!resultado.ok) {
-      return res.status(401).json({ mensaje: resultado.mensaje });
+      registrarAcceso(resultado.bloqueado ? "Acceso rechazado: cuenta bloqueada" : "Intento de inicio de sesión fallido", acceso, "warn");
+      return res.status(resultado.bloqueado ? 423 : 401).json({ mensaje: resultado.mensaje });
     }
 
+    registrarAcceso("Inicio de sesión", { ...acceso, usuario_id: resultado.usuario.id, rol: resultado.usuario.rol });
     return res.json({ token: resultado.token, usuario: resultado.usuario });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ mensaje: "Error interno al iniciar sesion" });
+    log.error("Error al atender la petición", { error });
+    return res.status(500).json({ mensaje: "Error interno al iniciar sesión" });
   }
 }
 
-module.exports = { iniciarSesion };
+function responderErrorRecuperacion(res, error, mensaje) {
+  if (error.status) return res.status(error.status).json({ mensaje: error.message });
+  log.error("Error al atender la petición", { error });
+  if (error.code === "SMTP_NOT_CONFIGURED") {
+    return res.status(503).json({ mensaje: "La recuperación por correo no está disponible: falta configurar SMTP." });
+  }
+  return res.status(500).json({ mensaje });
+}
+
+async function solicitarRecuperacion(req, res) {
+  try {
+    const mensaje = await authService.solicitarRecuperacion(req.body.correo);
+    return res.json({ mensaje });
+  } catch (error) {
+    return responderErrorRecuperacion(res, error, "No fue posible procesar la solicitud.");
+  }
+}
+
+async function recordarUsuario(req, res) {
+  try {
+    const mensaje = await authService.recordarUsuario(req.body.correo);
+    return res.json({ mensaje });
+  } catch (error) {
+    return responderErrorRecuperacion(res, error, "No fue posible procesar la solicitud.");
+  }
+}
+
+async function restablecerPassword(req, res) {
+  try {
+    await authService.restablecerPassword(
+      req.body.token,
+      req.body.password,
+    );
+    return res.json({ mensaje: "La contraseña se actualizó. Ya puedes iniciar sesión." });
+  } catch (error) {
+    return responderErrorRecuperacion(res, error, "No fue posible restablecer la contraseña.");
+  }
+}
+
+async function cerrarSesion(req, res) {
+  try {
+    await authService.cerrarSesion(req.usuario.id);
+    res.json({ mensaje: "Sesión cerrada" });
+  } catch (error) {
+    log.error("Error al cerrar la sesión", { error });
+    res.status(500).json({ mensaje: "No se pudo cerrar la sesión" });
+  }
+}
+
+module.exports = {
+  cerrarSesion,
+  iniciarSesion,
+  solicitarRecuperacion,
+  recordarUsuario,
+  restablecerPassword,
+};

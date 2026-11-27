@@ -1,11 +1,52 @@
 const reportesService = require("../services/reportes.service");
+const reportesExcel = require("../services/reportesExcel.service");
+const reportesPdf = require("../services/reportesPdf.service");
+const log = require("../utils/logger").crearLogger("reportes");
 
 async function produccion(req, res) {
   try {
     res.json(await reportesService.resumenProduccion());
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ mensaje: "Error al generar reporte de produccion" });
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el reporte de producción" });
+  }
+}
+
+async function detalleProduccion(req, res) {
+  try {
+    const { operario_id, producto } = req.query;
+    res.json(await reportesService.detalleProduccion(req.query.periodo, undefined, { operario_id, producto }));
+  } catch (error) {
+    if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el detalle de producción" });
+  }
+}
+
+async function detalleVentas(req, res) {
+  try {
+    res.json(await reportesService.detalleVentas(req.query.periodo));
+  } catch (error) {
+    if (error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el detalle de ventas" });
+  }
+}
+
+// HU-022 / RF-027: cumplimiento de la meta por operario en el periodo
+async function rendimiento(req, res) {
+  try {
+    res.json(await reportesService.rendimientoOperarios(req.query.periodo));
+  } catch (error) {
+    if (error.message.startsWith("El periodo")) {
+      return res.status(400).json({ mensaje: error.message });
+    }
+    log.error("Error al atender la petición", { error });
+    res.status(500).json({ mensaje: "Error al generar el reporte de rendimiento" });
   }
 }
 
@@ -14,7 +55,7 @@ async function ventas(req, res) {
     const { desde, hasta } = req.query;
     res.json(await reportesService.resumenVentas({ desde, hasta }));
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al generar reporte de ventas" });
   }
 }
@@ -23,19 +64,77 @@ async function inventario(req, res) {
   try {
     res.json(await reportesService.resumenInventario());
   } catch (error) {
-    console.error(error);
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al generar reporte de inventario" });
   }
 }
 
 async function auditoria(req, res) {
   try {
-    const limite = Number(req.query.limite) || 100;
-    res.json(await reportesService.bitacoraAuditoria(limite));
+    const { desde, hasta, usuario_id, accion, tabla, texto, pagina, porPagina } = req.query;
+    res.json(await reportesService.bitacoraAuditoria({ desde, hasta, usuario_id, accion, tabla, texto, pagina, porPagina }));
   } catch (error) {
-    console.error(error);
+    if (error.statusCode === 400) return res.status(400).json({ mensaje: error.message });
+    log.error("Error al atender la petición", { error });
     res.status(500).json({ mensaje: "Error al consultar la bitacora" });
   }
 }
 
-module.exports = { produccion, ventas, inventario, auditoria };
+// Exporta el detalle del periodo a Excel (RF-028)
+function exportarExcel(tipo) {
+  return async (req, res) => {
+    try {
+      const { operario_id, producto } = req.query;
+      const { buffer, nombreArchivo } = await reportesExcel.libroDetalle(tipo, req.query.periodo, undefined, { operario_id, producto });
+      res.set({
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${nombreArchivo}"`,
+      });
+      res.send(buffer);
+    } catch (error) {
+      if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
+        return res.status(400).json({ mensaje: error.message });
+      }
+      log.error("Error al atender la petición", { error });
+      res.status(500).json({ mensaje: "Error al exportar el reporte a Excel" });
+    }
+  };
+}
+
+// El mismo detalle en PDF, para abrirlo en una pestaña e imprimirlo o descargarlo (RF-028)
+function exportarPdf(tipo) {
+  return async (req, res) => {
+    try {
+      const { operario_id, producto } = req.query;
+      const { buffer, nombreArchivo } = await reportesPdf.pdfDetalle(tipo, req.query.periodo, undefined, {}, { operario_id, producto });
+      res.set({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${nombreArchivo}"`,
+        "Cache-Control": "no-store",
+      });
+      res.send(buffer);
+    } catch (error) {
+      if (error.statusCode === 400 || error.message.startsWith("El periodo")) {
+        return res.status(400).json({ mensaje: error.message });
+      }
+      log.error("Error al atender la petición", { error });
+      res.status(500).json({ mensaje: "Error al generar el reporte en PDF" });
+    }
+  };
+}
+
+module.exports = {
+  produccion,
+  pdfProduccion: exportarPdf("produccion"),
+  pdfVentas: exportarPdf("ventas"),
+  pdfRendimiento: exportarPdf("rendimiento"),
+  detalleProduccion,
+  detalleVentas,
+  excelProduccion: exportarExcel("produccion"),
+  excelVentas: exportarExcel("ventas"),
+  rendimiento,
+  excelRendimiento: exportarExcel("rendimiento"),
+  ventas,
+  inventario,
+  auditoria,
+};

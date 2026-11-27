@@ -1,12 +1,14 @@
 const mysql = require("mysql2/promise");
+const log = require("../utils/logger").crearLogger("database");
 require("dotenv").config();
+const { datosConexion, zonaHoraria } = require("./conexion");
 
-// Pool de conexiones: mejor rendimiento que abrir/cerrar conexion en cada consulta
+const zona = zonaHoraria();
+
+// Pool de conexiones: mejor rendimiento que abrir/cerrar conexion en cada consulta.
+// En la nube la conexión va cifrada (DB_SSL) y con la zona horaria de la empresa (DB_TIME_ZONE).
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
+  ...datosConexion(),
   database: process.env.DB_NAME || "meviplast_db",
   waitForConnections: true,
   connectionLimit: 10,
@@ -14,14 +16,31 @@ const pool = mysql.createPool({
   dateStrings: true,
 });
 
+// DEF-022: modo estricto en cada conexión. XAMPP trae MariaDB sin STRICT_TRANS_TABLES, y así un número
+// o un texto que no cabe en su columna se guardaba recortado sin avisar; ahora la base da error.
+pool.on("connection", (conexion) => {
+  conexion.query(
+    "SET SESSION sql_mode = TRIM(BOTH ',' FROM CONCAT(@@SESSION.sql_mode, ',STRICT_TRANS_TABLES'))",
+    (error) => {
+      if (error) log.error("No se pudo activar el modo estricto de MySQL", { error: error.message });
+    },
+  );
+  // La fecha que guarda MySQL (CURRENT_TIMESTAMP) queda en la hora de la empresa aunque el servidor esté en UTC
+  if (zona) {
+    conexion.query("SET time_zone = ?", [zona], (error) => {
+      if (error) log.error("No se pudo fijar la zona horaria de MySQL", { error: error.message });
+    });
+  }
+});
+
 // Verifica la conexion al arrancar el servidor
 async function verificarConexion() {
   try {
     const connection = await pool.getConnection();
-    console.log(`Conexion a MySQL establecida (${process.env.DB_NAME || "meviplast_db"})`);
+    log.info("Conexión a MySQL establecida", { base: process.env.DB_NAME || "meviplast_db" });
     connection.release();
   } catch (error) {
-    console.error("No fue posible conectar a MySQL:", error.message);
+    log.error("No fue posible conectar a MySQL", { error: error.message });
     process.exit(1);
   }
 }

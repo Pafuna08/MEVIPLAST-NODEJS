@@ -1,0 +1,71 @@
+# Catálogo de API
+
+Base: `/api`. Las rutas protegidas esperan `Authorization: Bearer <token>`. Responden 401 si falta el token, si está vencido o es inválido, o si el usuario fue desactivado, eliminado o cambió de rol desde que inició sesión, o si cerró esa sesión (HU-020); el panel cierra la sesión al recibir 401. Responden 403 cuando el rol no tiene permiso para la ruta. Los roles y respuestas siguientes se derivan de los routers y middleware del backend. El contrato formal está en [`openapi.json`](openapi.json) (OpenAPI 3.0.3): cuerpos de petición, códigos de respuesta y roles por ruta (`x-roles`). La prueba `backend/tests/openapi.test.js` falla si el contrato y las rutas registradas en Express no coinciden.
+
+## Documentación interactiva (Swagger UI)
+
+El mismo servidor publica el contrato con Swagger UI (CR-024, pedido del instructor):
+
+| Dónde | Swagger UI | Contrato en JSON |
+| --- | --- | --- |
+| Equipo local | http://localhost:3000/api-docs | http://localhost:3000/api-docs/openapi.json |
+| Demostración en Render | https://meviplast.onrender.com/api-docs | https://meviplast.onrender.com/api-docs/openapi.json |
+
+La página se arma con `openapi.json`, el archivo que vigila `openapi.test.js`, así que no se desfasa de las rutas. Agrupa las 60 operaciones por módulo y muestra, en cada una, sus parámetros, cuerpo, respuestas, roles (`x-roles`) y requisito (`x-requisitos`). Para probar: `POST /auth/login`, copiar el `token`, pulsar **Authorize** y pegarlo; «Try it out» envía las peticiones con ese token y la API aplica los mismos roles y validaciones que al panel. Las peticiones son reales: en la demostración, lo que se registre queda en la base.
+
+Los archivos de Swagger UI vienen con la dependencia `swagger-ui-express` (no se cargan de internet), así que la página también funciona en la red local de la empresa. `API_DOCS=off` la desactiva y `/api-docs` responde 404. La prueba `backend/tests/api-docs.test.js` lo verifica (CP-103).
+
+| Método      | Ruta                                                                 | Acceso definido en backend             | Propósito                              |
+| ----------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| GET         | `/health`                                                            | Público                                | Verificar que la API y la base de datos respondan (200 / 503) |
+| POST        | `/auth/login`                                                        | Público                                | Iniciar sesión y recibir JWT           |
+| POST        | `/auth/logout`                                                       | Cualquier rol con sesión válida        | Cerrar sesión: el token queda revocado en el servidor (HU-020) |
+| POST        | `/auth/recuperar-password`                                           | Público                                | Solicitar enlace de recuperación por correo |
+| POST        | `/auth/recordar-usuario`                                             | Público                                | Enviar nombre de usuario al correo asociado |
+| POST        | `/auth/restablecer-password`                                         | Público con token de un solo uso       | Cambiar contraseña con enlace vigente   |
+| GET, POST   | `/usuarios`                                                          | Admin                                  | Consultar y crear usuarios             |
+| PUT, DELETE | `/usuarios/{id}`                                                     | Admin                                  | Actualizar o eliminar usuario          |
+| PUT         | `/usuarios/{id}/desbloquear`                                         | Admin                                  | Desbloquear una cuenta bloqueada por intentos fallidos |
+| GET, PUT    | `/auth/perfil`                                                       | Todos los roles (la cuenta del token)  | Mi perfil: consultar y cambiar nombre, usuario y correo; devuelve un token nuevo y los datos que cambiaron (si son los mismos no escribe nada; CR-028, MEVI-117) |
+| PUT         | `/auth/perfil/password`                                              | Todos los roles (la cuenta del token)  | Cambiar la contraseña con la actual (8 a 128; la equivocada cuenta como intento fallido; revoca las demás sesiones) |
+| GET         | `/materia-prima`, `/materia-prima/bajo-stock`, `/materia-prima/{id}` | Admin, supervisor, almacenista         | Consultar materias primas              |
+| POST        | `/materia-prima`                                                     | Admin                                  | Crear material (material, tamaño del rollo con su unidad de medida, calibre, color y peso; CR-027) y registrar saldo inicial |
+| PUT         | `/materia-prima/{id}`                                                | Admin, almacenista                     | Actualizar datos (no cantidad)          |
+| DELETE      | `/materia-prima/{id}`                                                | Admin                                  | Eliminar material                      |
+| GET         | `/materia-prima/movimientos`, `/materia-prima/{id}/movimientos`     | Admin, almacenista (el supervisor no, CR-026) | Consultar ledger de materias primas    |
+| POST        | `/materia-prima/movimientos`                                         | Admin, almacenista; consumo: admin/supervisor (el supervisor, desde Seguimiento: CR-026) | Compra (con costo y factura opcionales, HU-010), ajuste o consumo asociado a orden |
+| GET         | `/produccion`                                                        | Admin; supervisor limitado a órdenes entregadas; operario limitado a sus órdenes | Consultar órdenes (abiertas primero, por prioridad) |
+| GET         | `/lineas`                                                            | Admin, supervisor, almacenista, vendedor | Líneas de producto terminado: las seis de RN-012 y las que agregó el administrador (CR-020) |
+| POST        | `/lineas`                                                            | Admin                                  | Crear una línea; nombre de 3 a 60 caracteres, 409 si ya existe (CR-020) |
+| GET         | `/produccion/operarios`                                              | Admin, supervisor                      | Consultar operarios activos            |
+| GET         | `/produccion/supervisores`                                           | Admin                                  | Consultar supervisores activos         |
+| GET         | `/produccion/plantillas`                                             | Admin, supervisor                      | Consultar plantillas de órdenes        |
+| POST        | `/produccion/plantillas`                                             | Admin                                  | Crear plantilla de orden con su variante y su materia prima (RN-026; 409 si ya existe) |
+| DELETE      | `/produccion/plantillas/{id}`                                        | Admin                                  | Eliminar plantilla                     |
+| GET         | `/produccion/mis-registros?periodo={diario\|semanal\|mensual\|anual}` | Operario (solo los suyos)        | Avances registrados en el periodo calendario actual (Mi historial); por defecto, mensual |
+| POST        | `/produccion`                                                        | Admin (queda pendiente para los supervisores), supervisor (a un operario) | Crear orden con línea, medida, calibre, color de la lista (RN-025) y materia prima (RN-026) |
+| PUT         | `/produccion/{id}/asignar`                                           | Supervisor (toma la orden), admin (si falta el supervisor; no cambia el supervisor) | Asignar operario a orden pendiente sin avance |
+| PUT         | `/produccion/{id}/estado`                                            | Operario asignado (solo inicia), admin y supervisor (solo cancelan) | Cambiar estado; la orden se finaliza sola al completar la meta (CR-013) |
+| PUT         | `/produccion/{id}`                                                   | Admin, supervisor                      | Editar orden pendiente sin avance (medida, calibre y color van juntos; la materia prima se cambia, no se quita) |
+| POST        | `/produccion/{id}/avance`                                            | Operario asignado                      | Registrar avance; suma a la variante de la orden y la crea si no existe; la observación (máx. 255) queda en el movimiento |
+| DELETE      | `/produccion/{id}`                                                   | Admin                                  | Eliminar orden pendiente sin avance (las demás se cancelan; DEF-023) |
+| GET         | `/inventario`                                                        | Admin, supervisor, almacenista, vendedor | Consultar existencias                  |
+| GET         | `/inventario/movimientos`, `/inventario/{id}/movimientos`            | Admin, supervisor, almacenista         | Consultar ledger de inventario         |
+| POST        | `/inventario`                                                        | Admin, supervisor, almacenista         | Registrar ingreso manual              |
+| POST        | `/inventario/{id}/salida`                                            | Admin, supervisor, almacenista         | Registrar salida manual con `cantidad`, `motivo` (de la lista) y `detalle` (obligatorio si el motivo es «Otro») |
+| GET         | `/ventas`                                                            | Admin; vendedor (solo propias); el supervisor no (CR-021) | Consultar ventas                  |
+| POST        | `/ventas`                                                            | Admin, vendedor                         | Registrar una venta con `cliente` e `items` (1 a 20 productos: `inventario_id`, `cantidad_paquetes`, `unidades_paquete`, `precio_paquete`) y descontar el inventario de todos en una transacción (CR-022); acepta también el formato de un solo producto |
+| GET         | `/ventas/:id/comprobante`                                            | Admin; vendedor (solo propias, 404 si no); el supervisor no (CR-021) | Datos del comprobante imprimible con número `V-000123` (RF-023) |
+| GET         | `/ventas/:id/comprobante/pdf`                                        | Admin; vendedor (solo propias, 404 si no) | El mismo comprobante en PDF (`application/pdf`, se abre en otra pestaña) |
+| GET         | `/reportes/produccion`, `/reportes/inventario`                       | Admin, supervisor                      | Consultar resúmenes; el de inventario incluye las materias primas con su alerta de stock bajo (HU-023) |
+| GET         | `/reportes/ventas`                                                   | Admin (CR-021)                         | Resumen de ventas                      |
+| GET         | `/reportes/produccion/detalle?periodo={diario\|semanal\|mensual\|anual}&operario_id=&producto=` | Admin, supervisor                   | Ver producción registrada y agregados del periodo calendario actual, filtrada por operario y producto (HU-004) |
+| GET         | `/reportes/ventas/detalle?periodo={diario\|semanal\|mensual\|anual}` | Admin (CR-021)                         | Ver ventas registradas y agregados del periodo calendario actual |
+| GET         | `/reportes/{produccion\|ventas}/detalle/excel?periodo=…`             | Admin, supervisor (el de ventas, solo admin, CR-021) | Descargar el mismo detalle en `.xlsx` (hojas Resumen, Por producto y Detalle) (RF-028) |
+| GET         | `/reportes/{produccion\|ventas}/detalle/pdf?periodo=…`               | Admin, supervisor (el de ventas, solo admin, CR-021) | El mismo detalle en PDF (`application/pdf`), para abrirlo en otra pestaña |
+| GET         | `/reportes/rendimiento?periodo={diario\|semanal\|mensual\|anual}`  | Admin, supervisor                      | Cumplimiento de la meta por operario activo (HU-022, RF-027): órdenes asignadas y creadas en el periodo sin las canceladas, finalizadas, meta, producido (limitado a la meta de cada orden), `cumplimiento` = producido ÷ meta × 100 (`null` sin órdenes) y unidades registradas en el periodo |
+| GET         | `/reportes/rendimiento/excel?periodo=…`                              | Admin, supervisor                      | El mismo reporte en `.xlsx` (hojas Resumen y Por operario) |
+| GET         | `/reportes/rendimiento/pdf?periodo=…`                                | Admin, supervisor                      | El reporte de rendimiento en PDF |
+| GET         | `/reportes/auditoria?desde=&hasta=&usuario_id=&accion=&tabla=&texto=&pagina=&porPagina=` | Admin | Consultar la bitácora con filtros, por páginas (20 por defecto, máximo 100; el panel pide 10), con el total y las opciones de los filtros (CR-016); los inicios de sesión no están aquí, sino en `backend/logs/accesos-AAAA-MM-DD.log` |
+
+La venta, el movimiento de inventario relacionado y el descuento de saldo se confirman en una sola transacción. Las compras, ajustes y consumos de materia prima actualizan saldo y ledger en la misma transacción. La recuperación requiere SMTP configurado y un correo asociado a la cuenta. La autorización efectiva debe probarse por endpoint, no solo por la interfaz. Tras 5 intentos fallidos seguidos (`LOGIN_MAX_INTENTOS`), `/auth/login` responde 423 durante 15 minutos (`LOGIN_BLOQUEO_MINUTOS`), incluso con la contraseña correcta; el administrador puede desbloquear la cuenta antes. El panel usa `POST /materia-prima/movimientos` desde el formulario «Registrar movimiento» de Materias primas (restaurado en DEF-013).
