@@ -3,7 +3,7 @@
 Corte: 26/11/2026. Versión estable `v1.0.0` en `main` (PR #127); `develop` con los PR #1 a #126. Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (PR #53 a #127) cerró con la versión 1.0.0.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 164 unitarias, 24 E2E con MySQL, prueba de carga y 21 flujos en cada uno de Edge, Chrome y Firefox (63); cobertura de 79,0 % con unitarias y 91,6 % con E2E (medida el 25/11/2026); contraste WCAG AA medido en 56 vistas sin fallas (EV-2026-11-25-10).
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 168 unitarias, 24 E2E con MySQL, prueba de carga y 21 flujos en cada uno de Edge, Chrome y Firefox (63); cobertura de 79,0 % con unitarias y 91,6 % con E2E (medida el 25/11/2026); contraste WCAG AA medido en 56 vistas sin fallas (EV-2026-11-25-10).
 - Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (versiones 2.1 a 3.1 al PR #125, con las capturas del diseño nuevo, más la Rúbrica Integral de Evaluación; Carlos revisó hasta la 2.2 y las siguientes, igual que la aprobación del instructor, están pendientes); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md).
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json), publicado con Swagger UI en `/api-docs` (CR-024).
