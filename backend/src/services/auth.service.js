@@ -15,13 +15,49 @@ const MINUTOS_BLOQUEO = Number(process.env.LOGIN_BLOQUEO_MINUTOS) || 15;
 const MENSAJE_CREDENCIALES = "Usuario o contraseña incorrectos";
 const MENSAJE_BLOQUEO = `La cuenta está bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${MINUTOS_BLOQUEO} minutos o solicita el desbloqueo al administrador.`;
 
+function correoNoConfigurado() {
+  const error = new Error("El servicio de correo no está configurado");
+  error.code = "SMTP_NOT_CONFIGURED";
+  return error;
+}
+
+// «MEVIPLAST <correo@dominio>» o solo el correo
+function leerRemitente(texto) {
+  const valor = String(texto || "").trim();
+  const conNombre = valor.match(/^(.*?)\s*<([^<>\s]+@[^<>\s]+)>$/);
+  if (conNombre) return { name: conNombre[1].replace(/^"|"$/g, "").trim() || "MEVIPLAST", email: conNombre[2] };
+  return { name: "MEVIPLAST", email: valor };
+}
+
+// MEVI-127: Render (plan gratuito) bloquea los puertos SMTP 25, 465 y 587 desde septiembre de 2025. Con
+// BREVO_API_KEY el correo sale por la API HTTPS de Brevo; el resto del flujo no cambia (mismo sendMail).
+function crearTransportadorBrevo(clave) {
+  const remitente = process.env.SMTP_FROM || process.env.SMTP_USER;
+  if (!remitente || !FORMATO_CORREO.test(leerRemitente(remitente).email)) throw correoNoConfigurado();
+  return {
+    async sendMail({ from, to, subject, text, html }) {
+      const respuesta = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: { "api-key": clave, "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ sender: leerRemitente(from || remitente), to: [{ email: to }], subject, textContent: text, htmlContent: html }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!respuesta.ok) {
+        const detalle = await respuesta.text().catch(() => "");
+        const error = new Error(`Brevo rechazó el envío (${respuesta.status}): ${detalle.slice(0, 200)}`);
+        error.code = "BREVO_ERROR";
+        throw error;
+      }
+      return respuesta.json().catch(() => ({}));
+    },
+  };
+}
+
 function crearTransportadorCorreo() {
+  const claveBrevo = (process.env.BREVO_API_KEY || "").trim();
+  if (claveBrevo) return crearTransportadorBrevo(claveBrevo);
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD } = process.env;
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASSWORD) {
-    const error = new Error("El servicio de correo no está configurado");
-    error.code = "SMTP_NOT_CONFIGURED";
-    throw error;
-  }
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASSWORD) throw correoNoConfigurado();
   return nodemailer.createTransport({
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
