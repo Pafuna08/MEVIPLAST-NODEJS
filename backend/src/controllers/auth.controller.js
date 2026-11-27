@@ -31,7 +31,10 @@ function responderErrorRecuperacion(res, error, mensaje) {
   if (error.status) return res.status(error.status).json({ mensaje: error.message });
   log.error("Error al atender la petición", { error });
   if (error.code === "SMTP_NOT_CONFIGURED") {
-    return res.status(503).json({ mensaje: "La recuperación por correo no está disponible: falta configurar SMTP." });
+    // DEF-043: el correo sale por Brevo (BREVO_API_KEY, Render) o por SMTP (SMTP_*, red local)
+    return res.status(503).json({
+      mensaje: "La recuperación por correo no está disponible: falta configurar el correo (Brevo o SMTP).",
+    });
   }
   return res.status(500).json({ mensaje });
 }

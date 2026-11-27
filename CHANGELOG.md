@@ -7,6 +7,7 @@ Los cambios relevantes se registran aquí. La versión estable `v1.0.0` se etiqu
 ### Fixed
 
 - Recuperación de contraseña y recordatorio de usuario en Render (DEF-042, MEVI-127, EV-2026-11-27-01): el plan gratuito de Render bloquea los puertos SMTP (25, 465 y 587) desde septiembre de 2025 y el servicio no tenía el correo configurado (respondía 503). Con `BREVO_API_KEY` el correo sale por la API HTTPS de Brevo, con el remitente de `SMTP_FROM`; sin esa variable se sigue usando SMTP. Si Brevo rechaza el envío, el enlace se borra. En local el envío por Gmail funcionaba, pero las cuentas tenían correos de ejemplo de otros buzones: ahora usan direcciones del buzón del proyecto (cambiables en «Mi perfil»). CP-118 en `auth.brevo.test.js`.
+- Mensaje del 503 de la recuperación por correo (DEF-043, MEVI-132): decía «falta configurar SMTP», también en Render, donde el correo sale por Brevo. Ahora dice «falta configurar el correo (Brevo o SMTP)». CP-119 en `auth.correo-no-configurado.test.js`.
 
 ## 1.0.0 - 2026-11-26
 
