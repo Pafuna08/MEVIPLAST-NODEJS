@@ -1,0 +1,212 @@
+[
+  {
+    "archivo": "DIA-ACT-01_actores",
+    "ancho": 1640,
+    "alto": 860,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-01_general",
+    "ancho": 1680,
+    "alto": 1184,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-02_seguridad",
+    "ancho": 1640,
+    "alto": 1088,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-03_produccion",
+    "ancho": 1640,
+    "alto": 1216,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-04_materias_primas",
+    "ancho": 1640,
+    "alto": 960,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-05_inventario_ventas",
+    "ancho": 1640,
+    "alto": 1088,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "DIA-CU-06_reportes",
+    "ancho": 1640,
+    "alto": 960,
+    "caso": null,
+    "titulo": null
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-001_iniciar_sesion",
+    "ancho": 1600,
+    "alto": 894,
+    "caso": "CU-001",
+    "titulo": "DIA-CU-001 · CU-001 Iniciar sesión"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-002_gestionar_usuarios_roles_y_desbloqueo",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-002",
+    "titulo": "DIA-CU-002 · CU-002 Gestionar usuarios, roles y desbloqueo"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-003_recuperar_contrasena_o_usuario",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-003",
+    "titulo": "DIA-CU-003 · CU-003 Recuperar contraseña o usuario"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-004_bloquear_cuenta_por_intentos_fallidos",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-004",
+    "titulo": "DIA-CU-004 · CU-004 Bloquear cuenta por intentos fallidos"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-005_cerrar_sesion",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-005",
+    "titulo": "DIA-CU-005 · CU-005 Cerrar sesión"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-006_asignar_tareas_de_produccion",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-006",
+    "titulo": "DIA-CU-006 · CU-006 Asignar tareas de producción"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-007_consultar_tareas_asignadas",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-007",
+    "titulo": "DIA-CU-007 · CU-007 Consultar tareas asignadas"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-008_registrar_produccion_realizada",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-008",
+    "titulo": "DIA-CU-008 · CU-008 Registrar producción realizada"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-009_consultar_historial_de_produccion",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-009",
+    "titulo": "DIA-CU-009 · CU-009 Consultar historial de producción"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-010_modificar_ordenes_de_produccion",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-010",
+    "titulo": "DIA-CU-010 · CU-010 Modificar órdenes de producción"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-011_registrar_materias_primas",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-011",
+    "titulo": "DIA-CU-011 · CU-011 Registrar materias primas"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-012_actualizar_cantidades_ajustes",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-012",
+    "titulo": "DIA-CU-012 · CU-012 Actualizar cantidades (ajustes)"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-013_registrar_consumo_en_una_orden",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-013",
+    "titulo": "DIA-CU-013 · CU-013 Registrar consumo en una orden"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-014_consultar_disponibilidad_y_bajo_stock",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-014",
+    "titulo": "DIA-CU-014 · CU-014 Consultar disponibilidad y bajo stock"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-015_registrar_compras_de_materiales",
+    "ancho": 1600,
+    "alto": 618,
+    "caso": "CU-015",
+    "titulo": "DIA-CU-015 · CU-015 Registrar compras de materiales"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-016_registrar_productos_terminados_ingresos_y_salida",
+    "ancho": 1600,
+    "alto": 769,
+    "caso": "CU-016",
+    "titulo": "DIA-CU-016 · CU-016 Registrar productos terminados (ingresos y salidas)"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-017_consultar_inventario_disponible",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-017",
+    "titulo": "DIA-CU-017 · CU-017 Consultar inventario disponible"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-018_registrar_ventas_por_paquetes",
+    "ancho": 1600,
+    "alto": 917,
+    "caso": "CU-018",
+    "titulo": "DIA-CU-018 · CU-018 Registrar ventas por paquetes"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-019_actualizar_stock_automaticamente",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-019",
+    "titulo": "DIA-CU-019 · CU-019 Actualizar stock automáticamente"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-020_generar_reporte_de_produccion",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-020",
+    "titulo": "DIA-CU-020 · CU-020 Generar reporte de producción"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-021_generar_reporte_de_inventario",
+    "ancho": 1600,
+    "alto": 746,
+    "caso": "CU-021",
+    "titulo": "DIA-CU-021 · CU-021 Generar reporte de inventario"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-022_generar_reporte_de_ventas",
+    "ancho": 1600,
+    "alto": 871,
+    "caso": "CU-022",
+    "titulo": "DIA-CU-022 · CU-022 Generar reporte de ventas"
+  },
+  {
+    "archivo": "casos_de_uso/DIA-CU-023_exportar_reportes_pdf_y_excel",
+    "ancho": 1600,
+    "alto": 917,
+    "caso": "CU-023",
+    "titulo": "DIA-CU-023 · CU-023 Exportar reportes (PDF y Excel)"
+  }
+]

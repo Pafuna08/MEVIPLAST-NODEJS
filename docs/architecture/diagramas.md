@@ -15,8 +15,10 @@ flowchart LR
     SYS[[Sistema web MEVIPLAST]]
   end
   SMTP[(Servidor SMTP<br/>Gmail del proyecto)]
+  BREVO[(API de Brevo<br/>solo en Render)]
   ADM & SUP & OPE & VEN & ALM -->|navegador, HTTP| SYS
-  SYS -->|correo de recuperación| SMTP
+  SYS -->|correo de recuperación, red local| SMTP
+  SYS -.->|correo de recuperación, demostración en Render| BREVO
 ```
 
 ## DIA-002 · Contenedores
@@ -27,24 +29,31 @@ flowchart LR
   subgraph SRV[Equipo servidor · Node.js 22]
     SPA[Sitio, login, recuperación y panel<br/>React 19 + Vite 6, solo frontend/dist]
     API[API REST<br/>Express 4, /api]
+    DOCS[Swagger UI<br/>/api-docs]
   end
   DB[(MySQL / MariaDB<br/>meviplast_db)]
   SMTP[(Servidor SMTP)]
+  BREVO[(API de Brevo)]
   NAV -->|HTTP| SPA
+  NAV -->|HTTP| DOCS
   SPA -->|JSON + Bearer JWT| API
+  DOCS -->|Try it out con el token| API
   API -->|mysql2, transacciones| DB
-  API -->|nodemailer| SMTP
+  API -->|nodemailer, sin BREVO_API_KEY| SMTP
+  API -->|HTTPS, con BREVO_API_KEY| BREVO
 ```
 
 ## DIA-003 · Componentes de la API
 
 ```mermaid
-flowchart TB
-  APP[app.js<br/>CORS, JSON, sanitizar, validarLongitudes, registro de peticiones, errores]
+flowchart LR
+  APP[app.js<br/>cabeceras, CORS, JSON, sanitizar,<br/>validarLongitudes, registro de peticiones, errores]
   AUTHMW[auth.middleware<br/>verificarToken, verificarRol]
+  PUB[utils/apiDocs + utils/frontend<br/>Swagger UI en /api-docs y solo frontend/dist]
   subgraph R[Rutas y controladores]
-    RA[auth]
+    RA[auth + perfil]
     RU[usuarios]
+    RL[lineas]
     RP[produccion]
     RM[materia-prima]
     RI[inventario]
@@ -52,24 +61,31 @@ flowchart TB
     RR[reportes]
   end
   subgraph S[Servicios con las reglas RN]
-    SA[auth.service]
+    SA[auth.service<br/>SMTP o Brevo]
+    SPF[perfil.service]
     SU[usuarios.service]
+    SL[lineas.service]
     SP[produccion.service]
     SM[materiaPrima.service]
     SI[inventario.service]
-    SV[ventas.service]
-    SR[reportes.service + reportesExcel.service]
+    SV[ventas.service + comprobantePdf.service]
+    SR[reportes.service + reportesExcel.service + reportesPdf.service]
+    SAA[archivoAuditoria.service]
   end
-  UT[utils: logger, auditoria, sanitizar]
-  CFG[config: database, initDb, schema]
+  UT[utils: logger, auditoria, sanitizar, numeros, variantes]
+  CFG[config: conexion, database, initDb, schema, archivarAuditoria]
   APP --> AUTHMW --> R
+  APP --> PUB
   RA --> SA
+  RA --> SPF
   RU --> SU
+  RL --> SL
   RP --> SP
   RM --> SM
   RI --> SI
   RV --> SV
   RR --> SR
+  RR --> SAA
   S --> CFG
   S --> UT
 ```
@@ -125,8 +141,10 @@ flowchart LR
     RENDER[Render<br/>servicio web meviplast, HTTPS]
     AIVEN[(Aiven<br/>MySQL 8.4 con TLS)]
   end
+  BREVO[(API de Brevo<br/>api.brevo.com, HTTPS)]
   INSTR[Instructor y equipo] -->|https://meviplast.onrender.com| RENDER
   RENDER -->|DB_SSL| AIVEN
+  RENDER -->|BREVO_API_KEY: el plan gratuito bloquea SMTP| BREVO
   GH -.->|Auto-Deploy de cada fusión en develop| RENDER
 ```
 

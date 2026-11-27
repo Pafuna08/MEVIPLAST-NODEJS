@@ -1,51 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="707" viewBox="0 0 1400 707" font-family="Helvetica, Arial, sans-serif">
-<rect width="1400" height="707" fill="#fff"/>
-<text x="24" y="36" font-size="20" font-weight="bold" fill="#1F3864">DIA-CU-04 · EP-002 Gestión de materias primas</text>
-<rect x="360" y="62" width="680" height="623" rx="6" fill="none" stroke="#1F4E79" stroke-width="2.2"/>
-<text x="700" y="88" font-size="16" font-weight="bold" text-anchor="middle" fill="#1F4E79">Sistema MEVIPLAST</text>
-<line x1="194" y1="369" x2="525" y2="165" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="369" x2="525" y2="273" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="369" x2="525" y2="381" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="369" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="369" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="531" x2="525" y2="489" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="194" y1="531" x2="525" y2="597" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="1206" y1="369" x2="875" y2="273" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="1206" y1="369" x2="875" y2="381" stroke="#1F3864" stroke-width="1.6"/>
-<line x1="1206" y1="369" x2="875" y2="489" stroke="#1F3864" stroke-width="1.6"/>
-<ellipse cx="700" cy="165" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
-<text x="700" y="155" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-011</text>
-<text x="700" y="173" font-size="14" text-anchor="middle" fill="#1F3864">Registrar materias primas</text>
-<ellipse cx="700" cy="273" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
-<text x="700" y="263" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-015</text>
-<text x="700" y="281" font-size="14" text-anchor="middle" fill="#1F3864">Registrar compras de materiales</text>
-<ellipse cx="700" cy="381" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
-<text x="700" y="371" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-012</text>
-<text x="700" y="389" font-size="14" text-anchor="middle" fill="#1F3864">Actualizar cantidades (ajustes)</text>
-<ellipse cx="700" cy="489" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
-<text x="700" y="471" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-014</text>
-<text x="700" y="489" font-size="14" text-anchor="middle" fill="#1F3864">Consultar disponibilidad e</text>
-<text x="700" y="505" font-size="14" text-anchor="middle" fill="#1F3864">insumos en bajo stock</text>
-<ellipse cx="700" cy="597" rx="175" ry="34" fill="#EAF1FB" stroke="#1F4E79" stroke-width="2"/>
-<text x="700" y="579" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#39A900">CU-013</text>
-<text x="700" y="597" font-size="14" text-anchor="middle" fill="#1F3864">Registrar consumo asociado a una</text>
-<text x="700" y="613" font-size="14" text-anchor="middle" fill="#1F3864">orden</text>
-<circle cx="170" cy="343" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="354" x2="170" y2="387" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="152" y1="364" x2="188" y2="364" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="387" x2="156" y2="411" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="387" x2="184" y2="411" stroke="#1F3864" stroke-width="2.2"/>
-<text x="170" y="431" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Administrador</text>
-<circle cx="170" cy="505" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="516" x2="170" y2="549" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="152" y1="526" x2="188" y2="526" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="549" x2="156" y2="573" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="170" y1="549" x2="184" y2="573" stroke="#1F3864" stroke-width="2.2"/>
-<text x="170" y="593" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Supervisor</text>
-<circle cx="1230" cy="343" r="11" fill="#fff" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1230" y1="354" x2="1230" y2="387" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1212" y1="364" x2="1248" y2="364" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1230" y1="387" x2="1216" y2="411" stroke="#1F3864" stroke-width="2.2"/>
-<line x1="1230" y1="387" x2="1244" y2="411" stroke="#1F3864" stroke-width="2.2"/>
-<text x="1230" y="431" font-size="15" font-weight="bold" text-anchor="middle" fill="#1F3864">Almacenista</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="960" viewBox="0 0 1640 960" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+<defs>
+  <filter id="sombra" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#1B2A41" flood-opacity="0.13"/></filter>
+</defs>
+<rect width="1640" height="960" fill="#ffffff"/>
+<text x="44" y="54" font-size="26" font-weight="700" fill="#1F3864" text-anchor="start">DIA-CU-04 · EP-002 Gestión de materias primas</text>
+<text x="44" y="82" font-size="15" font-weight="400" fill="#5F6B7A" text-anchor="start">Diagrama de casos de uso por épica: quién hace qué en el sistema, con los permisos que valida el servidor</text>
+<text x="1596" y="54" font-size="13" font-weight="400" fill="#5F6B7A" text-anchor="end">MEVIPLAST · MEV-DOC-04</text>
+<line x1="44" y1="100" x2="1596" y2="100" stroke="#D5DCE6" stroke-width="1.2"/>
+<rect x="380" y="128" width="880" height="682" rx="16" fill="#F8FAFD" stroke="#1F3864" stroke-width="2"/>
+<text x="402" y="160" font-size="16" font-weight="700" fill="#1F3864" text-anchor="start">Sistema MEVIPLAST</text>
+<rect x="576" y="142" width="76" height="26" rx="13" fill="#FFF2DF" stroke="#A8640A"/>
+<text x="614" y="160" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">EP-002</text>
+<line x1="220" y1="476" x2="734.1" y2="256.7" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="476" x2="688.8" y2="376" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="476" x2="644" y2="476" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="476" x2="688.8" y2="576" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="476" x2="734.1" y2="695.3" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="668" x2="659.3" y2="621.1" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="220" y1="668" x2="659.3" y2="714.9" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1420" y1="412" x2="925.2" y2="253.7" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1420" y1="412" x2="980.7" y2="365.1" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1420" y1="412" x2="980.7" y2="458.9" stroke="#3E4C63" stroke-width="1.8"/>
+<line x1="1420" y1="412" x2="925.2" y2="570.3" stroke="#3E4C63" stroke-width="1.8"/>
+
+<g filter="url(#sombra)"><ellipse cx="820" cy="220" rx="176" ry="42" fill="#FFF2DF" stroke="#A8640A" stroke-width="2"/></g>
+<text x="820" y="215" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-011</text>
+<text x="820" y="234" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Registrar materias primas</text>
+<g filter="url(#sombra)"><ellipse cx="820" cy="348" rx="176" ry="42" fill="#FFF2DF" stroke="#A8640A" stroke-width="2"/></g>
+<text x="820" y="343" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-015</text>
+<text x="820" y="362" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Registrar compras de materiales</text>
+<g filter="url(#sombra)"><ellipse cx="820" cy="476" rx="176" ry="42" fill="#FFF2DF" stroke="#A8640A" stroke-width="2"/></g>
+<text x="820" y="471" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-012</text>
+<text x="820" y="490" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Actualizar cantidades (ajustes)</text>
+<g filter="url(#sombra)"><ellipse cx="820" cy="604" rx="176" ry="42" fill="#FFF2DF" stroke="#A8640A" stroke-width="2"/></g>
+<text x="820" y="589.5" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-014</text>
+<text x="820" y="608.5" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Consultar disponibilidad y bajo</text>
+<text x="820" y="627.5" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">stock</text>
+<g filter="url(#sombra)"><ellipse cx="820" cy="732" rx="176" ry="42" fill="#FFF2DF" stroke="#A8640A" stroke-width="2"/></g>
+<text x="820" y="727" font-size="13" font-weight="700" fill="#A8640A" text-anchor="middle">CU-013</text>
+<text x="820" y="746" font-size="15" font-weight="400" fill="#1B2A41" text-anchor="middle">Registrar consumo en una orden</text>
+<circle cx="190" cy="480" r="58" fill="#EEF2F8"/>
+<circle cx="190" cy="444" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="190" y1="458" x2="190" y2="500" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="166" y1="474" x2="214" y2="474" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="171,530 190,500 209,530" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="190" y="558" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Administrador</text>
+<text x="190" y="576" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol admin</text>
+<circle cx="190" cy="672" r="58" fill="#EEF2F8"/>
+<circle cx="190" cy="636" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="190" y1="650" x2="190" y2="692" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="166" y1="666" x2="214" y2="666" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="171,722 190,692 209,722" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="190" y="750" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Supervisor</text>
+<text x="190" y="768" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol supervisor</text>
+<circle cx="1450" cy="416" r="58" fill="#EEF2F8"/>
+<circle cx="1450" cy="380" r="14" fill="#fff" stroke="#1F3864" stroke-width="2.6"/>
+<line x1="1450" y1="394" x2="1450" y2="436" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1426" y1="410" x2="1474" y2="410" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round"/>
+<polyline points="1431,466 1450,436 1469,466" fill="none" stroke="#1F3864" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1450" y="494" font-size="16" font-weight="700" fill="#1F3864" text-anchor="middle">Almacenista</text>
+<text x="1450" y="512" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="middle">rol almacenista</text>
+<rect x="230" y="844" width="443" height="46" rx="8" fill="#F8FAFD" stroke="#D5DCE6"/>
+<line x1="248" y1="867" x2="300" y2="867" stroke="#3E4C63" stroke-width="1.8"/>
+<text x="310" y="872" font-size="13" font-weight="400" fill="#1B2A41" text-anchor="start">Asociación: el rol tiene el permiso en el servidor</text>
+<line x1="44" y1="914" x2="1596" y2="914" stroke="#D5DCE6" stroke-width="1"/>
+<text x="44" y="936" font-size="12" font-weight="400" fill="#5F6B7A" text-anchor="start">Fuente: permisos de backend/src/routes (verificarRol, iguales a x-roles de Swagger) y vistas de frontend/src/comun/constantes.js · develop, 27/11/2026</text>
 </svg>

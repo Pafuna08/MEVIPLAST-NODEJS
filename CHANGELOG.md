@@ -9,6 +9,10 @@ Los cambios relevantes se registran aquí. La versión estable `v1.0.0` se etiqu
 - Recuperación de contraseña y recordatorio de usuario en Render (DEF-042, MEVI-127, EV-2026-11-27-01): el plan gratuito de Render bloquea los puertos SMTP (25, 465 y 587) desde septiembre de 2025 y el servicio no tenía el correo configurado (respondía 503). Con `BREVO_API_KEY` el correo sale por la API HTTPS de Brevo, con el remitente de `SMTP_FROM`; sin esa variable se sigue usando SMTP. Si Brevo rechaza el envío, el enlace se borra. En local el envío por Gmail funcionaba, pero las cuentas tenían correos de ejemplo de otros buzones: ahora usan direcciones del buzón del proyecto (cambiables en «Mi perfil»). CP-118 en `auth.brevo.test.js`.
 - Mensaje del 503 de la recuperación por correo (DEF-043, MEVI-132): decía «falta configurar SMTP», también en Render, donde el correo sale por Brevo. Ahora dice «falta configurar el correo (Brevo o SMTP)». CP-119 en `auth.correo-no-configurado.test.js`.
 
+### Documentation
+
+- Revisión completa contra el código (MEVI-133, EV-2026-11-27-02): los diagramas de casos de uso se rehicieron desde los permisos del servidor y las vistas del panel (actores, general por paquetes, uno por épica y uno por cada uno de los 23 casos, con su API, pantalla y trazabilidad), generados con `Documentacion_Proyecto_ADSO/02_Requisitos/diagramas/fuente/generar_cu.js`; los anteriores mostraban al supervisor con ventas. Diagramas de arquitectura con Brevo y todos los módulos; Swagger con el correo por Brevo o SMTP; flujos de CU-006 y CU-013 según CR-014 y CR-026; casos de prueba que faltaban en las fichas.
+
 ## 1.0.0 - 2026-11-26
 
 Primera versión estable: reúne todo lo desarrollado hasta el 26/11/2026 (PR #1 a #127), con las 25 historias y los 29 requisitos funcionales implementados. MEVIPLAST delegó en el equipo las decisiones pendientes y la aprobación del instructor sigue pendiente.

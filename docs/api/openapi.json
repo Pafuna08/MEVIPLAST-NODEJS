@@ -149,6 +149,7 @@
           "Autenticación"
         ],
         "summary": "Pedir enlace de recuperación de contraseña",
+        "description": "HU-018 / RF-003: si el correo coincide exactamente con una cuenta, envía a esa dirección un enlace de un solo uso, vigente 30 minutos (la respuesta es la misma exista o no la cuenta). El correo sale por la API HTTPS de Brevo si existe BREVO_API_KEY (Render, donde SMTP está bloqueado: DEF-042) o, si no, por SMTP (SMTP_*). Si Brevo o SMTP rechazan el envío, el enlace se borra.",
         "x-requisitos": "RF-003",
         "requestBody": {
           "required": true,
@@ -184,7 +185,7 @@
             "$ref": "#/components/responses/Validacion"
           },
           "503": {
-            "description": "SMTP no configurado",
+            "description": "Correo no configurado: falta BREVO_API_KEY o SMTP_* (y el remitente SMTP_FROM). Mensaje: «La recuperación por correo no está disponible: falta configurar el correo (Brevo o SMTP).» (DEF-043)",
             "content": {
               "application/json": {
                 "schema": {
@@ -203,6 +204,7 @@
           "Autenticación"
         ],
         "summary": "Enviar el nombre de usuario al correo",
+        "description": "HU-018 / RF-003: si el correo coincide exactamente con una cuenta, le envía su nombre de usuario (la respuesta es la misma exista o no la cuenta). Usa el mismo servicio de correo que la recuperación: Brevo con BREVO_API_KEY o SMTP.",
         "x-requisitos": "RF-003",
         "requestBody": {
           "required": true,
@@ -238,7 +240,7 @@
             "$ref": "#/components/responses/Validacion"
           },
           "503": {
-            "description": "SMTP no configurado",
+            "description": "Correo no configurado: falta BREVO_API_KEY o SMTP_* (y el remitente SMTP_FROM). Mensaje: «La recuperación por correo no está disponible: falta configurar el correo (Brevo o SMTP).» (DEF-043)",
             "content": {
               "application/json": {
                 "schema": {

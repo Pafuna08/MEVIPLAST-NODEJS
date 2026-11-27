@@ -1,6 +1,6 @@
 # Trazabilidad y estado por historia
 
-Estado del código en `develop` al PR #124 (25/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
+Estado del código en `develop` al PR #137 (27/11/2026). Coincide con la misma fuente que la **Matriz Maestra de Trazabilidad** ([`02_Requisitos/Matriz_de_Trazabilidad.xlsx`](../Documentacion_Proyecto_ADSO/02_Requisitos/Matriz_de_Trazabilidad.xlsx) del paquete documental), que es la fuente única de relaciones; si hay diferencias, manda la matriz.
 
 «Implementado» describe el código y las pruebas. MEVIPLAST aprobó el alcance en la reunión inicial y delegó en el equipo las decisiones pendientes ([`decisiones-por-delegacion.md`](decisiones-por-delegacion.md)); la sesión de aceptación por rol con usuarios de la empresa no se realizó.
 
@@ -32,7 +32,7 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 | HU-012 | Vendedor | Consultar inventario disponible | RF-019 | Implementado | El vendedor consulta existencias sin poder modificarlas. |
 | HU-024 | Vendedor | Visualizar historial de ventas | RF-022 | Implementado | El vendedor ve solo sus ventas; sin filtros por fecha o cliente. |
 | HU-016 | Todos los roles | Iniciar sesión | RF-001 | Implementado | JWT con expiración de 8 h; contraseñas con bcrypt; mensaje de error genérico. El token deja de servir si el usuario se desactiva o cambia de rol (CP-053, CP-054). |
-| HU-018 | Todos los roles | Recuperar contraseña | RF-003 | Implementado | Enlace por correo de un solo uso, vigente 30 min. Requiere SMTP configurado. Probado con un servidor SMTP local (CP-061) y con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04). |
+| HU-018 | Todos los roles | Recuperar contraseña | RF-003 | Implementado | Enlace por correo de un solo uso, vigente 30 min, o el nombre de usuario. Requiere el correo configurado: SMTP en la red local o la API de Brevo (`BREVO_API_KEY`) donde SMTP está bloqueado, como en Render (DEF-042); sin ninguno responde 503 y lo dice (DEF-043, CP-119). Probado con un servidor SMTP local (CP-061), con el buzón Gmail del proyecto (CP-030, EV-2026-11-08-04) y en Render con Brevo (CP-118, EV-2026-11-27-01). |
 | HU-019 | Todos los roles | Bloquear intentos fallidos | RF-004 | Implementado | 5 intentos seguidos bloquean 15 minutos (configurable); el administrador desbloquea. Probado con MySQL real (CP-051). |
 | HU-020 | Todos los roles | Cerrar sesión | RF-005 | Implementado | Cerrar sesión revoca el token en el servidor (`POST /api/auth/logout`): el mismo token responde 401 (PR #109). El servidor también lo rechaza si el usuario se desactiva o cambia de rol (DEF-011) y vence a las 8 h; CP-110. |
 
@@ -42,7 +42,7 @@ Historias: 25 implementadas de 25. Requisitos funcionales: 29 implementados de 2
 |---|---|---|---|---|---|
 | RF-001 | Autenticar usuario | Implementado | MVP | API-01 | CP-027 (pendiente), CP-046 |
 | RF-002 | Gestionar usuarios y rol | Implementado | MVP | API-03 | CP-047, CP-054, CP-089 (siempre queda un administrador activo, DEF-021), CP-111 (permisos fijos por rol, CR-025) |
-| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061, CP-118 (envío por la API de Brevo donde SMTP está bloqueado, DEF-042) |
+| RF-003 | Recuperar acceso por correo | Implementado | MVP | API-02 | CP-001, CP-002, CP-003, CP-030, CP-061, CP-118 (envío por la API de Brevo donde SMTP está bloqueado, DEF-042), CP-119 (mensaje del correo no configurado, DEF-043) |
 | RF-004 | Bloquear intentos fallidos | Implementado | MVP | API-03 | CP-043, CP-044, CP-045, CP-046, CP-047, CP-051, CP-115 (la contraseña actual equivocada en «Mi perfil» cuenta como intento fallido) |
 | RF-005 | Cerrar sesión | Implementado | MVP | API-01 | CP-110 (el token queda revocado en el servidor) |
 | RF-006 | Registrar auditoría | Implementado | MVP | — | CP-083 (inicios de sesión en el archivo de accesos, CR-016) |
