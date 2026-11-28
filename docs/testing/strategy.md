@@ -19,7 +19,7 @@ npm run test:e2e --prefix backend
 
 - Health check con base real.
 - CP-028: orden del administrador (rechazada sin medida, calibre y color; queda sin supervisor fijo, CR-014) → asignación del supervisor, que toma la orden → avance del operario (rechazo por exceso y finalización) → inventario (la variante de la orden se crea si no existe, con la medida normalizada «40 x 60 cm») y movimiento → venta del vendedor → comprobante (CP-056) → reportes semanales y descarga en Excel (CP-059).
-- CP-029: acceso directo a 17 operaciones (incluidos `POST /ventas`, que el supervisor ya no puede usar, DEF-007, y `GET /ventas` y `GET /reportes/ventas`, que tampoco consulta, CR-021) con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
+- CP-029: acceso directo a 18 operaciones (incluidos `POST /ventas`, que el supervisor ya no puede usar, DEF-007; `GET /ventas` y `GET /reportes/ventas`, que tampoco consulta, CR-021; y `POST /inventario` y `GET /inventario/movimientos`, que son del administrador y del almacenista, DEF-044) con el token de cada uno de los cinco roles y sin token (401/403 según la matriz de permisos).
 - CP-031: cinco ventas concurrentes sobre 1 500 unidades: se aceptan tres, se rechazan dos y el saldo queda en 0 sin valores negativos.
 - HU-019: bloqueo al quinto intento, rechazo con la contraseña correcta, desbloqueo del administrador y registro en auditoría.
 - ADR-004 (CP-054): el token deja de servir al desactivar al usuario o cambiarle el rol.
@@ -48,7 +48,7 @@ npm run test:e2e --prefix backend
 npm run test:perf --prefix backend
 ```
 
-`backend/tests/perf/carga.perf.js` crea `meviplast_perf` con unos 1 500 registros, levanta la API como proceso aparte y simula cinco usuarios concurrentes, uno por rol, con sus operaciones habituales. Falla si el percentil 95 supera 3 s o si alguna respuesta es un error. No corre en CI: los tiempos de los servidores compartidos de GitHub no son representativos. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md); el último recorrido, 63 de 63 flujos (21 por navegador), en [`../evidence/EV-2026-11-25-perfil.md`](../evidence/EV-2026-11-25-perfil.md).
+`backend/tests/perf/carga.perf.js` crea `meviplast_perf` con unos 1 500 registros, levanta la API como proceso aparte y simula cinco usuarios concurrentes, uno por rol, con sus operaciones habituales. Falla si el percentil 95 supera 3 s o si alguna respuesta es un error. No corre en CI: los tiempos de los servidores compartidos de GitHub no son representativos. Resultado en [`../evidence/EV-2026-10-27-rnf.md`](../evidence/EV-2026-10-27-rnf.md) (p95 de 60 a 69 ms) y, la última medición, en [`../evidence/EV-2026-11-27-auditoria.md`](../evidence/EV-2026-11-27-auditoria.md) (p95 de 51 a 56 ms en tres ejecuciones, 0 errores); el último recorrido, 63 de 63 flujos (21 por navegador), en [`../evidence/EV-2026-11-25-perfil.md`](../evidence/EV-2026-11-25-perfil.md).
 
 ## Compatibilidad (RNF-007)
 
@@ -119,12 +119,12 @@ npm run test:coverage --prefix backend        # solo unitarias; mínimo 58 % de 
 npm run test:coverage:total --prefix backend  # unitarias + E2E (requiere MySQL); mínimo 75 % de líneas
 ```
 
-Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-25, sobre `develop` al PR #123 (164 unitarias y 24 E2E):
+Usa la cobertura integrada de Node.js sobre `backend/src` (sin dependencias nuevas). Medición del 2026-11-27, sobre `develop` al PR #138 (171 unitarias y 24 E2E):
 
 | Alcance | Líneas | Ramas | Funciones |
 | --- | --- | --- | --- |
-| Unitarias | 79,0 % | 82,7 % | 79,0 % |
-| Unitarias + E2E | 91,6 % | 83,7 % | 95,1 % |
+| Unitarias | 80,3 % | 82,0 % | 81,1 % |
+| Unitarias + E2E | 92,4 % | 83,8 % | 95,5 % |
 
 Los controladores se cubren sobre todo con la suite E2E, por eso suben al combinar. Las áreas menos cubiertas son los caminos de error de los controladores. El CI ejecuta los dos comandos y falla si la cobertura de líneas baja del mínimo. Los mínimos están un poco por debajo de la medición para tolerar variaciones pequeñas; súbanlos cuando agreguen pruebas.
 

@@ -15,6 +15,7 @@ Los cambios relevantes se registran aquí. La versión estable `v1.0.0` se etiqu
 
 ### Documentation
 
+- Auditoría de coherencia (MEVI-135, EV-2026-11-27-04): cifras medidas de nuevo (195 pruebas, cobertura 80,3 % / 92,4 %, carga con p95 de 51 a 56 ms, 0 vulnerabilidades), revisiones de Carlos al día (PR #12 a #127), versión vigente en el pie de todos los documentos, matriz de permisos completa, EV-029 en el Plan de Calidad y el estado de la v1.0.0 en lugar del commit 62ed8d3; versiones firmadas por el equipo.
 - Revisión completa contra el código (MEVI-133, EV-2026-11-27-02): los diagramas de casos de uso se rehicieron desde los permisos del servidor y las vistas del panel (actores, general por paquetes, uno por épica y uno por cada uno de los 23 casos, con su API, pantalla y trazabilidad), generados con `Documentacion_Proyecto_ADSO/02_Requisitos/diagramas/fuente/generar_cu.js`; los anteriores mostraban al supervisor con ventas. Diagramas de arquitectura con Brevo y todos los módulos; Swagger con el correo por Brevo o SMTP; flujos de CU-006 y CU-013 según CR-014 y CR-026; casos de prueba que faltaban en las fichas.
 
 ## 1.0.0 - 2026-11-26

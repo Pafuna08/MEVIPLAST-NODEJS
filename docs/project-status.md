@@ -1,9 +1,9 @@
 # Estado del proyecto
 
-Corte: 27/11/2026. Versión estable `v1.0.0` en `main` (PR #127); `develop` con los PR #1 a #138 (después de la v1.0.0: índices y firmas del paquete documental, recuperación por correo en Render con Brevo, el mensaje del correo no configurado, la revisión completa de la documentación y los diagramas, y los permisos de inventario terminado del supervisor, DEF-044). Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (PR #53 a #127) cerró con la versión 1.0.0.
+Corte: 27/11/2026. Versión estable `v1.0.0` en `main` (PR #127); `develop` con los PR #1 a #139 (después de la v1.0.0: índices y firmas del paquete documental, recuperación por correo en Render con Brevo, el mensaje del correo no configurado, la revisión completa de la documentación y los diagramas, los permisos de inventario terminado del supervisor, DEF-044, y la auditoría de coherencia del 27/11/2026). Sprints 0 a 10 numerados como en el tablero de Jira del equipo; el Sprint 10 (PR #53 a #127) cerró con la versión 1.0.0.
 
 - Trazabilidad y estado por historia: [`requirements/traceability.md`](requirements/traceability.md). La fuente única es la Matriz Maestra de Trazabilidad del paquete documental.
-- Pruebas: [`testing/strategy.md`](testing/strategy.md). 171 unitarias, 24 E2E con MySQL, prueba de carga y 21 flujos en cada uno de Edge, Chrome y Firefox (63); cobertura de 79,0 % con unitarias y 91,6 % con E2E (medida el 25/11/2026); contraste WCAG AA medido en 56 vistas sin fallas (EV-2026-11-25-10).
+- Pruebas: [`testing/strategy.md`](testing/strategy.md). 171 unitarias, 24 E2E con MySQL, prueba de carga y 21 flujos en cada uno de Edge, Chrome y Firefox (63); cobertura de 80,3 % con unitarias y 92,4 % con E2E y prueba de carga con p95 de 51 a 56 ms (medidas el 27/11/2026, EV-2026-11-27-04); contraste WCAG AA medido en 56 vistas sin fallas (EV-2026-11-25-10).
 - Paquete documental ADSO: los 16 entregables siguen las plantillas institucionales que envió el instructor el 08/11/2026 (la versión vigente de cada uno está en el Índice Maestro, con las capturas del diseño nuevo, más la Rúbrica Integral de Evaluación; todas las versiones tienen la revisión y la aprobación del equipo, y la aprobación del instructor está pendiente); los diagramas de arquitectura tienen su fuente en [`architecture/diagramas.md`](architecture/diagramas.md) y los 30 diagramas de casos de uso (actores, general, uno por épica y uno por cada caso) en `Documentacion_Proyecto_ADSO/02_Requisitos/diagramas`, generados desde el código con `fuente/generar_cu.js`.
 - Decisiones del equipo por delegación del cliente: [`requirements/decisiones-por-delegacion.md`](requirements/decisiones-por-delegacion.md).
 - API: [`api/endpoints.md`](api/endpoints.md) y contrato [`api/openapi.json`](api/openapi.json), publicado con Swagger UI en `/api-docs` (CR-024).
@@ -18,7 +18,7 @@ Las 25 historias están implementadas (25 de 25) y los 29 requisitos funcionales
 ## Pendiente después de `v1.0.0`
 
 - Aprobación del instructor de la entrega y del paquete documental.
-- Que Carlos Herrera revise los PR #124 a #126 y desde el #128 (el #127, que llevó todo a `main`, ya lo aprobó). Ya revisó los 112 PR del #12 al #123: aprobó 104 en GitHub y dio visto bueno a 8 en su commit de fusión (#55 a #58 y #60 a #63). La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
+- Que Carlos Herrera revise los PR desde el #128. Ya revisó los 116 PR del #12 al #127: aprobó 108 en GitHub y dio visto bueno a 8 en su commit de fusión (#55 a #58 y #60 a #63). La instalación limpia ya la repitió en su equipo (RNF-009 cumple, EV-2026-11-08-05).
 
 ## Limitaciones conocidas de la entrega
 
